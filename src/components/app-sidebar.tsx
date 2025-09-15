@@ -90,9 +90,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border/60">
         <div className="flex items-center justify-between px-2 py-1">
-          <span className="text-xs text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
-            {state === "collapsed" ? "Expandir" : "Encolher"}
-          </span>
+          {state === "collapsed" && (
+            <span className="text-xs text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
+              Expandir
+            </span>
+          )}
           <Button
             variant="ghost"
             size="icon"
