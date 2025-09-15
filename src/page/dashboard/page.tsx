@@ -7,7 +7,6 @@ import { AppHeader } from "@/components/app-header"
 
 export default function Page() {
   const userName = "Luimá Almeida"
-  const orgName = "WMS - INDUSTRIA E COM SANTA MARIA LTDA"
   const qrValue = "wms://setup?org=1&env=prod"
 
   return (
@@ -19,7 +18,6 @@ export default function Page() {
         <div className="flex flex-1 flex-col gap-4 p-6 pt-4">
           {/* Saudação no conteúdo (não no header) */}
           <div>
-            <span className="text-sm text-muted-foreground">{orgName}</span>
             <h1 className="text-2xl font-semibold leading-tight">Olá, {userName}</h1>
             {/* Badges movidos para o header */}
           </div>
