@@ -53,7 +53,7 @@ const data = {
     { title: "Picking", url: "#", icon: Hand },
     { title: "Kit", url: "#", icon: Layers3 },
     { title: "Docs", url: "#", icon: FileText },
-    { title: "Integração", url: "#", icon: Cable },
+  { title: "Integração", url: "/integration", icon: Cable },
     { title: "Atividades", url: "#", icon: Activity },
     { title: "Manufatura", url: "#", icon: Factory },
   ],
