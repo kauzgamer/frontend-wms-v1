@@ -1,7 +1,7 @@
 "use client"
 import { Spinner } from "@/components/ui/shadcn-io/spinner"
 import { cn } from "@/lib/utils"
-import * as React from "react"
+// React import removed (no JSX transform need if using automatic runtime configured, otherwise not required explicitly)
 
 export function FullPageSpinner({ className }: { className?: string }) {
   return (

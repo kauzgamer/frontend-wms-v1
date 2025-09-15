@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useState } from "react"
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { FullPageSpinner } from "@/components/full-page-spinner"
+import { useIsFetching } from '@tanstack/react-query'
 
 const DashboardPage = lazy(() => import("@/page/dashboard/page"))
 const SettingsPage = lazy(() => import("@/page/settings/page"))
@@ -9,6 +10,7 @@ const IntegrationPage = lazy(() => import("@/page/integration/page"))
 // Global route change overlay spinner
 function GlobalRouteLoader({ minDuration = 300 }: { minDuration?: number }) {
   const location = useLocation()
+  const isFetching = useIsFetching()
   const [loading, setLoading] = useState(false)
   const [startTime, setStartTime] = useState<number | null>(null)
 
@@ -24,7 +26,8 @@ function GlobalRouteLoader({ minDuration = 300 }: { minDuration?: number }) {
     }
   }, [loading, startTime, minDuration])
 
-  if (!loading) return null
+  const networkBusy = isFetching > 0
+  if (!loading && !networkBusy) return null
   return (
     <div className="fixed inset-0 z-40 grid place-items-center bg-background/70 backdrop-blur-sm">
       <FullPageSpinner />

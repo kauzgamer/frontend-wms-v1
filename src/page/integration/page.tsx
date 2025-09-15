@@ -4,59 +4,31 @@ import { AppHeader } from "@/components/app-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RefreshCcw, Filter, Download } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
-
-interface Transaction {
-  id: string
-  date: string // ISO
-  document: string
-  key: string
-  process: string
-  status: "success" | "failed" | "quarantine"
-}
-
-// Mock generator (could be replaced by API call later)
-function generateMock(count = 0): Transaction[] {
-  const base: Transaction[] = []
-  const today = new Date()
-  for (let i = 0; i < count; i++) {
-    const d = new Date(today)
-    d.setHours(0, 0, 0, 0)
-    base.push({
-      id: String(i + 1),
-      date: d.toISOString(),
-      document: `DOC-${(i + 1).toString().padStart(4, "0")}`,
-      key: `KEY-${(i + 1).toString().padStart(6, "0")}`,
-      process: ["Import", "Export", "Sync"][i % 3],
-      status: ["success", "failed", "quarantine"][i % 5 === 0 ? 1 : i % 11 === 0 ? 2 : 0] as Transaction["status"],
-    })
-  }
-  return base
-}
+import { useMemo, useState } from "react"
+import { useQuery } from '@tanstack/react-query'
+import { fetchIntegrationTransactions } from '@/lib/api/integration'
+import type { IntegrationTransaction } from '@/lib/api/integration'
 
 export function IntegrationPage() {
-  const [all, setAll] = useState<Transaction[]>(() => generateMock(0))
+  // Query remote (mock) data
+  const { data: all = [], isFetching, isLoading, isError, error, refetch, dataUpdatedAt } = useQuery({
+    queryKey: ['integration','transactions'],
+    queryFn: () => fetchIntegrationTransactions(42, 800),
+    staleTime: 30_000,
+  })
+
   const [filterKey, setFilterKey] = useState("")
   const [visible, setVisible] = useState(10)
-  const [refreshAt, setRefreshAt] = useState<Date>(new Date())
 
-  const filtered = useMemo(() => {
-    return all.filter(t => (!filterKey || t.key.includes(filterKey)))
-  }, [all, filterKey])
+  const filtered = useMemo(() =>
+    all.filter(t => (!filterKey || t.key.includes(filterKey)))
+  , [all, filterKey])
 
-  const successToday = filtered.filter(t => t.status === "success").length
-  const failedToday = filtered.filter(t => t.status === "failed").length
-  const quarantine15 = filtered.filter(t => t.status === "quarantine").length
+  const successToday = filtered.filter(t => t.status === 'success').length
+  const failedToday = filtered.filter(t => t.status === 'failed').length
+  const quarantine15 = filtered.filter(t => t.status === 'quarantine').length
 
-  const refresh = () => {
-    setRefreshAt(new Date())
-    // placeholder for API fetch
-    setAll(generateMock(0))
-  }
-
-  useEffect(() => {
-    refresh()
-  }, [])
+  const refresh = () => refetch()
 
   return (
     <SidebarProvider defaultOpen={false}>
@@ -67,6 +39,7 @@ export function IntegrationPage() {
           <div>
             <h1 className="text-2xl font-semibold leading-tight">Monitor de transações</h1>
           </div>
+
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
@@ -91,9 +64,9 @@ export function IntegrationPage() {
 
           {/* Toolbar */}
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Atualizado em: {refreshAt.toLocaleString()}</span>
-            <Button variant="ghost" size="sm" onClick={refresh} className="h-7 px-2">
-              <RefreshCcw className="size-4" />
+            <span className="text-muted-foreground">Atualizado em: {new Date(dataUpdatedAt || Date.now()).toLocaleString()}</span>
+            <Button variant="ghost" size="sm" onClick={refresh} className="h-7 px-2" disabled={isLoading}>
+              <RefreshCcw className={"size-4" + (isFetching ? " animate-spin" : "")} />
             </Button>
             <div className="ml-auto flex items-center gap-2">
               <Button variant="outline" size="sm" className="h-8">
@@ -127,24 +100,42 @@ export function IntegrationPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.slice(0, visible).map(row => (
-                  <tr key={row.id} className="border-t">
-                    <td className="py-2 px-3 whitespace-nowrap">{new Date(row.date).toLocaleDateString()}</td>
-                    <td className="py-2 px-3">{row.document}</td>
-                    <td className="py-2 px-3 font-mono text-xs">{row.key}</td>
-                    <td className="py-2 px-3">{row.process}</td>
-                    <td className="py-2 px-3">
-                      {row.status === "success" && <span className="text-cyan-600">Sucesso</span>}
-                      {row.status === "failed" && <span className="text-amber-600">Falha</span>}
-                      {row.status === "quarantine" && <span className="text-red-600">Quarentena</span>}
+                {isError && (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-red-600 text-sm">
+                      Erro ao carregar: {(error as Error).message}
                     </td>
                   </tr>
+                )}
+                {!isError && (isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-muted-foreground text-sm">Carregando...</td>
+                  </tr>
+                ) : (
+                  filtered.slice(0, visible).map((row: IntegrationTransaction) => (
+                    <tr key={row.id} className="border-t">
+                      <td className="py-2 px-3 whitespace-nowrap">{new Date(row.date).toLocaleDateString()}</td>
+                      <td className="py-2 px-3">{row.document}</td>
+                      <td className="py-2 px-3 font-mono text-xs">{row.key}</td>
+                      <td className="py-2 px-3">{row.process}</td>
+                      <td className="py-2 px-3">
+                        {row.status === 'success' && <span className="text-cyan-600">Sucesso</span>}
+                        {row.status === 'failed' && <span className="text-amber-600">Falha</span>}
+                        {row.status === 'quarantine' && <span className="text-red-600">Quarentena</span>}
+                      </td>
+                    </tr>
+                  ))
                 ))}
-                {filtered.length === 0 && (
+                {!isLoading && !isError && filtered.length === 0 && (
                   <tr>
                     <td colSpan={5} className="py-10 text-center text-muted-foreground text-sm">
                       Nenhum resultado para a pesquisa com filtros informados.
                     </td>
+                  </tr>
+                )}
+                {isFetching && !isLoading && (
+                  <tr>
+                    <td colSpan={5} className="py-4 text-center text-muted-foreground text-xs tracking-wide">Atualizando...</td>
                   </tr>
                 )}
               </tbody>
@@ -153,7 +144,7 @@ export function IntegrationPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                disabled={visible >= filtered.length || filtered.length === 0}
+                disabled={visible >= filtered.length || filtered.length === 0 || isLoading}
                 onClick={() => setVisible(v => v + 10)}
               >
                 Carregar mais 10 resultados
