@@ -11,7 +11,7 @@ export default function Page() {
   const qrValue = "wms://setup?org=1&env=prod"
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <AppSidebar />
       <SidebarInset>
   <AppHeader online={true} />

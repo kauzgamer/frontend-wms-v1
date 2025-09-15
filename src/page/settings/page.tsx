@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 
 export default function SettingsPage() {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <AppSidebar />
       <SidebarInset>
         <AppHeader />
