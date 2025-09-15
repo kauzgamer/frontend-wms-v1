@@ -13,11 +13,13 @@ import {
   Activity,
   Factory,
   Settings2,
+  ArrowRightFromLine,
+  ArrowLeftToLine,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
-import { NavUser } from "@/components/nav-user"
+// import { NavUser } from "@/components/nav-user"
 // import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
@@ -26,7 +28,9 @@ import {
   SidebarHeader,
   SidebarInput,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
 
 // This is sample data.
 const data = {
@@ -56,6 +60,7 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { state, toggleSidebar } = useSidebar()
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -72,7 +77,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <div className="flex items-center justify-between px-2 py-1">
+          <span className="text-xs text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
+            {state === "collapsed" ? "Expandir" : "Encolher"}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={state === "collapsed" ? "Expandir sidebar" : "Encolher sidebar"}
+            onClick={toggleSidebar}
+            className="size-8"
+          >
+            {state === "collapsed" ? (
+              <ArrowRightFromLine className="size-4" />
+            ) : (
+              <ArrowLeftToLine className="size-4" />
+            )}
+          </Button>
+        </div>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
