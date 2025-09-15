@@ -15,6 +15,7 @@ import {
   Settings2,
   ArrowRightFromLine,
   ArrowLeftToLine,
+  Home,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -43,7 +44,9 @@ const data = {
     { name: "WMS", logo: Settings2, plan: "Prod" },
   ],
   navMain: [
-    { title: "Estoque", url: "#", icon: Boxes, isActive: true },
+    { title: "Início", url: "#", icon: Home, isActive: true },
+    { title: "Configurações", url: "#", icon: Settings2 },
+    { title: "Estoque", url: "#", icon: Boxes },
     { title: "Recebimento", url: "#", icon: PackagePlus },
     { title: "Expedição", url: "#", icon: Truck },
     { title: "Inventário", url: "#", icon: ClipboardList },

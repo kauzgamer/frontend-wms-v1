@@ -70,12 +70,14 @@ export function NavMain({
               }
             >
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
+                <SidebarMenuButton isActive={item.isActive} tooltip={item.title}>
                   {item.icon && <item.icon />}
                   <span className={collapsed ? "text-[10px] leading-4 max-w-[3.25rem] text-center block" : undefined}>
                     {collapsed ? (abbr[item.title] ?? item.title.slice(0, 6)) : item.title}
                   </span>
-                  <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 keep-size group-data-[collapsible=icon]:hidden" />
+                  {(item.title === "Atividades" || item.title === "Manufatura") && (
+                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 keep-size group-data-[collapsible=icon]:hidden" />
+                  )}
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
