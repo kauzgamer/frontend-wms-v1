@@ -1,4 +1,3 @@
-import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -15,7 +14,6 @@ export type AppHeaderProps = { online?: boolean }
 export function AppHeader({ online = true }: AppHeaderProps) {
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 px-4">
-      <Separator orientation="vertical" className="mr-2 hidden sm:block data-[orientation=vertical]:h-4" />
       <span className="text-sm text-muted-foreground">WMS - INDUSTRIA E COM SANTA MARIA LTDA</span>
 
       <div className="ml-auto flex items-center gap-3">
