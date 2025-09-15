@@ -1,9 +1,15 @@
 import DashboardPage from "@/page/dashboard/page"
-// import SettingsPage from "@/page/settings/page"
+import SettingsPage from "@/page/settings/page"
+import { Routes, Route, Navigate } from "react-router-dom"
 
 function App() {
-  // Troque para <SettingsPage /> para ver a página de Configurações
-  return <DashboardPage />
+  return (
+    <Routes>
+      <Route path="/" element={<DashboardPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
 }
 
 export default App
