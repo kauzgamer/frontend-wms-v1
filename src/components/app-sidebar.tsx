@@ -68,7 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <svg
             viewBox="0 0 24 24"
             aria-hidden="true"
-            className="v-align-middle text-sidebar-foreground/90 size-8 group-data-[collapsible=icon]:size-10"
+            className="v-align-middle text-sidebar-foreground/90 size-8 group-data-[collapsible=icon]:size-9"
           >
             <path
               fill="currentColor"
