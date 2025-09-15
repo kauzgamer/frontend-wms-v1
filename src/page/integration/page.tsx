@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RefreshCcw, Filter, Download } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
-import { withPageLoader } from "@/components/with-page-loader"
 
 interface Transaction {
   id: string
@@ -167,5 +166,4 @@ export function IntegrationPage() {
   )
 }
 
-const IntegrationPageWithLoader = withPageLoader(IntegrationPage, { minDelay: 500 })
-export default IntegrationPageWithLoader
+export default IntegrationPage

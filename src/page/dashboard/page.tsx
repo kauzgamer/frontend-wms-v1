@@ -1,5 +1,4 @@
 import { AppSidebar } from "@/components/app-sidebar"
-import { withPageLoader } from "@/components/with-page-loader"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Smartphone, Printer } from "lucide-react"
@@ -53,5 +52,4 @@ export function DashboardPage() {
   )
 }
 
-const DashboardPageWithLoader = withPageLoader(DashboardPage, { minDelay: 500 })
-export default DashboardPageWithLoader
+export default DashboardPage
