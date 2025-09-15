@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RefreshCcw, Filter, Download } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
+import { withPageLoader } from "@/components/with-page-loader"
 
 interface Transaction {
   id: string
@@ -34,7 +35,7 @@ function generateMock(count = 0): Transaction[] {
   return base
 }
 
-export default function IntegrationPage() {
+export function IntegrationPage() {
   const [all, setAll] = useState<Transaction[]>(() => generateMock(0))
   const [filterKey, setFilterKey] = useState("")
   const [visible, setVisible] = useState(10)
@@ -165,3 +166,6 @@ export default function IntegrationPage() {
     </SidebarProvider>
   )
 }
+
+const IntegrationPageWithLoader = withPageLoader(IntegrationPage, { minDelay: 500 })
+export default IntegrationPageWithLoader

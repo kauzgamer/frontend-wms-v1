@@ -2,8 +2,9 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { AppHeader } from "@/components/app-header"
 import { Card } from "@/components/ui/card"
+import { withPageLoader } from "@/components/with-page-loader"
 
-export default function SettingsPage() {
+export function SettingsPage() {
   return (
     <SidebarProvider defaultOpen={false}>
       <AppSidebar />
@@ -30,3 +31,6 @@ export default function SettingsPage() {
     </SidebarProvider>
   )
 }
+
+const SettingsPageWithLoader = withPageLoader(SettingsPage, { minDelay: 500 })
+export default SettingsPageWithLoader
