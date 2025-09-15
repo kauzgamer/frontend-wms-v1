@@ -100,12 +100,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             size="icon"
             aria-label={state === "collapsed" ? "Expandir sidebar" : "Encolher sidebar"}
             onClick={toggleSidebar}
-            className="size-8"
+            className="size-8 hover:bg-transparent"
           >
             {state === "collapsed" ? (
-              <ArrowRightFromLine className="size-4" />
+              <ArrowRightFromLine className="size-4 text-sidebar-foreground" />
             ) : (
-              <ArrowLeftToLine className="size-4" />
+              <ArrowLeftToLine className="size-4 text-sidebar-foreground" />
             )}
           </Button>
         </div>
