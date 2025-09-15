@@ -4,7 +4,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Smartphone, Printer, Search, Bell, SunMedium, Settings } from "lucide-react"
+import { Smartphone, Printer, Bell, SunMedium, Settings } from "lucide-react"
 import QRCode from "react-qr-code"
 
 export default function Page() {
@@ -20,20 +20,8 @@ export default function Page() {
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 hidden sm:block data-[orientation=vertical]:h-4" />
 
-          {/* Busca */}
-          <div className="flex w-full max-w-xl items-center gap-2">
-            <div className="bg-background ring-border/60 text-muted-foreground focus-within:ring-ring/60 relative flex w-full items-center gap-2 rounded-xl border px-3 py-2 shadow-sm transition focus-within:ring-2">
-              <Search className="size-4" />
-              <input
-                placeholder="Search..."
-                className="placeholder:text-muted-foreground/70 text-foreground w-full bg-transparent outline-none"
-              />
-              <kbd className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[10px] font-medium">Ctrl K</kbd>
-            </div>
-          </div>
-
           {/* Ações à direita */}
-          <div className="ml-auto flex items-center gap-4 pl-2">
+          <div className="ml-auto flex items-center gap-4">
             <span className="bg-red-500 inline-block size-2 rounded-full" aria-hidden />
             <button aria-label="Notificações" className="text-foreground/80 hover:text-foreground transition">
               <Bell className="size-5" />
