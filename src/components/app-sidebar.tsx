@@ -29,8 +29,8 @@ import {
   SidebarHeader,
   SidebarInput,
   SidebarRail,
-  useSidebar,
 } from "@/components/ui/sidebar"
+import { useSidebar } from "@/components/ui/use-sidebar"
 import { Button } from "@/components/ui/button"
 
 // This is sample data.
