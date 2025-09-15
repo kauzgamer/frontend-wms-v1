@@ -1,11 +1,9 @@
 import { AppSidebar } from "@/components/app-sidebar"
-import { Separator } from "@/components/ui/separator"
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { Badge } from "@/components/ui/badge"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Smartphone, Printer, Bell, SunMedium, Settings } from "lucide-react"
+import { Smartphone, Printer } from "lucide-react"
 import QRCode from "react-qr-code"
+import { AppHeader } from "@/components/app-header"
 
 export default function Page() {
   const userName = "Luimá Almeida"
@@ -16,39 +14,14 @@ export default function Page() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 hidden sm:block data-[orientation=vertical]:h-4" />
-
-          {/* Ações à direita */}
-          <div className="ml-auto flex items-center gap-4">
-            <span className="bg-red-500 inline-block size-2 rounded-full" aria-hidden />
-            <button aria-label="Notificações" className="text-foreground/80 hover:text-foreground transition">
-              <Bell className="size-5" />
-            </button>
-            <button aria-label="Tema" className="text-foreground/80 hover:text-foreground transition">
-              <SunMedium className="size-5" />
-            </button>
-            <button aria-label="Configurações" className="text-foreground/80 hover:text-foreground transition">
-              <Settings className="size-5" />
-            </button>
-            <Separator orientation="vertical" className="hidden h-6 sm:block" />
-            <Avatar className="size-8">
-              <AvatarImage src="https://i.pravatar.cc/64" alt={userName} />
-              <AvatarFallback>LA</AvatarFallback>
-            </Avatar>
-          </div>
-        </header>
+  <AppHeader online={true} />
 
         <div className="flex flex-1 flex-col gap-4 p-6 pt-4">
           {/* Saudação no conteúdo (não no header) */}
           <div>
             <span className="text-sm text-muted-foreground">{orgName}</span>
             <h1 className="text-2xl font-semibold leading-tight">Olá, {userName}</h1>
-            <div className="mt-2 flex items-center gap-2">
-              <Badge variant="outline">Integração Nativa</Badge>
-              <Badge variant="success">Online</Badge>
-            </div>
+            {/* Badges movidos para o header */}
           </div>
           <div className="max-w-xl">
             <Card>
