@@ -6,6 +6,7 @@ import { useIsFetching } from '@tanstack/react-query'
 const DashboardPage = lazy(() => import("@/page/dashboard/page"))
 const SettingsPage = lazy(() => import("@/page/settings/page"))
 const IntegrationPage = lazy(() => import("@/page/integration/page"))
+const IntegrationSettingsPage = lazy(() => import("@/page/integration/settings/page"))
 
 // Global route change overlay spinner
 function GlobalRouteLoader({ minDuration = 300 }: { minDuration?: number }) {
@@ -42,7 +43,8 @@ function App() {
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/integration" element={<IntegrationPage />} />
+  <Route path="/integration" element={<IntegrationPage />} />
+  <Route path="/integration/settings" element={<IntegrationSettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

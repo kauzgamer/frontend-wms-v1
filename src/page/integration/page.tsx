@@ -3,7 +3,9 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppHeader } from "@/components/app-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { RefreshCcw, Filter, Download } from "lucide-react"
+import { RefreshCcw, Filter, Download, Settings, HomeIcon } from "lucide-react"
+import { Link, useNavigate } from 'react-router-dom'
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { useMemo, useState } from "react"
 import { useQuery } from '@tanstack/react-query'
 import { fetchIntegrationTransactions } from '@/lib/api/integration'
@@ -28,6 +30,7 @@ export function IntegrationPage() {
   const failedToday = filtered.filter(t => t.status === 'failed').length
   const quarantine15 = filtered.filter(t => t.status === 'quarantine').length
 
+  const navigate = useNavigate()
   const refresh = () => refetch()
 
   return (
@@ -38,6 +41,24 @@ export function IntegrationPage() {
         <div className="flex flex-1 flex-col gap-6 p-6 pt-4">
           <div>
             <h1 className="text-2xl font-semibold leading-tight">Monitor de transações</h1>
+            <div className="mt-2">
+              <Breadcrumb>
+                <BreadcrumbList className="bg-background rounded-md border px-3 py-2 shadow-xs">
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to="/">
+                        <HomeIcon size={16} aria-hidden="true" />
+                        <span className="sr-only">Home</span>
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Integração</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
           </div>
 
           {/* Stats */}
@@ -67,6 +88,9 @@ export function IntegrationPage() {
             <span className="text-muted-foreground">Atualizado em: {new Date(dataUpdatedAt || Date.now()).toLocaleString()}</span>
             <Button variant="ghost" size="sm" onClick={refresh} className="h-7 px-2" disabled={isLoading}>
               <RefreshCcw className={"size-4" + (isFetching ? " animate-spin" : "")} />
+            </Button>
+            <Button variant="outline" size="sm" className="h-8" onClick={() => navigate('/integration/settings')}>
+              <Settings className="size-4" /> Configurações
             </Button>
             <div className="ml-auto flex items-center gap-2">
               <Button variant="outline" size="sm" className="h-8">
