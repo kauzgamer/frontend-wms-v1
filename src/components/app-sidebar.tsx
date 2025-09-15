@@ -76,7 +76,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
         <NavProjects projects={data.projects} />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="border-t border-sidebar-border/60">
         <div className="flex items-center justify-between px-2 py-1">
           <span className="text-xs text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden">
             {state === "collapsed" ? "Expandir" : "Encolher"}
