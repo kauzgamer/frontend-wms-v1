@@ -67,3 +67,9 @@ export default tseslint.config([
   },
 ])
 ```
+
+# Páginas
+- Dashboard: `src/page/dashboard/page.tsx`
+- Configurações: `src/page/settings/page.tsx`
+
+Para alternar a página inicial, edite `src/App.tsx` e troque `<DashboardPage />` por `<SettingsPage />`.
