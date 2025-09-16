@@ -1,20 +1,12 @@
-import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Smartphone, Printer } from "lucide-react"
 import QRCode from "react-qr-code"
-import { AppHeader } from "@/components/app-header"
 
 export function DashboardPage() {
   const userName = "Luimá Almeida"
   const qrValue = "wms://setup?org=1&env=prod"
 
   return (
-    <SidebarProvider defaultOpen={false}>
-      <AppSidebar />
-      <SidebarInset>
-  <AppHeader online={true} />
-
         <div className="flex flex-1 flex-col gap-4 p-6 pt-4">
           {/* Saudação no conteúdo (não no header) */}
           <div>
@@ -47,8 +39,6 @@ export function DashboardPage() {
             </Card>
           </div>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
   )
 }
 

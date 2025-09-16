@@ -1,6 +1,3 @@
-import { AppSidebar } from '@/components/app-sidebar'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
-import { AppHeader } from '@/components/app-header'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, HomeIcon } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -27,10 +24,6 @@ export function IntegrationSettingsPage() {
   const navigate = useNavigate()
 
   return (
-    <SidebarProvider defaultOpen={false}>
-      <AppSidebar />
-      <SidebarInset>
-        <AppHeader />
         <div className="flex flex-1 flex-col gap-6 p-6 pt-4">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -77,8 +70,6 @@ export function IntegrationSettingsPage() {
             </ul>
           </div>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
   )
 }
 

@@ -1,6 +1,3 @@
-import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { AppHeader } from "@/components/app-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { RefreshCcw, Filter, Download, Settings, HomeIcon } from "lucide-react"
@@ -34,10 +31,6 @@ export function IntegrationPage() {
   const refresh = () => refetch()
 
   return (
-    <SidebarProvider defaultOpen={false}>
-      <AppSidebar />
-      <SidebarInset>
-        <AppHeader />
         <div className="flex flex-1 flex-col gap-6 p-6 pt-4">
           <div>
             <h1 className="text-2xl font-semibold leading-tight">Monitor de transações</h1>
@@ -176,8 +169,6 @@ export function IntegrationPage() {
             </div>
           </div>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
   )
 }
 
