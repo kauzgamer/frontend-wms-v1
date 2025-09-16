@@ -1,33 +1,89 @@
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { AppHeader } from "@/components/app-header"
 import { Card } from "@/components/ui/card"
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
+import { HomeIcon, Workflow, Warehouse, MapPinned, Component as StructureIcon, ListChecks, Users } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export function SettingsPage() {
   return (
-    <SidebarProvider defaultOpen={false}>
-      <AppSidebar />
-      <SidebarInset>
-        <AppHeader />
-        <div className="p-4 md:p-6 space-y-4">
-          <h1 className="text-xl font-semibold text-sidebar-accent-foreground">Configurações</h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            <Card className="p-4">
-              <h2 className="text-sm font-medium mb-2">Preferências</h2>
-              <p className="text-sm text-sidebar-foreground/80">Idioma, tema e outras preferências da interface.</p>
-            </Card>
-            <Card className="p-4">
-              <h2 className="text-sm font-medium mb-2">Integrações</h2>
-              <p className="text-sm text-sidebar-foreground/80">Gerencie conexões com serviços externos.</p>
-            </Card>
-            <Card className="p-4">
-              <h2 className="text-sm font-medium mb-2">Notificações</h2>
-              <p className="text-sm text-sidebar-foreground/80">Configure alertas e preferências de notificação.</p>
-            </Card>
+    <div className="flex flex-1 flex-col gap-6 p-6 pt-4">
+      <div>
+        <Breadcrumb>
+          <BreadcrumbList className="bg-background rounded-md border px-3 py-2 shadow-xs">
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/">
+                  <HomeIcon size={16} aria-hidden="true" />
+                  <span className="sr-only">Home</span>
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Configurador</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
+      <h1 className="text-3xl font-semibold leading-tight">Configurador WMS</h1>
+
+      {/* Feature cards */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-6">
+        <Card className="p-4 flex flex-col items-center gap-3 text-center cursor-pointer hover:shadow-sm transition">
+          <Workflow className="size-8" style={{ color: '#65bfd6' }} />
+          <span className="text-sm font-medium">Fluxo de processos</span>
+        </Card>
+        <Card className="p-4 flex flex-col items-center gap-3 text-center cursor-pointer hover:shadow-sm transition">
+          <Warehouse className="size-8" style={{ color: '#65bfd6' }} />
+          <span className="text-sm font-medium">Depósito</span>
+        </Card>
+        <Card className="p-4 flex flex-col items-center gap-3 text-center cursor-pointer hover:shadow-sm transition">
+          <MapPinned className="size-8" style={{ color: '#65bfd6' }} />
+          <span className="text-sm font-medium">Endereços</span>
+        </Card>
+        <Card className="p-4 flex flex-col items-center gap-3 text-center cursor-pointer hover:shadow-sm transition">
+          <StructureIcon className="size-8" style={{ color: '#65bfd6' }} />
+          <span className="text-sm font-medium">Estrutura física</span>
+        </Card>
+        <Card className="p-4 flex flex-col items-center gap-3 text-center cursor-pointer hover:shadow-sm transition">
+          <ListChecks className="size-8" style={{ color: '#65bfd6' }} />
+          <span className="text-sm font-medium">Grupo de atividade</span>
+        </Card>
+        <Card className="p-4 flex flex-col items-center gap-3 text-center cursor-pointer hover:shadow-sm transition">
+          <Users className="size-8" style={{ color: '#65bfd6' }} />
+          <span className="text-sm font-medium">Usuários</span>
+        </Card>
+      </div>
+
+      {/* Cadastros list */}
+      <Card className="p-0 overflow-hidden">
+        <div className="p-4 border-b">
+          <h2 className="text-base font-semibold">Cadastros (11)</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Selecione a rotina de Cadastros na lista abaixo:</p>
+        </div>
+        <div className="p-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-2 text-sm py-4 px-4">
+            <div className="space-y-2">
+              <button className="text-left w-full hover:underline">Produto/SKU</button>
+              <button className="text-left w-full hover:underline">Características de estoque</button>
+              <button className="text-left w-full hover:underline">Categoria de produto</button>
+              <button className="text-left w-full hover:underline">Atributos de estoque</button>
+            </div>
+            <div className="space-y-2">
+              <button className="text-left w-full hover:underline">Fornecedor</button>
+              <button className="text-left w-full hover:underline">Transportadora</button>
+              <button className="text-left w-full hover:underline">Cliente</button>
+              <button className="text-left w-full hover:underline">Kit de produtos</button>
+            </div>
+            <div className="space-y-2">
+              <button className="text-left w-full hover:underline">Grupo de Endereço</button>
+              <button className="text-left w-full hover:underline">Mapeamento de endereço</button>
+              <button className="text-left w-full hover:underline">Tipo de estoque</button>
+            </div>
           </div>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+      </Card>
+    </div>
   )
 }
 
