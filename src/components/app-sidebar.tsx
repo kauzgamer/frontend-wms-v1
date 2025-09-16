@@ -65,22 +65,53 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state, toggleSidebar } = useSidebar()
   const sidebarContentRef = React.useRef<HTMLDivElement>(null)
+  const restoringRef = React.useRef(true)
 
-  // Restore scroll position on mount
+  // Restore scroll position on mount (after first paint)
   React.useEffect(() => {
-    const savedScrollTop = localStorage.getItem('sidebar-scroll-position')
-    if (savedScrollTop && sidebarContentRef.current) {
-      sidebarContentRef.current.scrollTop = parseInt(savedScrollTop, 10)
+    const saved = localStorage.getItem('sidebar-scroll-position')
+    if (!saved) {
+      restoringRef.current = false
+      return
     }
+    const value = parseInt(saved, 10)
+    const el = sidebarContentRef.current
+    if (!el) {
+      restoringRef.current = false
+      return
+    }
+    let attempts = 0
+    const maxAttempts = 10
+    const tryRestore = () => {
+      attempts += 1
+      // Ensure content is large enough to scroll to target
+      if (el.scrollHeight > el.clientHeight || attempts >= maxAttempts) {
+        el.scrollTop = value
+        restoringRef.current = false
+      } else {
+        requestAnimationFrame(tryRestore)
+      }
+    }
+    requestAnimationFrame(tryRestore)
   }, [])
 
-  // Save scroll position on unmount
+  // Save scroll position on scroll, before unload, and on unmount
   React.useEffect(() => {
-    const currentRef = sidebarContentRef.current
+    const el = sidebarContentRef.current
+    if (!el) return
+
+    const save = () => {
+      if (restoringRef.current) return
+      localStorage.setItem('sidebar-scroll-position', el.scrollTop.toString())
+    }
+
+    el.addEventListener('scroll', save, { passive: true })
+    window.addEventListener('beforeunload', save)
+
     return () => {
-      if (currentRef) {
-        localStorage.setItem('sidebar-scroll-position', currentRef.scrollTop.toString())
-      }
+      el.removeEventListener('scroll', save)
+      window.removeEventListener('beforeunload', save)
+      save()
     }
   }, [])
 

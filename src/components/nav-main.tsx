@@ -67,7 +67,15 @@ export function NavMain({
                 className={`${active ? "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-sidebar-primary" : ""} -mx-2 border-b border-sidebar-border/60 border-x-transparent`}
               >
                 <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
-                  <Link to={item.url}>
+                  <Link
+                    to={item.url}
+                    onClick={() => {
+                      const scroller = document.querySelector('[data-sidebar="content"]') as HTMLElement | null
+                      if (scroller) {
+                        localStorage.setItem('sidebar-scroll-position', scroller.scrollTop.toString())
+                      }
+                    }}
+                  >
                     {item.icon && <item.icon />}
                     <span className={collapsed ? "text-[10px] leading-4 max-w-[3.25rem] text-center block" : undefined}>
                       {collapsed ? (abbr[item.title] ?? item.title.slice(0, 6)) : item.title}
@@ -99,7 +107,15 @@ export function NavMain({
                     {item.items?.map((subItem) => (
                       <SidebarMenuSubItem key={subItem.title}>
                         <SidebarMenuSubButton asChild>
-                          <Link to={subItem.url}>
+                          <Link
+                            to={subItem.url}
+                            onClick={() => {
+                              const scroller = document.querySelector('[data-sidebar="content"]') as HTMLElement | null
+                              if (scroller) {
+                                localStorage.setItem('sidebar-scroll-position', scroller.scrollTop.toString())
+                              }
+                            }}
+                          >
                             <span>{subItem.title}</span>
                           </Link>
                         </SidebarMenuSubButton>
