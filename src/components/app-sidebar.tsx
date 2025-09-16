@@ -64,6 +64,26 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state, toggleSidebar } = useSidebar()
+  const sidebarContentRef = React.useRef<HTMLDivElement>(null)
+
+  // Restore scroll position on mount
+  React.useEffect(() => {
+    const savedScrollTop = localStorage.getItem('sidebar-scroll-position')
+    if (savedScrollTop && sidebarContentRef.current) {
+      sidebarContentRef.current.scrollTop = parseInt(savedScrollTop, 10)
+    }
+  }, [])
+
+  // Save scroll position on unmount
+  React.useEffect(() => {
+    const currentRef = sidebarContentRef.current
+    return () => {
+      if (currentRef) {
+        localStorage.setItem('sidebar-scroll-position', currentRef.scrollTop.toString())
+      }
+    }
+  }, [])
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -84,7 +104,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarInput placeholder="Pesquisar" className="group-data-[collapsible=icon]:hidden" />
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent ref={sidebarContentRef}>
         <NavMain items={data.navMain} />
         <NavProjects projects={data.projects} />
       </SidebarContent>
