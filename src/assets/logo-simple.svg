@@ -1,0 +1,5 @@
+<svg width="140" height="40" viewBox="0 0 140 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="40" height="40" rx="8" fill="#0c9abe"/>
+  <path d="M12 20c0-4.418 3.582-8 8-8h0c1.657 0 3 1.343 3 3v10c0 1.657-1.343 3-3 3h0c-4.418 0-8-3.582-8-8Z" fill="white"/>
+  <text x="50" y="26" font-family="system-ui, Arial" font-size="18" font-weight="700" fill="#0c5669">WMS</text>
+</svg>

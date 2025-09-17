@@ -12,6 +12,7 @@ const UsuariosPage = lazy(() => import("@/page/settings/usuarios/page"))
 const IntegrationPage = lazy(() => import("@/page/integration/page"))
 const IntegrationSettingsPage = lazy(() => import("@/page/integration/settings/page"))
 const OrganizacaoIntegrationPage = lazy(() => import("@/page/integration/settings/organizacao/page"))
+const LoginPage = lazy(() => import("@/page/login/page"))
 
 // Global route change overlay spinner
 function GlobalRouteLoader({ minDuration = 300 }: { minDuration?: number }) {
@@ -71,6 +72,7 @@ function App() {
     <Suspense fallback={<div className="fixed inset-0 z-40 pointer-events-none"><div className="absolute top-4 right-4"><FullPageSpinner className="w-8 h-8" /></div></div>}>
       <GlobalRouteLoader />
       <Routes>
+        <Route path="/login" element={<LoginPage />} />
         <Route element={<SidebarLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/settings" element={<SettingsPage />} />
