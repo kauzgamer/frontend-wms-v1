@@ -51,10 +51,12 @@ export function SettingsPage() {
     <ListChecks className="size-9" style={{ color: '#0c9abe' }} />
           <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Grupo de atividade</span>
         </Card>
-  <Card className="aspect-[6/5] flex flex-col items-center justify-center gap-2 text-center cursor-pointer hover:shadow-sm transition p-4">
-    <Users className="size-9" style={{ color: '#0c9abe' }} />
-          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Usuários</span>
-        </Card>
+  <Link to="/settings/usuarios" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0c9abe] rounded-md">
+    <Card className="aspect-[6/5] flex flex-col items-center justify-center gap-2 text-center cursor-pointer hover:shadow-sm transition p-4">
+      <Users className="size-9" style={{ color: '#0c9abe' }} />
+      <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Usuários</span>
+    </Card>
+  </Link>
       </div>
 
       {/* Cadastros list */}
