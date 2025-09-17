@@ -12,4 +12,13 @@ export default defineConfig({
       '@': path.resolve(fileURLToPath(new URL('.', import.meta.url)), './src'),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
+  },
 })

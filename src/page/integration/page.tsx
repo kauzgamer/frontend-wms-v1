@@ -12,7 +12,7 @@ export function IntegrationPage() {
   // Query remote (mock) data
   const { data: all = [], isFetching, isLoading, isError, error, refetch, dataUpdatedAt } = useQuery({
     queryKey: ['integration','transactions'],
-    queryFn: () => fetchIntegrationTransactions(42, 800),
+    queryFn: () => fetchIntegrationTransactions(),
     staleTime: 30_000,
   })
 

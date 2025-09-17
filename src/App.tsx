@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useState } from "react"
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
 import { FullPageSpinner } from "@/components/full-page-spinner"
 import { useIsFetching } from '@tanstack/react-query'
+import { ProtectedRoute } from "@/components/protected-route"
 import SidebarLayout from "@/layouts/sidebar-layout"
 
 const DashboardPage = lazy(() => import("@/page/dashboard/page"))
@@ -72,9 +73,10 @@ function App() {
     <Suspense fallback={<div className="fixed inset-0 z-40 pointer-events-none"><div className="absolute top-4 right-4"><FullPageSpinner className="w-8 h-8" /></div></div>}>
       <GlobalRouteLoader />
       <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route element={<SidebarLayout />}>
-          <Route path="/" element={<DashboardPage />} />
+        <Route element={<ProtectedRoute><SidebarLayout /></ProtectedRoute>}>
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/fluxos" element={<FluxosPage />} />
           <Route path="/settings/deposito" element={<DepositoPage />} />
@@ -83,7 +85,7 @@ function App() {
           <Route path="/integration/settings" element={<IntegrationSettingsPage />} />
           <Route path="/integration/settings/organizacao" element={<OrganizacaoIntegrationPage />} />
         </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Suspense>
   )

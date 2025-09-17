@@ -1,22 +1,38 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { User, Lock } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
 import logo from '@/assets/logo-simple.svg'
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const [login, setLogin] = useState('')
+  const location = useLocation()
+  const { login } = useAuth()
+  const [loginValue, setLoginValue] = useState('')
   const [senha, setSenha] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const versao = '1.0.0'
+
+  // Get the intended destination
+  const from = location.state?.from?.pathname || '/dashboard'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (loading) return
+
     setLoading(true)
-    await new Promise(r => setTimeout(r, 600))
-    // mock auth success
-    navigate('/')
+    setError('')
+
+    try {
+      await login(loginValue, senha)
+      // Redirect to intended page or dashboard
+      navigate(from, { replace: true })
+    } catch (err) {
+      setError('Credenciais inválidas. Tente novamente.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -32,8 +48,8 @@ export function LoginPage() {
             <User className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#0790a8]" />
             <input
               placeholder="Inserir seu login"
-              value={login}
-              onChange={e => setLogin(e.target.value)}
+              value={loginValue}
+              onChange={e => setLoginValue(e.target.value)}
               className="w-full h-10 pl-9 pr-3 rounded border text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
             />
           </div>
@@ -47,9 +63,14 @@ export function LoginPage() {
               className="w-full h-10 pl-9 pr-3 rounded border text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
             />
           </div>
+          {error && (
+            <div className="text-red-600 text-sm text-center">
+              {error}
+            </div>
+          )}
           <button
             type="submit"
-            disabled={loading || !login || !senha}
+            disabled={loading || !loginValue || !senha}
             className="h-10 rounded bg-[#008bb1] hover:bg-[#007697] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm shadow-sm transition"
           >
             {loading ? 'Entrando...' : 'Entrar'}
