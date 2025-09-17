@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { z } from 'zod'
 
 interface User {
-  id: string
   email: string
   name: string
   provider: string
+  providerId: string
+  picture?: string
 }
 
 interface AuthContextType {
@@ -63,7 +65,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       const data = await response.json()
-      const { access_token, user: userData } = data
+
+      // Validate response structure
+      const loginResponseSchema = z.object({
+        access_token: z.string().min(10),
+        user: z.object({
+          email: z.string().email(),
+          name: z.string().min(1),
+          provider: z.string(),
+          providerId: z.string(),
+          picture: z.string().url().optional().or(z.literal('').optional()),
+        }),
+      })
+
+      const parsed = loginResponseSchema.safeParse(data)
+      if (!parsed.success) {
+        throw new Error('Invalid response format')
+      }
+
+      const { access_token, user: userData } = parsed.data
 
       setToken(access_token)
       setUser(userData)

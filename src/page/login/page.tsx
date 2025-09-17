@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { User, Lock } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { frontendLoginSchema } from '@/lib/validation/auth'
 import logo from '@/assets/logo-simple.svg'
 
 export function LoginPage() {
@@ -25,10 +26,17 @@ export function LoginPage() {
     setError('')
 
     try {
-      await login(loginValue, senha)
+      // Validate with zod
+      const parsed = frontendLoginSchema.safeParse({ email: loginValue, password: senha })
+      if (!parsed.success) {
+        setError(parsed.error.issues.map(issue => issue.message).join('\n'))
+        setLoading(false)
+        return
+      }
+      await login(parsed.data.email, parsed.data.password)
       // Redirect to intended page or dashboard
       navigate(from, { replace: true })
-    } catch (err) {
+    } catch {
       setError('Credenciais inválidas. Tente novamente.')
     } finally {
       setLoading(false)
