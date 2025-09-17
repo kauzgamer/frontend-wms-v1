@@ -124,7 +124,8 @@ export function FluxosPage() {
                         aria-haspopup="menu"
                         aria-expanded={isOpen}
                         onClick={() => setOpenId(isOpen ? null : item.id)}
-                        className="px-2 py-1 rounded hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                        className="px-2.5 py-1.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-[#0c9abe] text-[#0c9abe] hover:bg-[#e3f5f9] font-bold text-lg leading-none"
+                        style={{letterSpacing:'2px'}}
                       >
                         ...
                       </button>
