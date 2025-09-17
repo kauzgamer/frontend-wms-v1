@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { HomeIcon, Plus, Filter, Search, FileSpreadsheet, Maximize2 } from 'lucide-react'
+import { HomeIcon, Plus, Filter, Search, FileSpreadsheet, Maximize2, Check, X, Plus as PlusSmall } from 'lucide-react'
 
 interface DepositoItem {
   id: string
@@ -18,9 +18,12 @@ const MOCK_DATA: DepositoItem[] = [
 
 export function DepositoPage() {
   const navigate = useNavigate()
-  const [itens] = useState(MOCK_DATA)
+  const [itens, setItens] = useState<DepositoItem[]>(MOCK_DATA)
   const [openId, setOpenId] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [descricao, setDescricao] = useState("")
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -30,6 +33,42 @@ export function DepositoPage() {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [openId])
+
+  useEffect(() => {
+    if (creating) {
+      // focus input next tick
+      setTimeout(() => inputRef.current?.focus(), 0)
+    }
+  }, [creating])
+
+  function startCreate() {
+    if (!creating) {
+      setDescricao("")
+      setCreating(true)
+    }
+  }
+
+  function cancelCreate() {
+    setCreating(false)
+    setDescricao("")
+  }
+
+  function saveCreate(addAnother?: boolean) {
+    const desc = descricao.trim()
+    if (!desc) return
+    const newItem: DepositoItem = {
+      id: (Math.random()*1e9).toFixed(0),
+      descricao: desc.toUpperCase(),
+      situacao: 'ATIVO'
+    }
+    setItens(prev => [newItem, ...prev])
+    if (addAnother) {
+      setDescricao("")
+      inputRef.current?.focus()
+    } else {
+      setCreating(false)
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 pt-4">
@@ -63,7 +102,7 @@ export function DepositoPage() {
       <Card className="p-0 overflow-hidden border">
         {/* Top control bar */}
         <div className="flex items-center gap-4 px-5 py-3 border-b bg-white/60">
-          <Button size="sm" className="bg-[#0082a1] hover:bg-[#006c85] text-white h-9 px-4 text-[13px] font-semibold tracking-wide" onClick={() => {}}>
+          <Button size="sm" className="bg-[#0082a1] hover:bg-[#006c85] text-white h-9 px-4 text-[13px] font-semibold tracking-wide" onClick={startCreate} disabled={creating}>
             <Plus className="size-4 mr-1" /> NOVO DEPÓSITO
           </Button>
           <div className="text-[11px] flex items-center gap-2">
@@ -105,6 +144,52 @@ export function DepositoPage() {
               </tr>
             </thead>
             <tbody>
+              {creating && (
+                <tr className="border-b bg-white relative">
+                  <td className="px-2 align-top border-r py-3">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => saveCreate(false)}
+                        title="Salvar"
+                        className="size-9 rounded-md border flex items-center justify-center text-[#009c80] bg-white hover:bg-[#e3f5f9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0c9abe]"
+                      >
+                        <Check className="size-5" />
+                      </button>
+                      <button
+                        onClick={() => saveCreate(true)}
+                        title="Salvar e adicionar outro"
+                        className="text-[#0c9abe] hover:opacity-80"
+                      >
+                        <PlusSmall className="size-5" />
+                      </button>
+                      <button
+                        onClick={cancelCreate}
+                        title="Cancelar"
+                        className="text-red-600 hover:opacity-80"
+                      >
+                        <X className="size-5" />
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-6 py-3 border-r">
+                    <input
+                      ref={inputRef}
+                      value={descricao}
+                      onChange={e => setDescricao(e.target.value)}
+                      placeholder="Informe a descrição"
+                      className="w-full h-10 rounded border px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe] shadow-sm"
+                    />
+                    {descricao.trim() === '' && (
+                      <p className="text-[10px] text-[#b45309] mt-1">Informe a descrição</p>
+                    )}
+                  </td>
+                  <td className="px-6 py-2">
+                    <div className="flex justify-end">
+                      <span className="inline-flex items-center rounded-sm bg-[#009c80] text-white text-[11px] font-semibold px-4 h-7 leading-none justify-center min-w-32 tracking-wide">ATIVO</span>
+                    </div>
+                  </td>
+                </tr>
+              )}
               {itens.map((item, idx) => {
                 const isOpen = openId === item.id
                 const striped = idx % 2 === 1
