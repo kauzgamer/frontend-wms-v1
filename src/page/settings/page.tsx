@@ -25,33 +25,33 @@ export function SettingsPage() {
         </Breadcrumb>
       </div>
 
-      <h1 className="text-3xl font-semibold leading-tight">Configurador WMS</h1>
+  <h1 className="text-3xl font-semibold leading-tight" style={{ color: '#4a5c60' }}>Configurador WMS</h1>
 
       {/* Feature cards */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-6">
-        <Card className="p-4 flex flex-col items-center gap-3 text-center cursor-pointer hover:shadow-sm transition">
-          <Workflow className="size-8" style={{ color: '#65bfd6' }} />
-          <span className="text-sm font-medium">Fluxo de processos</span>
+      <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-6">
+        <Card className="p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:shadow-sm transition">
+          <Workflow className="size-10" style={{ color: '#65bfd6' }} />
+          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Fluxo de processos</span>
         </Card>
-        <Card className="p-4 flex flex-col items-center gap-3 text-center cursor-pointer hover:shadow-sm transition">
-          <Warehouse className="size-8" style={{ color: '#65bfd6' }} />
-          <span className="text-sm font-medium">Depósito</span>
+        <Card className="p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:shadow-sm transition">
+          <Warehouse className="size-10" style={{ color: '#65bfd6' }} />
+          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Depósito</span>
         </Card>
-        <Card className="p-4 flex flex-col items-center gap-3 text-center cursor-pointer hover:shadow-sm transition">
-          <MapPinned className="size-8" style={{ color: '#65bfd6' }} />
-          <span className="text-sm font-medium">Endereços</span>
+        <Card className="p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:shadow-sm transition">
+          <MapPinned className="size-10" style={{ color: '#65bfd6' }} />
+          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Endereços</span>
         </Card>
-        <Card className="p-4 flex flex-col items-center gap-3 text-center cursor-pointer hover:shadow-sm transition">
-          <StructureIcon className="size-8" style={{ color: '#65bfd6' }} />
-          <span className="text-sm font-medium">Estrutura física</span>
+        <Card className="p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:shadow-sm transition">
+          <StructureIcon className="size-10" style={{ color: '#65bfd6' }} />
+          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Estrutura física</span>
         </Card>
-        <Card className="p-4 flex flex-col items-center gap-3 text-center cursor-pointer hover:shadow-sm transition">
-          <ListChecks className="size-8" style={{ color: '#65bfd6' }} />
-          <span className="text-sm font-medium">Grupo de atividade</span>
+        <Card className="p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:shadow-sm transition">
+          <ListChecks className="size-10" style={{ color: '#65bfd6' }} />
+          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Grupo de atividade</span>
         </Card>
-        <Card className="p-4 flex flex-col items-center gap-3 text-center cursor-pointer hover:shadow-sm transition">
-          <Users className="size-8" style={{ color: '#65bfd6' }} />
-          <span className="text-sm font-medium">Usuários</span>
+        <Card className="p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:shadow-sm transition">
+          <Users className="size-10" style={{ color: '#65bfd6' }} />
+          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Usuários</span>
         </Card>
       </div>
 
