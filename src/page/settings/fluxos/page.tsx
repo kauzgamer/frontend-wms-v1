@@ -154,7 +154,7 @@ export function FluxosPage() {
                       )}
                     </td>
                     <td className="px-6 py-2 font-semibold text-[12.5px] tracking-wide border-r">
-                      <span className="inline-flex items-center gap-2">
+                      <span className="inline-flex items-center gap-2" style={{color:'#4a5c60'}}>
                         {item.descricao}
                         {item.padrao && (
                           <span className="text-[10px] font-semibold rounded-full bg-[#555] text-white px-2 py-[3px] leading-none">PADRÃO</span>
@@ -162,10 +162,10 @@ export function FluxosPage() {
                       </span>
                     </td>
                     <td className="px-6 py-2 border-r">
-                      <span className="inline-flex items-center rounded-sm bg-[#3f3faf] text-white text-[11px] font-semibold px-4 h-6 leading-none justify-center">{item.tipo}</span>
+                      <span className="flex items-center rounded-sm bg-[#3f3faf] text-white text-[11px] font-semibold px-4 h-7 leading-none justify-center w-full tracking-wide" style={{letterSpacing:'0.5px'}}>{item.tipo}</span>
                     </td>
                     <td className="px-6 py-2">
-                      <span className="inline-flex items-center rounded-sm bg-[#009c80] text-white text-[11px] font-semibold px-4 h-6 leading-none justify-center">{item.situacao}</span>
+                      <span className="flex items-center rounded-sm bg-[#009c80] text-white text-[11px] font-semibold px-4 h-7 leading-none justify-center w-full tracking-wide" style={{letterSpacing:'0.5px'}}>{item.situacao}</span>
                     </td>
                     {/* menu removed from right side; only left trigger */}
                   </tr>
