@@ -31,27 +31,27 @@ export function SettingsPage() {
       <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-6">
         <Card className="p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:shadow-sm transition">
           <Workflow className="size-10" style={{ color: '#0c9abe' }} />
-          <span className="text-base font-medium" style={{ color: '#0c9abe' }}>Fluxo de processos</span>
+          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Fluxo de processos</span>
         </Card>
         <Card className="p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:shadow-sm transition">
           <Warehouse className="size-10" style={{ color: '#0c9abe' }} />
-          <span className="text-base font-medium" style={{ color: '#0c9abe' }}>Depósito</span>
+          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Depósito</span>
         </Card>
         <Card className="p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:shadow-sm transition">
           <MapPinned className="size-10" style={{ color: '#0c9abe' }} />
-          <span className="text-base font-medium" style={{ color: '#0c9abe' }}>Endereços</span>
+          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Endereços</span>
         </Card>
         <Card className="p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:shadow-sm transition">
           <StructureIcon className="size-10" style={{ color: '#0c9abe' }} />
-          <span className="text-base font-medium" style={{ color: '#0c9abe' }}>Estrutura física</span>
+          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Estrutura física</span>
         </Card>
         <Card className="p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:shadow-sm transition">
           <ListChecks className="size-10" style={{ color: '#0c9abe' }} />
-          <span className="text-base font-medium" style={{ color: '#0c9abe' }}>Grupo de atividade</span>
+          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Grupo de atividade</span>
         </Card>
         <Card className="p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:shadow-sm transition">
           <Users className="size-10" style={{ color: '#0c9abe' }} />
-          <span className="text-base font-medium" style={{ color: '#0c9abe' }}>Usuários</span>
+          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Usuários</span>
         </Card>
       </div>
 
