@@ -11,7 +11,7 @@ interface ConfigItem {
 }
 
 const configItems: ConfigItem[] = [
-  { id: 'org', title: 'Organização' },
+  { id: 'org', title: 'Organização', path: '/integration/settings/organizacao' },
   { id: 'unified-product', title: 'Produto unificado' },
   { id: 'stock-type', title: 'Tipo de Estoque' },
   { id: 'erp', title: 'Integração ERP' },
@@ -63,8 +63,15 @@ export function IntegrationSettingsPage() {
             </div>
             <ul>
               {configItems.map(item => (
-                <li key={item.id} className="px-6 py-3 border-b last:border-b-0 hover:bg-muted/40 cursor-pointer text-sm">
-                  {item.title}
+                <li
+                  key={item.id}
+                  onClick={() => item.path && navigate(item.path)}
+                  className="px-6 py-3 border-b last:border-b-0 hover:bg-muted/40 cursor-pointer text-sm select-none flex items-center justify-between"
+                  role={item.path ? 'button' : undefined}
+                  aria-label={item.title}
+                >
+                  <span>{item.title}</span>
+                  {item.path && <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Abrir</span>}
                 </li>
               ))}
             </ul>
