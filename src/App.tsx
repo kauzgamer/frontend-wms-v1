@@ -6,6 +6,7 @@ import SidebarLayout from "@/layouts/sidebar-layout"
 
 const DashboardPage = lazy(() => import("@/page/dashboard/page"))
 const SettingsPage = lazy(() => import("@/page/settings/page"))
+const FluxosPage = lazy(() => import("@/page/settings/fluxos/page"))
 const IntegrationPage = lazy(() => import("@/page/integration/page"))
 const IntegrationSettingsPage = lazy(() => import("@/page/integration/settings/page"))
 
@@ -70,6 +71,7 @@ function App() {
         <Route element={<SidebarLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings/fluxos" element={<FluxosPage />} />
           <Route path="/integration" element={<IntegrationPage />} />
           <Route path="/integration/settings" element={<IntegrationSettingsPage />} />
         </Route>
