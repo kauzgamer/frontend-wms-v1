@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from "react"
 import { Routes, Route, Navigate, useLocation } from "react-router-dom"
+import { useAuth } from '@/lib/use-auth'
 import { FullPageSpinner } from "@/components/full-page-spinner"
 import { useIsFetching } from '@tanstack/react-query'
 import { ProtectedRoute } from "@/components/protected-route"
@@ -47,6 +48,7 @@ function GlobalRouteLoader({ minDuration = 300 }: { minDuration?: number }) {
 
 function App() {
   const location = useLocation()
+  const { isAuthenticated } = useAuth()
 
   // After every route change, restore the sidebar scroll position robustly
   useEffect(() => {
@@ -73,7 +75,13 @@ function App() {
     <Suspense fallback={<div className="fixed inset-0 z-40 pointer-events-none"><div className="absolute top-4 right-4"><FullPageSpinner className="w-8 h-8" /></div></div>}>
       <GlobalRouteLoader />
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/*
+          Rota raiz:
+          - Se autenticado envia para /dashboard
+          - Se não autenticado envia para /login
+          Isso evita efeito de "logout" quando o usuário clica em Início (sidebar agora aponta direto para /dashboard).
+        */}
+        <Route path="/" element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route element={<ProtectedRoute><SidebarLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<DashboardPage />} />

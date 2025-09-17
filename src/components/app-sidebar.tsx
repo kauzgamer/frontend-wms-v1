@@ -44,7 +44,7 @@ const data = {
     { name: "WMS", logo: Settings2, plan: "Prod" },
   ],
   navMain: [
-    { title: "Início", url: "/", icon: Home },
+    { title: "Início", url: "/dashboard", icon: Home },
     { title: "Configurações", url: "/settings", icon: Settings2 },
     { title: "Estoque", url: "#", icon: Boxes },
     { title: "Recebimento", url: "#", icon: PackagePlus },

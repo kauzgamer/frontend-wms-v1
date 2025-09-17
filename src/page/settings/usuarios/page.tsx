@@ -1,8 +1,22 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Card } from '@/components/ui/card'
 import { Search, HomeIcon, Plus, Mail, User as UserIcon, MoreVertical } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { apiFetch } from '@/lib/api/client'
+import { useAuth } from '@/lib/use-auth'
+
+interface ApiUser {
+  id: string
+  email: string
+  name: string
+  provider: string
+  providerId: string
+  lastLoginAt?: string
+  createdAt: string
+  updatedAt: string
+}
 
 interface UsuarioItem {
   id: string
@@ -10,28 +24,40 @@ interface UsuarioItem {
   login: string
   email: string
   status: 'ATIVO' | 'INATIVO'
+  lastLoginAt?: string
 }
-
-const MOCK_USERS: UsuarioItem[] = [
-  { id: '1', nome: 'Andre Becker', login: 'andre.becker', email: 'andre.becker@example.com', status: 'ATIVO' },
-  { id: '2', nome: 'Angelo Ricardo', login: 'angelo.ricardo', email: 'angelo.ricardo@example.com', status: 'ATIVO' },
-  { id: '3', nome: 'cs.supply@totvs.com', login: 'admin', email: 'cs.supply@totvs.com', status: 'ATIVO' },
-  { id: '4', nome: 'Gabriel Santos', login: 'gabriel.santos', email: 'gabriel.santos@example.com', status: 'ATIVO' },
-]
 
 export function UsuariosPage() {
   const navigate = useNavigate()
-  const [users] = useState(MOCK_USERS)
+  const { token } = useAuth()
   const [query, setQuery] = useState('')
 
-  const filtered = users.filter(u => {
+  const { data, isLoading, isError, refetch, isFetching } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => apiFetch<ApiUser[]>('/users'),
+    enabled: !!token,
+  })
+
+  const users: UsuarioItem[] = useMemo(() => {
+    if (!data) return []
+    return data.map(u => ({
+      id: u.id,
+      nome: u.name || u.email,
+      login: u.providerId,
+      email: u.email,
+      status: 'ATIVO',
+      lastLoginAt: u.lastLoginAt,
+    }))
+  }, [data])
+
+  const filtered = useMemo(() => {
     const q = query.toLowerCase()
-    return (
+    return users.filter(u =>
       u.nome.toLowerCase().includes(q) ||
       u.login.toLowerCase().includes(q) ||
       u.email.toLowerCase().includes(q)
     )
-  })
+  }, [users, query])
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 pt-4">
@@ -85,6 +111,19 @@ export function UsuariosPage() {
         >
           Voltar
         </button>
+      </div>
+
+      <div className="flex items-center gap-3">
+        {isLoading && <span className="text-sm text-muted-foreground">Carregando usuários...</span>}
+        {isFetching && !isLoading && <span className="text-xs text-muted-foreground">Atualizando...</span>}
+        {isError && (
+          <button onClick={() => refetch()} className="text-sm text-red-600 underline">
+            Erro ao carregar. Tentar novamente
+          </button>
+        )}
+        {!isLoading && !isError && filtered.length === 0 && (
+          <span className="text-sm text-muted-foreground">Nenhum usuário encontrado</span>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 max-w-none">
