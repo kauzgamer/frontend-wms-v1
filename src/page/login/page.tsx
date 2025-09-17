@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { User, Lock } from 'lucide-react'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/lib/use-auth'
 import { frontendLoginSchema } from '@/lib/validation/auth'
 import logo from '@/assets/logo-simple.svg'
 
