@@ -7,6 +7,7 @@ import SidebarLayout from "@/layouts/sidebar-layout"
 const DashboardPage = lazy(() => import("@/page/dashboard/page"))
 const SettingsPage = lazy(() => import("@/page/settings/page"))
 const FluxosPage = lazy(() => import("@/page/settings/fluxos/page"))
+const DepositoPage = lazy(() => import("@/page/settings/deposito/page"))
 const UsuariosPage = lazy(() => import("@/page/settings/usuarios/page"))
 const IntegrationPage = lazy(() => import("@/page/integration/page"))
 const IntegrationSettingsPage = lazy(() => import("@/page/integration/settings/page"))
@@ -74,6 +75,7 @@ function App() {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/fluxos" element={<FluxosPage />} />
+          <Route path="/settings/deposito" element={<DepositoPage />} />
           <Route path="/settings/usuarios" element={<UsuariosPage />} />
           <Route path="/integration" element={<IntegrationPage />} />
           <Route path="/integration/settings" element={<IntegrationSettingsPage />} />
