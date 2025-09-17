@@ -14,7 +14,7 @@ export type AppHeaderProps = { online?: boolean }
 export function AppHeader({ online = true }: AppHeaderProps) {
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 px-4">
-      <span className="text-sm text-muted-foreground">WMS - INDUSTRIA E COM SANTA MARIA LTDA</span>
+  <span className="text-sm font-medium" style={{ color: '#29b6c5' }}>WMS - INDUSTRIA E COM SANTA MARIA LTDA</span>
 
       <div className="ml-auto flex items-center gap-3">
         {online ? (
