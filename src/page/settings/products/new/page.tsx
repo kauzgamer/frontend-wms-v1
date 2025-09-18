@@ -4,6 +4,7 @@ import { HomeIcon } from 'lucide-react'
 import { productCreateSchema, type ProductCreateForm } from '@/lib/validation/product'
 import { useState } from 'react'
 import { MoreHorizontal, Plus, Check, X, Trash2 } from 'lucide-react'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { useCreateProduct } from '@/lib/hooks/use-create-product'
 
 export function NewProductPage() {
@@ -21,15 +22,21 @@ export function NewProductPage() {
   })
   const [errors, setErrors] = useState<string[]>([])
   // SKUs locais enquanto produto não existe no backend (salvamos tudo junto futuramente ou após criação)
-  interface TempSku { id: string; description: string; unitsPerSku: number; fractional: boolean; generatePickingLabel: boolean }
+  interface DimensionsDraft { height?: number; width?: number; length?: number; weight?: number; layers?: number; pallet?: number; volumeM3?: number }
+  interface TempSku { id: string; description: string; unitsPerSku: number; fractional: boolean; generatePickingLabel: boolean; barcodes: string[]; dimensions?: DimensionsDraft }
   const [skus, setSkus] = useState<TempSku[]>([])
   const [addingSku, setAddingSku] = useState(false)
-  const [newSku, setNewSku] = useState<TempSku>({ id: '', description: '', unitsPerSku: 1, fractional: false, generatePickingLabel: false })
+  const [newSku, setNewSku] = useState<TempSku>({ id: '', description: '', unitsPerSku: 1, fractional: false, generatePickingLabel: false, barcodes: [], dimensions: undefined })
   const [openMenuSkuId, setOpenMenuSkuId] = useState<string | null>(null)
+  const [editingSkuId, setEditingSkuId] = useState<string | null>(null)
+  const [editDraft, setEditDraft] = useState<TempSku | null>(null)
+  const [openSkuSheetId, setOpenSkuSheetId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'barcodes' | 'dimensions'>('barcodes')
+  const [barcodeInput, setBarcodeInput] = useState('')
 
   function startAddSku() {
     setAddingSku(true)
-    setNewSku({ id: '', description: '', unitsPerSku: 1, fractional: false, generatePickingLabel: false })
+    setNewSku({ id: '', description: '', unitsPerSku: 1, fractional: false, generatePickingLabel: false, barcodes: [], dimensions: undefined })
   }
   function cancelAddSku() { setAddingSku(false) }
   function confirmAddSku() {
@@ -38,7 +45,70 @@ export function NewProductPage() {
     setAddingSku(false)
   }
   function removeSku(id: string) {
+    // if removing the one being edited reset editing state
     setSkus(prev => prev.filter(s => s.id !== id))
+    if (editingSkuId === id) {
+      setEditingSkuId(null)
+      setEditDraft(null)
+    }
+  }
+
+  function startEditSku(id: string) {
+    const sku = skus.find(s => s.id === id)
+    if (!sku) return
+    setEditingSkuId(id)
+    setEditDraft({ ...sku })
+    setOpenMenuSkuId(null)
+  }
+
+  function cancelEditSku() {
+    setEditingSkuId(null)
+    setEditDraft(null)
+  }
+
+  function confirmEditSku() {
+    if (!editingSkuId || !editDraft) return
+    if (!editDraft.description) return
+    setSkus(prev => prev.map(s => s.id === editingSkuId ? { ...s, ...editDraft } : s))
+    setEditingSkuId(null)
+    setEditDraft(null)
+  }
+
+  // Sheet helpers
+  function openSheetForSku(id: string, tab: 'barcodes' | 'dimensions' = 'barcodes') {
+    setOpenSkuSheetId(id)
+    setActiveTab(tab)
+    setOpenMenuSkuId(null)
+  }
+
+  function closeSheet() {
+    setOpenSkuSheetId(null)
+    setBarcodeInput('')
+  }
+
+  function addBarcode() {
+    if (!barcodeInput.trim()) return
+    setSkus(prev => prev.map(s => s.id === openSkuSheetId ? { ...s, barcodes: s.barcodes.includes(barcodeInput.trim()) ? s.barcodes : [...s.barcodes, barcodeInput.trim()] } : s))
+    setBarcodeInput('')
+  }
+
+  function removeBarcode(code: string) {
+    setSkus(prev => prev.map(s => s.id === openSkuSheetId ? { ...s, barcodes: s.barcodes.filter(b => b !== code) } : s))
+  }
+
+  function updateDimensions<K extends keyof DimensionsDraft>(key: K, value: number | undefined) {
+    setSkus(prev => prev.map(s => {
+      if (s.id !== openSkuSheetId) return s
+      const dims: DimensionsDraft = { ...(s.dimensions || {}) }
+      dims[key] = value
+      // calculate volume if length/width/height present (assuming cm -> convert to m3)
+      const { length, width, height } = dims
+      if (length && width && height) {
+        // if values are in cm convert to meters: /100 each then multiply
+        dims.volumeM3 = (length/100) * (width/100) * (height/100)
+      }
+      return { ...s, dimensions: dims }
+    }))
   }
 
   function update<K extends keyof ProductCreateForm>(key: K, value: ProductCreateForm[K]) {
@@ -173,64 +243,139 @@ export function NewProductPage() {
             </button>
           </div>
           <div className="border rounded shadow-sm overflow-hidden bg-white">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/40 border-b">
+            <table className="w-full text-sm border-collapse">
+              <thead className="bg-muted/40">
                 <tr className="text-left">
-                  <th className="w-10"></th>
-                  <th className="px-3 py-2 font-medium">Descrição</th>
-                  <th className="px-3 py-2 font-medium">Quantidade de unidades</th>
-                  <th className="px-3 py-2 font-medium">Fracionado</th>
-                  <th className="px-3 py-2 font-medium">Gerar etiqueta de separação</th>
-                  <th className="w-10"></th>
+                  <th className="w-16 border-b border-r border-gray-200"></th>
+                  <th className="px-3 py-2 font-medium border-b border-r border-gray-200">Descrição</th>
+                  <th className="px-3 py-2 font-medium border-b border-r border-gray-200">Quantidade de unidades</th>
+                  <th className="px-3 py-2 font-medium text-center border-b border-r border-gray-200">Fracionado</th>
+                  <th className="px-3 py-2 font-medium text-center border-b border-r border-gray-200">Gerar etiqueta de separação</th>
+                  <th className="w-10 border-b border-gray-200"></th>
                 </tr>
               </thead>
               <tbody>
                 {addingSku && (
-                  <tr className="border-b bg-blue-50/30">
-                    <td className="px-2 py-2 text-center">
-                      <button type="button" onClick={confirmAddSku} className="text-emerald-600 hover:text-emerald-700"><Check className="size-4" /></button>
+                  <tr className="bg-blue-50/20">
+                    <td className="px-2 py-2 text-center border-b border-r border-gray-200">
+                      <div className="flex items-center justify-center gap-3">
+                        <button
+                          type="button"
+                          onClick={confirmAddSku}
+                          disabled={!newSku.description.trim()}
+                          className="text-emerald-600 enabled:hover:text-emerald-700 disabled:opacity-40"
+                          title="Confirmar"
+                        >
+                          <Check className="size-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cancelAddSku}
+                          className="text-red-600 hover:text-red-700"
+                          title="Cancelar"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </div>
                     </td>
-                    <td className="px-2 py-2">
-                      <input autoFocus value={newSku.description} onChange={e=>setNewSku(s=>({...s, description: e.target.value}))} placeholder="Descrição" className="h-8 w-full border rounded px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                    <td className="px-2 py-2 border-b border-r border-gray-200">
+                      <input
+                        autoFocus
+                        value={newSku.description}
+                        onChange={e=>setNewSku(s=>({...s, description: e.target.value}))}
+                        onKeyDown={e=>{
+                          if (e.key==='Enter') confirmAddSku()
+                          if (e.key==='Escape') cancelAddSku()
+                        }}
+                        placeholder="Informe a descrição"
+                        className="h-8 w-full border rounded px-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                      />
                     </td>
-                    <td className="px-2 py-2">
-                      <input type="number" min={1} value={newSku.unitsPerSku} onChange={e=>setNewSku(s=>({...s, unitsPerSku: parseInt(e.target.value)||1}))} className="h-8 w-24 border rounded px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                    <td className="px-2 py-2 border-b border-r border-gray-200">
+                      <input
+                        type="number"
+                        min={1}
+                        value={newSku.unitsPerSku}
+                        onChange={e=>setNewSku(s=>({...s, unitsPerSku: parseInt(e.target.value)||1}))}
+                        onKeyDown={e=>{
+                          if (e.key==='Enter') confirmAddSku()
+                          if (e.key==='Escape') cancelAddSku()
+                        }}
+                        placeholder="Informe a quantidade"
+                        className="h-8 w-full border rounded px-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                      />
                     </td>
-                    <td className="px-2 py-2 text-center">
-                      <input type="checkbox" checked={newSku.fractional} onChange={e=>setNewSku(s=>({...s, fractional: e.target.checked}))} />
+                    <td className="px-2 py-2 text-center border-b border-r border-gray-200">
+                      <input
+                        type="checkbox"
+                        checked={newSku.fractional}
+                        onChange={e=>setNewSku(s=>({...s, fractional: e.target.checked}))}
+                        title="Fracionado"
+                      />
                     </td>
-                    <td className="px-2 py-2 text-center">
-                      <input type="checkbox" checked={newSku.generatePickingLabel} onChange={e=>setNewSku(s=>({...s, generatePickingLabel: e.target.checked}))} />
+                    <td className="px-2 py-2 text-center border-b border-r border-gray-200">
+                      <input
+                        type="checkbox"
+                        checked={newSku.generatePickingLabel}
+                        onChange={e=>setNewSku(s=>({...s, generatePickingLabel: e.target.checked}))}
+                        title="Gerar etiqueta de separação"
+                      />
                     </td>
-                    <td className="px-2 py-2 text-center">
-                      <button type="button" onClick={cancelAddSku} className="text-red-600 hover:text-red-700"><X className="size-4" /></button>
-                    </td>
+                    <td className="px-2 py-2 text-center border-b border-gray-200" />
                   </tr>
                 )}
-                {skus.map(sku => (
-                  <tr key={sku.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="px-2 py-2 text-center">
-                      <button type="button" onClick={()=>removeSku(sku.id)} className="text-red-600 hover:text-red-700"><Trash2 className="size-4" /></button>
-                    </td>
-                    <td className="px-2 py-2">{sku.description}</td>
-                    <td className="px-2 py-2">{sku.unitsPerSku}</td>
-                    <td className="px-2 py-2 text-center">{sku.fractional ? 'Sim' : 'Não'}</td>
-                    <td className="px-2 py-2 text-center">{sku.generatePickingLabel ? 'Sim' : 'Não'}</td>
-                    <td className="px-2 py-2 text-center relative">
-                      <button type="button" onClick={()=>setOpenMenuSkuId(openMenuSkuId===sku.id?null:sku.id)} className="text-muted-foreground hover:text-foreground"><MoreHorizontal className="size-4" /></button>
-                      {openMenuSkuId===sku.id && (
-                        <div className="absolute top-8 right-0 z-10 w-44 bg-white border rounded shadow-md text-sm py-1">
-                          <button type="button" className="block w-full text-left px-3 py-1.5 hover:bg-muted/40">Editar</button>
-                          <button type="button" className="block w-full text-left px-3 py-1.5 hover:bg-muted/40">Código de barras e Dimensões</button>
-                          <button type="button" onClick={()=>removeSku(sku.id)} className="block w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-600">Excluir</button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {skus.map(sku => {
+                  const isEditing = editingSkuId === sku.id
+                  return (
+                    <tr key={sku.id} className={`${isEditing ? 'bg-blue-50/30' : 'hover:bg-muted/30'}`}>
+                      <td className="px-2 py-2 text-center border-b border-r border-gray-200">
+                        {isEditing ? (
+                          <div className="flex items-center gap-2 justify-center">
+                            <button type="button" onClick={confirmEditSku} className="text-emerald-600 hover:text-emerald-700"><Check className="size-4" /></button>
+                            <button type="button" onClick={cancelEditSku} className="text-red-600 hover:text-red-700"><X className="size-4" /></button>
+                          </div>
+                        ) : (
+                          <button type="button" onClick={()=>removeSku(sku.id)} className="text-red-600 hover:text-red-700"><Trash2 className="size-4" /></button>
+                        )}
+                      </td>
+                      <td className="px-2 py-2 border-b border-r border-gray-200">
+                        {isEditing ? (
+                          <input value={editDraft?.description || ''} onChange={e=>setEditDraft(d=>d?{...d, description: e.target.value}:d)} className="h-8 w-full border rounded px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                        ) : sku.description}
+                      </td>
+                      <td className="px-2 py-2 border-b border-r border-gray-200">
+                        {isEditing ? (
+                          <input type="number" min={1} value={editDraft?.unitsPerSku || 1} onChange={e=>setEditDraft(d=>d?{...d, unitsPerSku: parseInt(e.target.value)||1}:d)} className="h-8 w-24 border rounded px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                        ) : sku.unitsPerSku}
+                      </td>
+                      <td className="px-2 py-2 text-center border-b border-r border-gray-200">
+                        {isEditing ? (
+                          <input type="checkbox" checked={editDraft?.fractional || false} onChange={e=>setEditDraft(d=>d?{...d, fractional: e.target.checked}:d)} />
+                        ) : (sku.fractional ? 'Sim' : 'Não')}
+                      </td>
+                      <td className="px-2 py-2 text-center border-b border-r border-gray-200">
+                        {isEditing ? (
+                          <input type="checkbox" checked={editDraft?.generatePickingLabel || false} onChange={e=>setEditDraft(d=>d?{...d, generatePickingLabel: e.target.checked}:d)} />
+                        ) : (sku.generatePickingLabel ? 'Sim' : 'Não')}
+                      </td>
+                      <td className="px-2 py-2 text-center relative border-b border-gray-200">
+                        {!isEditing && (
+                          <button type="button" onClick={()=>setOpenMenuSkuId(openMenuSkuId===sku.id?null:sku.id)} className="text-muted-foreground hover:text-foreground"><MoreHorizontal className="size-4" /></button>
+                        )}
+                        {openMenuSkuId===sku.id && !isEditing && (
+                          <div className="absolute top-8 right-0 z-10 w-56 bg-white border rounded shadow-md text-sm py-1">
+                            <button type="button" onClick={()=>startEditSku(sku.id)} className="block w-full text-left px-3 py-1.5 hover:bg-muted/40">Editar</button>
+                            <button type="button" onClick={()=>openSheetForSku(sku.id, 'barcodes')} className="block w-full text-left px-3 py-1.5 hover:bg-muted/40">Código de barras e Dimensões</button>
+                            <button type="button" onClick={()=>removeSku(sku.id)} className="block w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-600">Excluir</button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
                 {!addingSku && skus.length===0 && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">Nenhum dado encontrado</td>
+                    <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground border-b border-gray-200">Nenhum dado encontrado</td>
                   </tr>
                 )}
               </tbody>
@@ -244,6 +389,71 @@ export function NewProductPage() {
           </div>
         )}
       </form>
+      {/* Sheet for Barcodes & Dimensions */}
+      {openSkuSheetId && (
+        <Sheet open onOpenChange={(open)=>{ if (!open) { closeSheet() } }}>
+          <SheetContent side="right" className="sm:max-w-xl">
+            <SheetHeader>
+              <SheetTitle>Códigos de barras e Dimensões</SheetTitle>
+            </SheetHeader>
+            <div className="px-4 flex flex-col gap-6 overflow-y-auto">
+              {/* Tabs mimic */}
+              <div className="flex border-b gap-4 text-sm">
+                <button type="button" onClick={()=>setActiveTab('barcodes')} className={`pb-2 -mb-px border-b-2 ${activeTab==='barcodes'?'border-[#008bb1] text-[#008bb1]':'border-transparent text-muted-foreground hover:text-foreground'}`}>Códigos de barras</button>
+                <button type="button" onClick={()=>setActiveTab('dimensions')} className={`pb-2 -mb-px border-b-2 ${activeTab==='dimensions'?'border-[#008bb1] text-[#008bb1]':'border-transparent text-muted-foreground hover:text-foreground'}`}>Dimensões</button>
+              </div>
+              {activeTab==='barcodes' && (
+                <div className="flex flex-col gap-4">
+                  <div className="flex gap-2 items-end">
+                    <div className="flex-1">
+                      <label className="text-xs font-medium text-[#334b52]">Adicionar código de barras</label>
+                      <input value={barcodeInput} onChange={e=>setBarcodeInput(e.target.value)} placeholder="EAN / GTIN" className="h-9 w-full border rounded px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                    </div>
+                    <button type="button" onClick={addBarcode} className="h-9 px-4 rounded bg-[#008bb1] text-white text-xs font-medium hover:bg-[#007697]">Adicionar</button>
+                  </div>
+                  <div className="border rounded divide-y">
+                    {skus.find(s=>s.id===openSkuSheetId)?.barcodes.map(code => (
+                      <div key={code} className="flex items-center justify-between px-3 py-2 text-sm">
+                        <span>{code}</span>
+                        <button type="button" onClick={()=>removeBarcode(code)} className="text-red-600 hover:text-red-700 text-xs font-medium">Remover</button>
+                      </div>
+                    ))}
+                    {skus.find(s=>s.id===openSkuSheetId)?.barcodes.length===0 && (
+                      <div className="px-3 py-6 text-center text-xs text-muted-foreground">Nenhum código adicionado</div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {activeTab==='dimensions' && (
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  {(['length','width','height','weight','layers','pallet'] as (keyof DimensionsDraft)[]).map(key => {
+                    const labelMap: Record<string,string> = { length:'Comprimento (cm)', width:'Largura (cm)', height:'Altura (cm)', weight:'Peso (kg)', layers:'Camadas', pallet:'Lastro' }
+                    const sku = skus.find(s=>s.id===openSkuSheetId)
+                    const value = sku?.dimensions?.[key]
+                    return (
+                      <div className="flex flex-col gap-1" key={key}>
+                        <label className="text-xs font-medium text-[#334b52]">{labelMap[key]}</label>
+                        <input type="number" value={value ?? ''} onChange={e=>updateDimensions(key, e.target.value===''?undefined:parseFloat(e.target.value))} className="h-9 w-full border rounded px-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                      </div>
+                    )
+                  })}
+                  <div className="flex flex-col gap-1 col-span-2">
+                    <label className="text-xs font-medium text-[#334b52]">Volume (m³)</label>
+                    <input disabled value={(skus.find(s=>s.id===openSkuSheetId)?.dimensions?.volumeM3 ?? 0).toFixed(4)} className="h-9 w-full border rounded px-2 bg-muted/40 text-muted-foreground" />
+                  </div>
+                </div>
+              )}
+            </div>
+            <SheetFooter>
+              <div className="flex gap-2 justify-end">
+                <SheetClose asChild>
+                  <button type="button" onClick={closeSheet} className="h-9 px-5 rounded border text-sm font-medium hover:bg-muted/40">Fechar</button>
+                </SheetClose>
+              </div>
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   )
 }
