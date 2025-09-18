@@ -71,7 +71,7 @@ export function ProductsPage() {
               </thead>
               <tbody>
                 {data?.length ? data.map(p => (
-                  <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
+                  <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={()=>{ window.location.href = `/settings/products/${p.id}` }}>
                     <td className="px-3 py-2 font-mono text-xs">{p.id}</td>
                     <td className="px-3 py-2">{p.name}</td>
                     <td className="px-3 py-2">{p.sku}</td>

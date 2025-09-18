@@ -6,6 +6,6 @@ export function useProducts() {
   return useQuery<Product[], Error>({
     queryKey: ['products'],
     queryFn: () => apiFetch<Product[]>('/products'),
-    staleTime: 60_000,
+    staleTime: 15_000,
   })
 }
