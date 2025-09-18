@@ -3,7 +3,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { HomeIcon } from 'lucide-react'
 import { productCreateSchema, type ProductCreateForm } from '@/lib/validation/product'
 import { useState } from 'react'
-import { MoreHorizontal, Plus, Check, X, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Plus, Check, X } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { useCreateProduct } from '@/lib/hooks/use-create-product'
 
@@ -251,7 +251,7 @@ export function NewProductPage() {
                   <th className="px-3 py-2 font-medium border-b border-r border-gray-200">Quantidade de unidades</th>
                   <th className="px-3 py-2 font-medium text-center border-b border-r border-gray-200">Fracionado</th>
                   <th className="px-3 py-2 font-medium text-center border-b border-r border-gray-200">Gerar etiqueta de separação</th>
-                  <th className="w-10 border-b border-gray-200"></th>
+                  {/* removed last actions column */}
                 </tr>
               </thead>
               <tbody>
@@ -328,14 +328,22 @@ export function NewProductPage() {
                   const isEditing = editingSkuId === sku.id
                   return (
                     <tr key={sku.id} className={`${isEditing ? 'bg-blue-50/30' : 'hover:bg-muted/30'}`}>
-                      <td className="px-2 py-2 text-center border-b border-r border-gray-200">
+                      <td className="px-2 py-2 text-center border-b border-r border-gray-200 relative">
                         {isEditing ? (
                           <div className="flex items-center gap-2 justify-center">
-                            <button type="button" onClick={confirmEditSku} className="text-emerald-600 hover:text-emerald-700"><Check className="size-4" /></button>
-                            <button type="button" onClick={cancelEditSku} className="text-red-600 hover:text-red-700"><X className="size-4" /></button>
+                            <button type="button" onClick={confirmEditSku} className="text-emerald-600 hover:text-emerald-700" title="Confirmar edição"><Check className="size-4" /></button>
+                            <button type="button" onClick={cancelEditSku} className="text-red-600 hover:text-red-700" title="Cancelar edição"><X className="size-4" /></button>
                           </div>
                         ) : (
-                          <button type="button" onClick={()=>removeSku(sku.id)} className="text-red-600 hover:text-red-700"><Trash2 className="size-4" /></button>
+                          <button type="button" onClick={()=>setOpenMenuSkuId(openMenuSkuId===sku.id?null:sku.id)} className="text-muted-foreground hover:text-foreground" title="Ações"><MoreHorizontal className="size-4" /></button>
+                        )}
+                        {openMenuSkuId===sku.id && !isEditing && (
+                          <div className="absolute top-8 left-2 z-10 w-56 bg-white border rounded shadow-md text-sm py-1 text-left">
+                            <button type="button" onClick={()=>startEditSku(sku.id)} className="block w-full text-left px-3 py-1.5 hover:bg-muted/40">Editar</button>
+                            <button type="button" onClick={()=>openSheetForSku(sku.id, 'barcodes')} className="block w-full text-left px-3 py-1.5 hover:bg-muted/40">Código de barras e Dimensões</button>
+                            <div className="h-px bg-gray-100 my-1" />
+                            <button type="button" onClick={()=>{ removeSku(sku.id); setOpenMenuSkuId(null) }} className="block w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-600">Excluir</button>
+                          </div>
                         )}
                       </td>
                       <td className="px-2 py-2 border-b border-r border-gray-200">
@@ -358,24 +366,13 @@ export function NewProductPage() {
                           <input type="checkbox" checked={editDraft?.generatePickingLabel || false} onChange={e=>setEditDraft(d=>d?{...d, generatePickingLabel: e.target.checked}:d)} />
                         ) : (sku.generatePickingLabel ? 'Sim' : 'Não')}
                       </td>
-                      <td className="px-2 py-2 text-center relative border-b border-gray-200">
-                        {!isEditing && (
-                          <button type="button" onClick={()=>setOpenMenuSkuId(openMenuSkuId===sku.id?null:sku.id)} className="text-muted-foreground hover:text-foreground"><MoreHorizontal className="size-4" /></button>
-                        )}
-                        {openMenuSkuId===sku.id && !isEditing && (
-                          <div className="absolute top-8 right-0 z-10 w-56 bg-white border rounded shadow-md text-sm py-1">
-                            <button type="button" onClick={()=>startEditSku(sku.id)} className="block w-full text-left px-3 py-1.5 hover:bg-muted/40">Editar</button>
-                            <button type="button" onClick={()=>openSheetForSku(sku.id, 'barcodes')} className="block w-full text-left px-3 py-1.5 hover:bg-muted/40">Código de barras e Dimensões</button>
-                            <button type="button" onClick={()=>removeSku(sku.id)} className="block w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-600">Excluir</button>
-                          </div>
-                        )}
-                      </td>
+                      {/* removed trailing actions column */}
                     </tr>
                   )
                 })}
                 {!addingSku && skus.length===0 && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground border-b border-gray-200">Nenhum dado encontrado</td>
+                    <td colSpan={5} className="px-3 py-8 text-center text-sm text-muted-foreground border-b border-gray-200">Nenhum dado encontrado</td>
                   </tr>
                 )}
               </tbody>
