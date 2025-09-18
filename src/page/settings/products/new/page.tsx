@@ -6,9 +6,11 @@ import { useState } from 'react'
 import { MoreHorizontal, Plus, Check, X } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { useCreateProduct } from '@/lib/hooks/use-create-product'
+import { useOrganization } from '@/lib/hooks/use-organization'
 
 export function NewProductPage() {
   const navigate = useNavigate()
+  const { data: org } = useOrganization()
   const { mutateAsync, isPending } = useCreateProduct()
   const [form, setForm] = useState<ProductCreateForm>({
     name: '',
@@ -19,6 +21,7 @@ export function NewProductPage() {
     category: '',
     unit: '',
     stockCharacteristics: [],
+    organizationId: undefined,
   })
   const [errors, setErrors] = useState<string[]>([])
   // SKUs locais enquanto produto não existe no backend (salvamos tudo junto futuramente ou após criação)
@@ -191,6 +194,15 @@ export function NewProductPage() {
                 <option value="">Selecione a unidade de medida</option>
                 <option value="UN">UN</option>
                 <option value="CX">CX</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-[#334b52]">Organização</label>
+              <select value={form.organizationId || ''} onChange={e=>update('organizationId', e.target.value || undefined)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
+                <option value="">{org ? 'Selecionar organização' : 'Carregando...'}</option>
+                {org && (
+                  <option value={org.id}>{org.nome}</option>
+                )}
               </select>
             </div>
             <div className="flex flex-col gap-1 md:col-span-2">

@@ -9,6 +9,7 @@ export const productCreateSchema = z.object({
   category: z.string().max(50).optional(),
   unit: z.string().max(10).optional(),
   stockCharacteristics: z.array(z.string()).optional(),
+  organizationId: z.string().optional(),
 })
 
 export type ProductCreateForm = z.infer<typeof productCreateSchema>

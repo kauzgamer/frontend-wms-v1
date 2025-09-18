@@ -8,7 +8,13 @@ export function useCreateProduct() {
   return useMutation({
     mutationFn: (data: ProductCreateForm) => apiFetch<Product>('/products', {
       method: 'POST',
-      body: JSON.stringify({ name: data.name, sku: data.sku }),
+      body: JSON.stringify({
+        name: data.name,
+        sku: data.sku,
+        unit: data.unit,
+        unitOfMeasure: data.unitOfMeasure,
+        organizationId: data.organizationId,
+      }),
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['products'] })
