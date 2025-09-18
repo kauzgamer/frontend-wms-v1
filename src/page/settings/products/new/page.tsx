@@ -242,7 +242,7 @@ export function NewProductPage() {
               <Plus className="size-4" /> Adicionar SKU
             </button>
           </div>
-          <div className="border rounded shadow-sm overflow-hidden bg-white">
+          <div className="border rounded shadow-sm overflow-visible bg-white relative">
             <table className="w-full text-sm border-collapse">
               <thead className="bg-muted/40">
                 <tr className="text-left">
@@ -338,7 +338,7 @@ export function NewProductPage() {
                           <button type="button" onClick={()=>setOpenMenuSkuId(openMenuSkuId===sku.id?null:sku.id)} className="text-muted-foreground hover:text-foreground" title="Ações"><MoreHorizontal className="size-4" /></button>
                         )}
                         {openMenuSkuId===sku.id && !isEditing && (
-                          <div className="absolute top-8 left-2 z-10 w-56 bg-white border rounded shadow-md text-sm py-1 text-left">
+                          <div className="absolute top-0 left-1 -translate-y-full -mt-2 z-20 w-56 bg-white border rounded shadow-lg text-sm py-1 text-left">
                             <button type="button" onClick={()=>startEditSku(sku.id)} className="block w-full text-left px-3 py-1.5 hover:bg-muted/40">Editar</button>
                             <button type="button" onClick={()=>openSheetForSku(sku.id, 'barcodes')} className="block w-full text-left px-3 py-1.5 hover:bg-muted/40">Código de barras e Dimensões</button>
                             <div className="h-px bg-gray-100 my-1" />
