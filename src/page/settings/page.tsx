@@ -70,7 +70,7 @@ export function SettingsPage() {
         <div className="p-0">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-2 text-sm py-4 px-4">
             <div className="space-y-0 text-[15px] leading-snug">
-              <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Produto/SKU</button>
+              <Link to="/settings/products" className="block text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Produto/SKU</Link>
               <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Características de estoque</button>
               <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Categoria de produto</button>
               <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Atributos de estoque</button>
