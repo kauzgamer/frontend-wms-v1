@@ -3,6 +3,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { HomeIcon } from 'lucide-react'
 import { productCreateSchema, type ProductCreateForm } from '@/lib/validation/product'
 import { useState } from 'react'
+import { MoreHorizontal, Plus, Check, X, Trash2 } from 'lucide-react'
 import { useCreateProduct } from '@/lib/hooks/use-create-product'
 
 export function NewProductPage() {
@@ -19,6 +20,26 @@ export function NewProductPage() {
     stockCharacteristics: [],
   })
   const [errors, setErrors] = useState<string[]>([])
+  // SKUs locais enquanto produto não existe no backend (salvamos tudo junto futuramente ou após criação)
+  interface TempSku { id: string; description: string; unitsPerSku: number; fractional: boolean; generatePickingLabel: boolean }
+  const [skus, setSkus] = useState<TempSku[]>([])
+  const [addingSku, setAddingSku] = useState(false)
+  const [newSku, setNewSku] = useState<TempSku>({ id: '', description: '', unitsPerSku: 1, fractional: false, generatePickingLabel: false })
+  const [openMenuSkuId, setOpenMenuSkuId] = useState<string | null>(null)
+
+  function startAddSku() {
+    setAddingSku(true)
+    setNewSku({ id: '', description: '', unitsPerSku: 1, fractional: false, generatePickingLabel: false })
+  }
+  function cancelAddSku() { setAddingSku(false) }
+  function confirmAddSku() {
+    if (!newSku.description) return
+    setSkus(prev => [...prev, { ...newSku, id: `tmp-${prev.length + 1}` }])
+    setAddingSku(false)
+  }
+  function removeSku(id: string) {
+    setSkus(prev => prev.filter(s => s.id !== id))
+  }
 
   function update<K extends keyof ProductCreateForm>(key: K, value: ProductCreateForm[K]) {
     setForm(f => ({ ...f, [key]: value }))
@@ -141,6 +162,79 @@ export function NewProductPage() {
                 <option value="PERECIVEL">PERECÍVEL</option>
               </select>
             </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-xs font-semibold tracking-wide text-[#008bb1] mb-3">SKU</h2>
+          <div className="mb-3">
+            <button type="button" onClick={startAddSku} disabled={addingSku} className="h-10 bg-[#008bb1] hover:bg-[#007697] text-white text-sm font-medium rounded px-4 disabled:opacity-50 inline-flex items-center gap-1">
+              <Plus className="size-4" /> Adicionar SKU
+            </button>
+          </div>
+          <div className="border rounded shadow-sm overflow-hidden bg-white">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/40 border-b">
+                <tr className="text-left">
+                  <th className="w-10"></th>
+                  <th className="px-3 py-2 font-medium">Descrição</th>
+                  <th className="px-3 py-2 font-medium">Quantidade de unidades</th>
+                  <th className="px-3 py-2 font-medium">Fracionado</th>
+                  <th className="px-3 py-2 font-medium">Gerar etiqueta de separação</th>
+                  <th className="w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {addingSku && (
+                  <tr className="border-b bg-blue-50/30">
+                    <td className="px-2 py-2 text-center">
+                      <button type="button" onClick={confirmAddSku} className="text-emerald-600 hover:text-emerald-700"><Check className="size-4" /></button>
+                    </td>
+                    <td className="px-2 py-2">
+                      <input autoFocus value={newSku.description} onChange={e=>setNewSku(s=>({...s, description: e.target.value}))} placeholder="Descrição" className="h-8 w-full border rounded px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                    </td>
+                    <td className="px-2 py-2">
+                      <input type="number" min={1} value={newSku.unitsPerSku} onChange={e=>setNewSku(s=>({...s, unitsPerSku: parseInt(e.target.value)||1}))} className="h-8 w-24 border rounded px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                    </td>
+                    <td className="px-2 py-2 text-center">
+                      <input type="checkbox" checked={newSku.fractional} onChange={e=>setNewSku(s=>({...s, fractional: e.target.checked}))} />
+                    </td>
+                    <td className="px-2 py-2 text-center">
+                      <input type="checkbox" checked={newSku.generatePickingLabel} onChange={e=>setNewSku(s=>({...s, generatePickingLabel: e.target.checked}))} />
+                    </td>
+                    <td className="px-2 py-2 text-center">
+                      <button type="button" onClick={cancelAddSku} className="text-red-600 hover:text-red-700"><X className="size-4" /></button>
+                    </td>
+                  </tr>
+                )}
+                {skus.map(sku => (
+                  <tr key={sku.id} className="border-b last:border-0 hover:bg-muted/30">
+                    <td className="px-2 py-2 text-center">
+                      <button type="button" onClick={()=>removeSku(sku.id)} className="text-red-600 hover:text-red-700"><Trash2 className="size-4" /></button>
+                    </td>
+                    <td className="px-2 py-2">{sku.description}</td>
+                    <td className="px-2 py-2">{sku.unitsPerSku}</td>
+                    <td className="px-2 py-2 text-center">{sku.fractional ? 'Sim' : 'Não'}</td>
+                    <td className="px-2 py-2 text-center">{sku.generatePickingLabel ? 'Sim' : 'Não'}</td>
+                    <td className="px-2 py-2 text-center relative">
+                      <button type="button" onClick={()=>setOpenMenuSkuId(openMenuSkuId===sku.id?null:sku.id)} className="text-muted-foreground hover:text-foreground"><MoreHorizontal className="size-4" /></button>
+                      {openMenuSkuId===sku.id && (
+                        <div className="absolute top-8 right-0 z-10 w-44 bg-white border rounded shadow-md text-sm py-1">
+                          <button type="button" className="block w-full text-left px-3 py-1.5 hover:bg-muted/40">Editar</button>
+                          <button type="button" className="block w-full text-left px-3 py-1.5 hover:bg-muted/40">Código de barras e Dimensões</button>
+                          <button type="button" onClick={()=>removeSku(sku.id)} className="block w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-600">Excluir</button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {!addingSku && skus.length===0 && (
+                  <tr>
+                    <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted-foreground">Nenhum dado encontrado</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </section>
 
