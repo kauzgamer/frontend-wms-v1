@@ -8,6 +8,8 @@ import { useStockAttributes } from '@/lib/hooks/use-stock-attributes'
 import type { StockAttribute } from '@/lib/types/stock-attribute'
 import { useDeleteStockAttribute } from '@/lib/hooks/use-delete-stock-attribute'
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
+import { CreateStockAttributeDialog } from '@/components/stock-attributes/create-stock-attribute-dialog'
+import { useToast } from '@/components/ui/toast-context'
 
 type Caracteristica = StockAttribute
 
@@ -18,6 +20,8 @@ export default function CaracteristicasEstoquePage() {
   const { data, isLoading, isError } = useStockAttributes({ q: query, status: statusFilter })
   const del = useDeleteStockAttribute()
   const [confirmId, setConfirmId] = useState<string | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
+  const { show } = useToast()
 
   const rows: Caracteristica[] = useMemo(() => data ?? [], [data])
 
@@ -75,7 +79,7 @@ export default function CaracteristicasEstoquePage() {
 
   <Card className="p-0 overflow-hidden">
         <div className="flex items-center gap-3 p-3">
-          <Button className="bg-[#0c9abe] hover:bg-[#0a869d] text-white"><Plus className="size-4 mr-2" /> Nova característica</Button>
+          <Button className="bg-[#0c9abe] hover:bg-[#0a869d] text-white" onClick={() => setCreateOpen(true)}><Plus className="size-4 mr-2" /> Nova característica</Button>
           <span className="text-sm text-muted-foreground">Arraste a coluna até aqui para agrupar</span>
         </div>
         <div className="overflow-auto">
@@ -165,13 +169,18 @@ export default function CaracteristicasEstoquePage() {
           if (!confirmId) return
           try {
             const res = await del.mutateAsync(confirmId)
-            if (res.deleted) setConfirmId(null)
-            else {
-              // proteção padrão: apenas fecha por enquanto; poderia exibir toast
+            if (res.deleted) {
               setConfirmId(null)
+              show({ kind: 'success', message: 'Característica de estoque excluída com sucesso!' })
+            } else {
+              setConfirmId(null)
+              if (res.reason === 'DEFAULT_PROTECTED') {
+                show({ kind: 'info', message: 'Esta característica padrão do sistema não pode ser excluída.' })
+              }
             }
           } catch {
             setConfirmId(null)
+            show({ kind: 'error', message: 'Erro ao excluir característica de estoque.' })
           }
         }}
         title="Excluir"
@@ -179,6 +188,7 @@ export default function CaracteristicasEstoquePage() {
         confirmText="Confirmar"
         cancelText="Cancelar"
       />
+      <CreateStockAttributeDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   )
 }
