@@ -10,19 +10,23 @@ import {
 import { Bell, UserRound, Sparkles, CreditCard, LogOut, User } from "lucide-react"
 import { useAuth } from '@/lib/use-auth'
 import { useNavigate } from 'react-router-dom'
+import { useOrganization } from '@/lib/hooks/use-organization'
 
 export type AppHeaderProps = { online?: boolean }
 
 export function AppHeader({ online = true }: AppHeaderProps) {
   const { logout } = useAuth()
   const navigate = useNavigate()
+  const { data: org, isLoading } = useOrganization()
   function handleLogout() {
     logout()
     navigate('/login', { replace: true })
   }
   return (
     <header className="flex h-16 shrink-0 items-center gap-2 px-4">
-  <span className="text-sm font-medium" style={{ color: '#29b6c5' }}>WMS - INDUSTRIA E COM SANTA MARIA LTDA</span>
+  <span className="text-sm font-medium" style={{ color: '#29b6c5' }} title={org?.codigo ? `Código: ${org.codigo}` : undefined}>
+    WMS - {isLoading ? 'Carregando...' : (org?.nome ?? '')}
+  </span>
 
       <div className="ml-auto flex items-center gap-3">
         {online ? (

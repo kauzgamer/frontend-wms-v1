@@ -1,9 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { HomeIcon, ChevronLeft, Save } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { useOrganization } from '@/lib/hooks/use-organization'
+import { useSaveOrganization } from '@/lib/hooks/use-save-organization'
 
 interface OrganizacaoForm {
   codigo: string
@@ -15,6 +17,8 @@ interface OrganizacaoForm {
 
 export function OrganizacaoIntegrationPage() {
   const navigate = useNavigate()
+  const { data: org, isLoading } = useOrganization()
+  const saveOrg = useSaveOrganization()
   const [form, setForm] = useState<OrganizacaoForm>({
     codigo: '',
     nome: '',
@@ -24,6 +28,19 @@ export function OrganizacaoIntegrationPage() {
   })
   const [saving, setSaving] = useState(false)
   const [touched, setTouched] = useState<Record<string, boolean>>({})
+
+  // Prefill when loading existing organization
+  useEffect(() => {
+    if (org) {
+      setForm({
+        codigo: org.codigo ?? '',
+        nome: org.nome ?? '',
+        cnpj: org.cnpj ?? '',
+        ativo: org.ativo ?? true,
+        timezone: org.timezone ?? 'America/Sao_Paulo',
+      })
+    }
+  }, [org])
 
   function update<K extends keyof OrganizacaoForm>(key: K, value: OrganizacaoForm[K]) {
     setForm(f => ({ ...f, [key]: value }))
@@ -41,10 +58,19 @@ export function OrganizacaoIntegrationPage() {
     setTouched({ codigo: true, nome: true, cnpj: true, ativo: true, timezone: true })
     if (hasErrors) return
     setSaving(true)
-    await new Promise(r => setTimeout(r, 800))
-    setSaving(false)
-    // success toast placeholder
-    alert('Organização salva (mock).')
+    try {
+      await saveOrg.mutateAsync({
+        codigo: form.codigo,
+        nome: form.nome,
+        cnpj: form.cnpj || undefined,
+        ativo: form.ativo,
+        timezone: form.timezone,
+      })
+      // opcional: feedback visual real (toast)
+      // reload form with latest data is handled by query invalidation in hook
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -84,8 +110,8 @@ export function OrganizacaoIntegrationPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => navigate(-1)} className="h-9"><ChevronLeft className="size-4" /> Voltar</Button>
-          <Button onClick={handleSave} disabled={saving || hasErrors} className="h-9 bg-[#0c9abe] hover:bg-[#0a869d] text-white">
-            <Save className="size-4 mr-1" /> {saving ? 'Salvando...' : 'Salvar'}
+          <Button onClick={handleSave} disabled={saving || hasErrors || isLoading} className="h-9 bg-[#0c9abe] hover:bg-[#0a869d] text-white">
+            <Save className="size-4 mr-1" /> {saving ? 'Salvando...' : isLoading ? 'Carregando...' : 'Salvar'}
           </Button>
         </div>
       </div>
@@ -158,8 +184,8 @@ export function OrganizacaoIntegrationPage() {
           </div>
           <div className="space-y-3 text-xs">
             <div className="flex justify-between"><span className="text-muted-foreground">Última sincronização:</span><span>-</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Criado em:</span><span>-</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Atualizado em:</span><span>-</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Criado em:</span><span>{org?.createdAt ? new Date(org.createdAt).toLocaleString() : '-'}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Atualizado em:</span><span>{org?.updatedAt ? new Date(org.updatedAt).toLocaleString() : '-'}</span></div>
           </div>
         </Card>
       </div>
