@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
-import { Plus, Search, SlidersHorizontal, Maximize2, Check, X } from 'lucide-react'
+import { Plus, Search, SlidersHorizontal, Maximize2, Check, X, MoreHorizontal } from 'lucide-react'
 import { useStockAttributes } from '@/lib/hooks/use-stock-attributes'
 import type { StockAttribute } from '@/lib/types/stock-attribute'
 import { useDeleteStockAttribute } from '@/lib/hooks/use-delete-stock-attribute'
@@ -116,7 +116,7 @@ export default function CaracteristicasEstoquePage() {
 
   <Card className="p-0 overflow-hidden">
         <div className="flex items-center gap-3 p-3">
-          <Button className="bg-[#c2c7c9] hover:bg-[#b3b8ba] text-white" onClick={addDraft}><Plus className="size-4 mr-2" /> Nova característica</Button>
+          <Button className="bg-[#2f8ac9] hover:bg-[#277ab1] text-white" onClick={addDraft}><Plus className="size-4 mr-2" /> Nova característica</Button>
           <span className="text-sm text-muted-foreground">Arraste a coluna até aqui para agrupar</span>
         </div>
         <div className="overflow-auto">
@@ -207,7 +207,9 @@ export default function CaracteristicasEstoquePage() {
                   <td className="px-3 py-2 border-x">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="px-2 py-1 rounded hover:bg-muted" aria-label="Ações">⋯</button>
+                        <button className="p-1.5 rounded hover:bg-muted" aria-label="Ações">
+                          <MoreHorizontal className="h-5 w-5" style={{ color: '#2f8ac9' }} />
+                        </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start">
                         <DropdownMenuItem
