@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
-import { Plus, Search, SlidersHorizontal, Maximize2, Trash2, Check, X } from 'lucide-react'
+import { Plus, Search, SlidersHorizontal, Maximize2, Check, X } from 'lucide-react'
 import { useStockAttributes } from '@/lib/hooks/use-stock-attributes'
 import type { StockAttribute } from '@/lib/types/stock-attribute'
 import { useDeleteStockAttribute } from '@/lib/hooks/use-delete-stock-attribute'
@@ -11,6 +11,8 @@ import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
 import { useToast } from '@/components/ui/toast-context'
 import { useCreateStockAttribute } from '@/lib/hooks/use-create-stock-attribute'
 import { nanoid } from 'nanoid'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { useUpdateStockAttributeMutation } from '@/lib/hooks/use-update-stock-attribute-mutation'
 
 type Caracteristica = StockAttribute
 
@@ -23,6 +25,7 @@ export default function CaracteristicasEstoquePage() {
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const { show } = useToast()
   const create = useCreateStockAttribute()
+  const updateMutation = useUpdateStockAttributeMutation()
 
   type Draft = { id: string; descricao: string; formato: '' | 'TEXTO' | 'DATA'; saving?: boolean }
   const [drafts, setDrafts] = useState<Draft[]>([])
@@ -199,18 +202,47 @@ export default function CaracteristicasEstoquePage() {
               {rows.map(row => (
                 <tr key={row.id} className="border-t">
                   <td className="px-3 py-2">
-                    {row.origem !== 'PADRÃO' ? (
-                      <button
-                        aria-label="Excluir"
-                        title="Excluir"
-                        className="text-red-600 hover:text-red-700"
-                        onClick={() => setConfirmId(row.id)}
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
-                    ) : (
-                      <span className="text-muted-foreground">...</span>
-                    )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="px-2 py-1 rounded hover:bg-muted" aria-label="Ações">⋯</button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuItem
+                          onClick={async () => {
+                            if (row.origem === 'PADRÃO') return
+                            const nextAtivo = row.situacao !== 'ATIVO'
+                            try {
+                              await updateMutation.mutateAsync({ id: row.id, ativo: nextAtivo })
+                            } catch {
+                              show({ kind: 'error', message: 'Erro ao atualizar situação.' })
+                            }
+                          }}
+                          variant="destructive"
+                          disabled={row.origem === 'PADRÃO' || updateMutation.isPending}
+                        >
+                          {row.situacao === 'ATIVO' ? 'Inativar' : 'Ativar'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            show({ kind: 'info', message: 'Edição inline será adicionada em seguida.' })
+                          }}
+                        >
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            if (row.origem === 'PADRÃO') {
+                              show({ kind: 'info', message: 'Esta característica padrão do sistema não pode ser excluída.' })
+                            } else {
+                              setConfirmId(row.id)
+                            }
+                          }}
+                          variant="destructive"
+                        >
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </td>
                   <td className="px-3 py-2">{row.descricao}</td>
                   <td className="px-3 py-2">
