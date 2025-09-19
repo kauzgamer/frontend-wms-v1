@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
-import { Plus, Search, SlidersHorizontal, Maximize2, Trash2 } from 'lucide-react'
+import { Plus, Search, SlidersHorizontal, Maximize2, Trash2, Check, X } from 'lucide-react'
 import { useStockAttributes } from '@/lib/hooks/use-stock-attributes'
 import type { StockAttribute } from '@/lib/types/stock-attribute'
 import { useDeleteStockAttribute } from '@/lib/hooks/use-delete-stock-attribute'
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
-import { CreateStockAttributeDialog } from '@/components/stock-attributes/create-stock-attribute-dialog'
 import { useToast } from '@/components/ui/toast-context'
+import { useCreateStockAttribute } from '@/lib/hooks/use-create-stock-attribute'
+import { nanoid } from 'nanoid'
 
 type Caracteristica = StockAttribute
 
@@ -20,8 +21,40 @@ export default function CaracteristicasEstoquePage() {
   const { data, isLoading, isError } = useStockAttributes({ q: query, status: statusFilter })
   const del = useDeleteStockAttribute()
   const [confirmId, setConfirmId] = useState<string | null>(null)
-  const [createOpen, setCreateOpen] = useState(false)
   const { show } = useToast()
+  const create = useCreateStockAttribute()
+
+  type Draft = { id: string; descricao: string; formato: '' | 'TEXTO' | 'DATA'; saving?: boolean }
+  const [drafts, setDrafts] = useState<Draft[]>([])
+
+  function addDraft() {
+    setDrafts((d) => [{ id: nanoid(), descricao: '', formato: '' }, ...d])
+  }
+
+  function updateDraft(id: string, patch: Partial<Draft>) {
+    setDrafts((ds) => ds.map((d) => (d.id === id ? { ...d, ...patch } : d)))
+  }
+
+  function removeDraft(id: string) {
+    setDrafts((ds) => ds.filter((d) => d.id !== id))
+  }
+
+  async function saveDraft(id: string, addAnother = false) {
+    const d = drafts.find((x) => x.id === id)
+    if (!d) return
+    const descricao = d.descricao.trim()
+    if (!descricao || (d.formato !== 'TEXTO' && d.formato !== 'DATA')) return
+    updateDraft(id, { saving: true })
+    try {
+      await create.mutateAsync({ descricao, formato: d.formato, ativo: true })
+      removeDraft(id)
+      show({ kind: 'success', message: 'Característica de estoque criada com sucesso!' })
+      if (addAnother) addDraft()
+    } catch {
+      updateDraft(id, { saving: false })
+      show({ kind: 'error', message: 'Erro ao criar característica de estoque.' })
+    }
+  }
 
   const rows: Caracteristica[] = useMemo(() => data ?? [], [data])
 
@@ -79,7 +112,7 @@ export default function CaracteristicasEstoquePage() {
 
   <Card className="p-0 overflow-hidden">
         <div className="flex items-center gap-3 p-3">
-          <Button className="bg-[#0c9abe] hover:bg-[#0a869d] text-white" onClick={() => setCreateOpen(true)}><Plus className="size-4 mr-2" /> Nova característica</Button>
+          <Button className="bg-[#c2c7c9] hover:bg-[#b3b8ba] text-white" onClick={addDraft}><Plus className="size-4 mr-2" /> Nova característica</Button>
           <span className="text-sm text-muted-foreground">Arraste a coluna até aqui para agrupar</span>
         </div>
         <div className="overflow-auto">
@@ -95,6 +128,65 @@ export default function CaracteristicasEstoquePage() {
               </tr>
             </thead>
             <tbody>
+              {drafts.map((d) => (
+                <tr key={d.id} className="border-t bg-muted/20">
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-3">
+                      <button
+                        className="text-[#00b894] hover:opacity-80 disabled:opacity-50"
+                        title="Salvar"
+                        aria-label="Salvar"
+                        disabled={d.saving || !d.descricao.trim() || !(d.formato === 'TEXTO' || d.formato === 'DATA')}
+                        onClick={() => saveDraft(d.id, false)}
+                      >
+                        <Check className="size-4" />
+                      </button>
+                      <button
+                        className="text-[#2f8ac9] hover:opacity-80 disabled:opacity-50"
+                        title="Salvar e adicionar outra"
+                        aria-label="Salvar e adicionar outra"
+                        disabled={d.saving || !d.descricao.trim() || !(d.formato === 'TEXTO' || d.formato === 'DATA')}
+                        onClick={() => saveDraft(d.id, true)}
+                      >
+                        <Plus className="size-4" />
+                      </button>
+                      <button
+                        className="text-red-600 hover:text-red-700 disabled:opacity-50"
+                        title="Cancelar"
+                        aria-label="Cancelar"
+                        disabled={d.saving}
+                        onClick={() => removeDraft(d.id)}
+                      >
+                        <X className="size-4" />
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2">
+                    <input
+                      className="h-9 w-full rounded-md border px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                      placeholder="Informe a descrição"
+                      value={d.descricao}
+                      onChange={(e) => updateDraft(d.id, { descricao: e.target.value })}
+                      disabled={d.saving}
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <select
+                      className="h-9 w-[220px] rounded-md border px-3 text-sm bg-background"
+                      value={d.formato}
+                      onChange={(e) => updateDraft(d.id, { formato: e.target.value as Draft['formato'] })}
+                      disabled={d.saving}
+                    >
+                      <option value="">Selecione o formato</option>
+                      <option value="TEXTO">TEXTO</option>
+                      <option value="DATA">DATA</option>
+                    </select>
+                  </td>
+                  <td className="px-3 py-2"></td>
+                  <td className="px-3 py-2"></td>
+                  <td className="px-3 py-2">...</td>
+                </tr>
+              ))}
               {isLoading && (
                 <tr><td className="px-3 py-6 text-sm text-muted-foreground" colSpan={6}>Carregando...</td></tr>
               )}
@@ -188,7 +280,6 @@ export default function CaracteristicasEstoquePage() {
         confirmText="Confirmar"
         cancelText="Cancelar"
       />
-      <CreateStockAttributeDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
   )
 }
