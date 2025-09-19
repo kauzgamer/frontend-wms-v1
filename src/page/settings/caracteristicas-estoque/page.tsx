@@ -103,6 +103,7 @@ export default function CaracteristicasEstoquePage() {
               <input
                 className="h-9 w-72 rounded-md border px-3 pr-8 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
                 placeholder="Pesquisar"
+                name="search"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
               />
@@ -119,21 +120,20 @@ export default function CaracteristicasEstoquePage() {
           <span className="text-sm text-muted-foreground">Arraste a coluna até aqui para agrupar</span>
         </div>
         <div className="overflow-auto">
-          <table className="min-w-full border-t text-sm">
+          <table className="min-w-full border text-sm">
             <thead className="bg-muted/40 text-muted-foreground">
               <tr>
-                <th className="w-10 text-left px-3 py-2"> </th>
-                <th className="text-left px-3 py-2">Descrição</th>
-                <th className="text-left px-3 py-2">Formato</th>
-                <th className="text-left px-3 py-2">Origem</th>
-                <th className="text-left px-3 py-2">Situação</th>
-                <th className="w-10 px-3 py-2"> </th>
+                <th className="w-10 text-left px-3 py-2 border-x"> </th>
+                <th className="text-left px-3 py-2 border-x">Descrição</th>
+                <th className="text-left px-3 py-2 border-x">Formato</th>
+                <th className="text-left px-3 py-2 border-x">Origem</th>
+                <th className="text-left px-3 py-2 border-x">Situação</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y">
               {drafts.map((d) => (
                 <tr key={d.id} className="border-t bg-muted/20">
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 border-x">
                     <div className="flex items-center gap-3">
                       <button
                         className="text-[#00b894] hover:opacity-80 disabled:opacity-50"
@@ -164,18 +164,22 @@ export default function CaracteristicasEstoquePage() {
                       </button>
                     </div>
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 border-x">
                     <input
                       className="h-9 w-full rounded-md border px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
                       placeholder="Informe a descrição"
+                      name={`descricao-${d.id}`}
+                      id={`descricao-${d.id}`}
                       value={d.descricao}
                       onChange={(e) => updateDraft(d.id, { descricao: e.target.value })}
                       disabled={d.saving}
                     />
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 border-x">
                     <select
                       className="h-9 w-[220px] rounded-md border px-3 text-sm bg-background"
+                      name={`formato-${d.id}`}
+                      id={`formato-${d.id}`}
                       value={d.formato}
                       onChange={(e) => updateDraft(d.id, { formato: e.target.value as Draft['formato'] })}
                       disabled={d.saving}
@@ -185,23 +189,22 @@ export default function CaracteristicasEstoquePage() {
                       <option value="DATA">DATA</option>
                     </select>
                   </td>
-                  <td className="px-3 py-2"></td>
-                  <td className="px-3 py-2"></td>
-                  <td className="px-3 py-2">...</td>
+                  <td className="px-3 py-2 border-x"></td>
+                  <td className="px-3 py-2 border-x"></td>
                 </tr>
               ))}
               {isLoading && (
-                <tr><td className="px-3 py-6 text-sm text-muted-foreground" colSpan={6}>Carregando...</td></tr>
+                <tr><td className="px-3 py-6 text-sm text-muted-foreground" colSpan={5}>Carregando...</td></tr>
               )}
               {isError && !isLoading && (
-                <tr><td className="px-3 py-6 text-sm text-red-600" colSpan={6}>Erro ao carregar dados.</td></tr>
+                <tr><td className="px-3 py-6 text-sm text-red-600" colSpan={5}>Erro ao carregar dados.</td></tr>
               )}
               {!isLoading && !isError && rows.length === 0 && (
-                <tr><td className="px-3 py-6 text-sm text-muted-foreground" colSpan={6}>Nenhum resultado.</td></tr>
+                <tr><td className="px-3 py-6 text-sm text-muted-foreground" colSpan={5}>Nenhum resultado.</td></tr>
               )}
               {rows.map(row => (
                 <tr key={row.id} className="border-t">
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 border-x">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="px-2 py-1 rounded hover:bg-muted" aria-label="Ações">⋯</button>
@@ -244,23 +247,22 @@ export default function CaracteristicasEstoquePage() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
-                  <td className="px-3 py-2">{row.descricao}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 border-x">{row.descricao}</td>
+                  <td className="px-3 py-2 border-x">
                     <span className="inline-flex items-center rounded bg-[#b3c559] text-white px-2 py-0.5 text-xs font-semibold">
                       {row.formato}
                     </span>
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 border-x">
                     <span className="inline-flex items-center rounded bg-[#2f8ac9] text-white px-2 py-0.5 text-xs font-semibold">
                       {row.origem}
                     </span>
                   </td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 border-x">
                     <span className="inline-flex items-center rounded bg-[#00b894] text-white px-2 py-0.5 text-xs font-semibold">
                       {row.situacao}
                     </span>
                   </td>
-                  <td className="px-3 py-2">...</td>
                 </tr>
               ))}
             </tbody>
