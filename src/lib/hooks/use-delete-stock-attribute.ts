@@ -5,12 +5,10 @@ export function useDeleteStockAttribute() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/stock-attributes/${id}`, { method: 'DELETE' })
-      if (!res.ok) {
-        const text = await res.text().catch(() => '')
-        throw new Error(text || res.statusText)
-      }
-      return res.json() as Promise<{ deleted: boolean; reason?: string }>
+      return apiFetch<{ deleted: boolean; reason?: string }>(
+        `/stock-attributes/${id}`,
+        { method: 'DELETE' }
+      )
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['stock-attributes'] })
