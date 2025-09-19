@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
-import { Plus, Search, SlidersHorizontal, Maximize2 } from 'lucide-react'
+import { Plus, Search, SlidersHorizontal, Maximize2, Trash2 } from 'lucide-react'
 import { useStockAttributes } from '@/lib/hooks/use-stock-attributes'
 import type { StockAttribute } from '@/lib/types/stock-attribute'
+import { useDeleteStockAttribute } from '@/lib/hooks/use-delete-stock-attribute'
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
 
 type Caracteristica = StockAttribute
 
@@ -14,6 +16,8 @@ export default function CaracteristicasEstoquePage() {
   const [statusFilter, setStatusFilter] = useState<'ATIVO' | 'INATIVO' | 'TODOS'>('ATIVO')
   const [pageSize, setPageSize] = useState(10)
   const { data, isLoading, isError } = useStockAttributes({ q: query, status: statusFilter })
+  const del = useDeleteStockAttribute()
+  const [confirmId, setConfirmId] = useState<string | null>(null)
 
   const rows: Caracteristica[] = useMemo(() => data ?? [], [data])
 
@@ -98,7 +102,20 @@ export default function CaracteristicasEstoquePage() {
               )}
               {rows.map(row => (
                 <tr key={row.id} className="border-t">
-                  <td className="px-3 py-2">...</td>
+                  <td className="px-3 py-2">
+                    {row.origem !== 'PADRÃO' ? (
+                      <button
+                        aria-label="Excluir"
+                        title="Excluir"
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => setConfirmId(row.id)}
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    ) : (
+                      <span className="text-muted-foreground">...</span>
+                    )}
+                  </td>
                   <td className="px-3 py-2">{row.descricao}</td>
                   <td className="px-3 py-2">
                     <span className="inline-flex items-center rounded bg-[#b3c559] text-white px-2 py-0.5 text-xs font-semibold">
@@ -141,6 +158,27 @@ export default function CaracteristicasEstoquePage() {
           </div>
         </div>
       </Card>
+      <ConfirmationDialog
+        open={!!confirmId}
+        onCancel={() => setConfirmId(null)}
+        onConfirm={async () => {
+          if (!confirmId) return
+          try {
+            const res = await del.mutateAsync(confirmId)
+            if (res.deleted) setConfirmId(null)
+            else {
+              // proteção padrão: apenas fecha por enquanto; poderia exibir toast
+              setConfirmId(null)
+            }
+          } catch {
+            setConfirmId(null)
+          }
+        }}
+        title="Excluir"
+        description="Deseja excluir esta característica de estoque?"
+        confirmText="Confirmar"
+        cancelText="Cancelar"
+      />
     </div>
   )
 }
