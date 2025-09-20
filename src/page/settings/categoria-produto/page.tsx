@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useProductCategories } from '@/lib/hooks/use-product-categories'
 import { useCreateProductCategory } from '@/lib/hooks/use-create-product-category'
 import { useUpdateProductCategory } from '@/lib/hooks/use-update-product-category'
@@ -16,10 +16,13 @@ export default function CategoriaProdutoPage() {
   const [status, setStatus] = useState<'ATIVO' | 'INATIVO' | 'TODOS'>('TODOS')
   const [showDraft, setShowDraft] = useState(false)
   const [draft, setDraft] = useState<{ descricao: string }>({ descricao: '' })
+  const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(10)
-  const [loaded, setLoaded] = useState<number>(10)
+  const [sort] = useState<string>('descricao')
+  const [order, setOrder] = useState<'asc' | 'desc'>('asc')
+  const [items, setItems] = useState<ProductCategory[]>([])
 
-  const { data, refetch } = useProductCategories({ q, status })
+  const { data, refetch, isFetching } = useProductCategories({ q, status, page, limit: pageSize, sort, order })
   const createMut = useCreateProductCategory()
 
   const handleCreate = async (keepOpen: boolean) => {
@@ -39,10 +42,22 @@ export default function CategoriaProdutoPage() {
     }
   }
 
-  const rows: ProductCategory[] = useMemo(() => data ?? [], [data])
-  const total = rows.length
-  const shown = Math.min(loaded, total)
-  const visibleRows = rows.slice(0, shown)
+  // accumulate or replace items when data changes
+  // Update accumulated items when page/data changes
+  useEffect(() => {
+    if (!data) return
+    if (page === 1) setItems(data.items)
+    else setItems(prev => {
+      // avoid duplicates if refetch returns overlapping pages
+      const seen = new Set(prev.map(i => i.id))
+      const merged = [...prev]
+      for (const it of data.items) if (!seen.has(it.id)) merged.push(it)
+      return merged
+    })
+  }, [data, page])
+
+  const total = data?.total ?? 0
+  const visibleRows = items
 
   return (
     <div className="p-6 space-y-4">
@@ -138,7 +153,20 @@ export default function CategoriaProdutoPage() {
           <thead className="bg-gray-50">
             <tr className="text-left">
               <th className="w-12"></th>
-              <th className="py-2 px-3">Descrição</th>
+              <th className="py-2 px-3">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 hover:underline"
+                  onClick={() => {
+                    const next = order === 'asc' ? 'desc' : 'asc'
+                    setOrder(next as 'asc' | 'desc')
+                    setPage(1)
+                  }}
+                  title={`Ordenar por descrição (${order === 'asc' ? 'asc' : 'desc'})`}
+                >
+                  Descrição {order === 'asc' ? '↑' : '↓'}
+                </button>
+              </th>
               <th className="py-2 px-3">Situação</th>
               <th className="py-2 px-3 w-24"></th>
             </tr>
@@ -198,10 +226,13 @@ export default function CategoriaProdutoPage() {
                 cat={cat}
                 onUpdated={() => {
                   toastApi.show({ message: 'Categoria atualizada', kind: 'success' })
+                  // refresh current page; reset accumulation to keep consistent
+                  setPage(1)
                   refetch()
                 }}
                 onDeleted={() => {
                   toastApi.show({ message: 'Categoria excluída', kind: 'success' })
+                  setPage(1)
                   refetch()
                 }}
               />
@@ -215,7 +246,7 @@ export default function CategoriaProdutoPage() {
         <div className="text-sm text-gray-600">
           {total > 0 ? (
             <span>
-              1 - {shown} de {total} resultados
+              {items.length} de {total} resultados
             </span>
           ) : (
             <span>0 resultados</span>
@@ -225,10 +256,10 @@ export default function CategoriaProdutoPage() {
           <button
             type="button"
             className="px-4 py-2 rounded-md text-gray-800 border bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
-            onClick={() => setLoaded((v) => Math.min(v + pageSize, total))}
-            disabled={shown >= total}
+            onClick={() => setPage(p => p + 1)}
+            disabled={isFetching || items.length >= total}
           >
-            Carregar mais {pageSize} resultados
+            {isFetching ? 'Carregando...' : `Carregar mais ${pageSize} resultados`}
           </button>
           <div className="flex items-center gap-2 text-sm">
             <span className="text-gray-600">Exibir</span>
@@ -238,6 +269,7 @@ export default function CategoriaProdutoPage() {
               onChange={(e) => {
                 const val = parseInt(e.target.value, 10)
                 setPageSize(val)
+                setPage(1)
               }}
             >
               <option value={10}>10</option>
