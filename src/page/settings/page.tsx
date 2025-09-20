@@ -72,11 +72,11 @@ export function SettingsPage() {
             <div className="space-y-0 text-[15px] leading-snug">
               <Link to="/settings/products" className="block text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Produto/SKU</Link>
               <Link to="/settings/caracteristicas-estoque" className="block text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Características de estoque</Link>
-              <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Categoria de produto</button>
+              <Link to="/settings/categoria-produto" className="block text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Categoria de produto</Link>
               <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Atributos de estoque</button>
             </div>
             <div className="space-y-0 text-[15px] leading-snug">
-              <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Fornecedor</button>
+              <Link to="/settings/fornecedor" className="block text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Fornecedor</Link>
               <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Transportadora</button>
               <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Cliente</button>
               <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Kit de produtos</button>
