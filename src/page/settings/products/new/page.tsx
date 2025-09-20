@@ -6,12 +6,14 @@ import { useState } from 'react'
 import { MoreHorizontal, Plus, Check, X } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet'
 import { useCreateProduct } from '@/lib/hooks/use-create-product'
+import { useProductCategoriesForSelect } from '@/lib/hooks/use-product-categories-for-select'
 import { useOrganization } from '@/lib/hooks/use-organization'
 
 export function NewProductPage() {
   const navigate = useNavigate()
   const { data: org } = useOrganization()
   const { mutateAsync, isPending } = useCreateProduct()
+  const { data: categories, isLoading: categoriesLoading } = useProductCategoriesForSelect()
   const [form, setForm] = useState<ProductCreateForm>({
     name: '',
     sku: '',
@@ -216,8 +218,10 @@ export function NewProductPage() {
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-[#334b52]">Categoria <span className="text-muted-foreground text-xs font-normal">(Opcional)</span></label>
               <select value={form.category || ''} onChange={e=>update('category', e.target.value)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
-                <option value="">Selecione a categoria</option>
-                <option value="GERAL">GERAL</option>
+                <option value="">{categoriesLoading ? 'Carregando...' : 'Selecione a categoria'}</option>
+                {categories?.map(c => (
+                  <option key={c.id} value={c.descricao}>{c.descricao}</option>
+                ))}
               </select>
             </div>
           </div>

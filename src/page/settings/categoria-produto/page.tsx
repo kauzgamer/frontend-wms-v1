@@ -4,17 +4,20 @@ import { useCreateProductCategory } from '@/lib/hooks/use-create-product-categor
 import { useUpdateProductCategory } from '@/lib/hooks/use-update-product-category'
 import { useDeleteProductCategory } from '@/lib/hooks/use-delete-product-category'
 import type { ProductCategory } from '@/lib/types/product-category'
-import { MoreHorizontal } from 'lucide-react'
+import { Filter, FileSpreadsheet, Maximize2, MoreHorizontal, Search } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useToast } from '@/components/ui/toast-context'
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 
 export default function CategoriaProdutoPage() {
   const toastApi = useToast()
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<'ATIVO' | 'INATIVO' | 'TODOS'>('TODOS')
   const [showDraft, setShowDraft] = useState(false)
-  const [draft, setDraft] = useState<{ descricao: string; ativo: boolean }>({ descricao: '', ativo: true })
+  const [draft, setDraft] = useState<{ descricao: string }>({ descricao: '' })
+  const [pageSize, setPageSize] = useState<number>(10)
+  const [loaded, setLoaded] = useState<number>(10)
 
   const { data, refetch } = useProductCategories({ q, status })
   const createMut = useCreateProductCategory()
@@ -25,9 +28,9 @@ export default function CategoriaProdutoPage() {
       return
     }
     try {
-      await createMut.mutateAsync({ descricao: draft.descricao.trim(), ativo: draft.ativo })
+      await createMut.mutateAsync({ descricao: draft.descricao.trim(), ativo: true })
   toastApi.show({ message: 'Categoria criada com sucesso', kind: 'success' })
-      setDraft({ descricao: '', ativo: true })
+      setDraft({ descricao: '' })
       if (!keepOpen) setShowDraft(false)
       refetch()
     } catch (e) {
@@ -37,19 +40,69 @@ export default function CategoriaProdutoPage() {
   }
 
   const rows: ProductCategory[] = useMemo(() => data ?? [], [data])
+  const total = rows.length
+  const shown = Math.min(loaded, total)
+  const visibleRows = rows.slice(0, shown)
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Categoria de produto</h1>
-        <button
-          type="button"
-          onClick={() => setShowDraft(true)}
-          className="px-3 py-2 rounded-md text-white"
-          style={{ backgroundColor: '#2f8ac9' }}
-        >
-          Nova categoria
-        </button>
+      {/* Breadcrumbs */}
+      <Breadcrumb className="mb-2">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">Início</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/settings">Configurador</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Categoria de produto</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      <h1 className="text-2xl font-semibold">Categoria de produto</h1>
+
+      {/* Toolbar */}
+      <div className="border rounded-md p-3">
+        <div className="text-sm font-medium mb-2">Categoria de produto</div>
+
+        {status !== 'TODOS' && (
+          <div className="mb-2 text-sm">
+            Filtrando por:
+            <span className="ml-2 inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-xs">
+              Situação igual a: {status === 'ATIVO' ? 'Ativo' : 'Inativo'}
+            </span>
+          </div>
+        )}
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowDraft(true)}
+            className="px-3 py-2 rounded-md text-white"
+            style={{ backgroundColor: '#2f8ac9' }}
+          >
+            + Nova categoria
+          </button>
+          <div className="text-sm text-gray-500">Arraste a coluna até aqui para agrupar</div>
+          <div className="ml-auto flex items-center gap-2">
+            <button aria-label="Filtros" className="p-2 rounded border hover:bg-gray-50"><Filter size={16} /></button>
+            <button aria-label="Exportar XLS" className="p-2 rounded border hover:bg-gray-50"><FileSpreadsheet size={16} /></button>
+            <div className="relative">
+              <input
+                className="border rounded pl-8 pr-2 py-1 text-sm w-64"
+                placeholder="Pesquisar"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
+              <Search size={16} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
+            </div>
+            <button aria-label="Tela cheia" className="p-2 rounded border hover:bg-gray-50"><Maximize2 size={16} /></button>
+          </div>
+        </div>
       </div>
 
       <div className="flex gap-3 items-end">
@@ -105,23 +158,14 @@ export default function CategoriaProdutoPage() {
                   />
                 </td>
                 <td className="px-3 py-2">
-                  <select
-                    id="ativo"
-                    name="ativo"
-                    className="border rounded px-2 py-1"
-                    value={draft.ativo ? 'ATIVO' : 'INATIVO'}
-                    onChange={(e) => setDraft((d) => ({ ...d, ativo: e.target.value === 'ATIVO' }))}
-                  >
-                    <option value="ATIVO">Ativo</option>
-                    <option value="INATIVO">Inativo</option>
-                  </select>
+                  <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">ATIVO</span>
                 </td>
-                <td className="px-3 py-2 flex gap-2">
+                <td className="px-3 py-2 flex gap-2 items-center">
                   <button
                     type="button"
                     title="Salvar"
                     className="px-2 py-1 rounded text-white"
-                    style={{ backgroundColor: '#2f8ac9' }}
+                    style={{ backgroundColor: '#28a745' }}
                     onClick={() => handleCreate(false)}
                   >
                     ✓
@@ -138,7 +182,8 @@ export default function CategoriaProdutoPage() {
                   <button
                     type="button"
                     title="Cancelar"
-                    className="px-2 py-1 rounded border"
+                    className="px-2 py-1 rounded text-white"
+                    style={{ backgroundColor: '#dc3545' }}
                     onClick={() => setShowDraft(false)}
                   >
                     ×
@@ -147,7 +192,7 @@ export default function CategoriaProdutoPage() {
               </tr>
             )}
 
-            {rows.map((cat) => (
+            {visibleRows.map((cat) => (
               <Row
                 key={cat.id}
                 cat={cat}
@@ -163,6 +208,45 @@ export default function CategoriaProdutoPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Paging footer */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-600">
+          {total > 0 ? (
+            <span>
+              1 - {shown} de {total} resultados
+            </span>
+          ) : (
+            <span>0 resultados</span>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            className="px-4 py-2 rounded-md text-gray-800 border bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+            onClick={() => setLoaded((v) => Math.min(v + pageSize, total))}
+            disabled={shown >= total}
+          >
+            Carregar mais {pageSize} resultados
+          </button>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-600">Exibir</span>
+            <select
+              className="border rounded px-2 py-1"
+              value={pageSize}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10)
+                setPageSize(val)
+              }}
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <span className="text-gray-600">resultados por vez</span>
+          </div>
+        </div>
       </div>
     </div>
   )
