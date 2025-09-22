@@ -1,101 +1,133 @@
-import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { User, Lock } from 'lucide-react'
-import { useAuth } from '@/lib/use-auth'
-import { frontendLoginSchema } from '@/lib/validation/auth'
-import logo from '@/assets/logo-simple.svg'
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { User, Lock } from "lucide-react";
+import { useAuth } from "@/lib/use-auth";
+import { frontendLoginSchema } from "@/lib/validation/auth";
+import logo from "@/assets/logo-simple.svg";
 
 export function LoginPage() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { login } = useAuth()
-  const [loginValue, setLoginValue] = useState('')
-  const [senha, setSenha] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const versao = '1.0.0'
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+  const [loginValue, setLoginValue] = useState("");
+  const [senha, setSenha] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const versao = "1.0.0";
 
   // Get the intended destination
-  const from = location.state?.from?.pathname || '/dashboard'
+  const from = location.state?.from?.pathname || "/dashboard";
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (loading) return
+    e.preventDefault();
+    if (loading) return;
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
 
     try {
       // Validate with zod
-      const parsed = frontendLoginSchema.safeParse({ email: loginValue, password: senha })
+      const parsed = frontendLoginSchema.safeParse({
+        email: loginValue,
+        password: senha,
+      });
       if (!parsed.success) {
-        setError(parsed.error.issues.map(issue => issue.message).join('\n'))
-        setLoading(false)
-        return
+        setError(parsed.error.issues.map((issue) => issue.message).join("\n"));
+        setLoading(false);
+        return;
       }
-      await login(parsed.data.email, parsed.data.password)
+      await login(parsed.data.email, parsed.data.password);
       // Redirect to intended page or dashboard
-      navigate(from, { replace: true })
-    } catch {
-      setError('Credenciais inválidas. Tente novamente.')
+      navigate(from, { replace: true });
+    } catch (e) {
+      const msg =
+        e instanceof Error
+          ? e.message
+          : "Credenciais inválidas. Tente novamente.";
+      setError(msg);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start pt-14 px-4 bg-[#fbfbfb] relative text-[#334b52]">
       <div className="w-full max-w-sm flex flex-col items-center">
-        <img src={logo} alt="Logo" className="mb-6 select-none" draggable={false} />
+        <img
+          src={logo}
+          alt="Logo"
+          className="mb-6 select-none"
+          draggable={false}
+        />
         <h2 className="text-3xl font-light tracking-wide mb-2">WMS</h2>
         <h3 className="text-center text-[#0790a8] font-semibold text-sm leading-snug mb-6 uppercase">
-          INDUSTRIA E COMERCIO SANTA MARIA<br/> LTDA
+          INDUSTRIA E COMERCIO SANTA MARIA
+          <br /> LTDA
         </h3>
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-3">
           <div className="relative">
+            <label htmlFor="email" className="sr-only">
+              Email
+            </label>
             <User className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#0790a8]" />
             <input
+              id="email"
+              name="email"
+              type="email"
               placeholder="Inserir seu login"
+              autoComplete="email"
               value={loginValue}
-              onChange={e => setLoginValue(e.target.value)}
+              onChange={(e) => setLoginValue(e.target.value)}
               className="w-full h-10 pl-9 pr-3 rounded border text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
             />
           </div>
           <div className="relative">
+            <label htmlFor="password" className="sr-only">
+              Senha
+            </label>
             <Lock className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#0790a8]" />
             <input
+              id="password"
+              name="password"
               placeholder="Insira sua senha"
               value={senha}
               type="password"
-              onChange={e => setSenha(e.target.value)}
+              autoComplete="current-password"
+              onChange={(e) => setSenha(e.target.value)}
               className="w-full h-10 pl-9 pr-3 rounded border text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
             />
           </div>
           {error && (
-            <div className="text-red-600 text-sm text-center">
-              {error}
-            </div>
+            <div className="text-red-600 text-sm text-center">{error}</div>
           )}
           <button
             type="submit"
             disabled={loading || !loginValue || !senha}
             className="h-10 rounded bg-[#008bb1] hover:bg-[#007697] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm shadow-sm transition"
           >
-            {loading ? 'Entrando...' : 'Entrar'}
+            {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
         <div className="mt-5 flex flex-col items-center gap-2 text-[12px]">
-          <button className="text-[#008bb1] hover:underline" type="button">Esqueceu sua senha?</button>
-          <button className="text-[#008bb1] hover:underline" type="button">Alterar senha</button>
+          <button className="text-[#008bb1] hover:underline" type="button">
+            Esqueceu sua senha?
+          </button>
+          <button className="text-[#008bb1] hover:underline" type="button">
+            Alterar senha
+          </button>
         </div>
         <div className="mt-10 opacity-55 text-[12px] font-medium tracking-wide select-none flex items-center gap-1">
-          <span className="inline-block w-5 h-5 rounded-full border-2 border-[#0c5669] flex items-center justify-center text-[9px] font-bold text-[#0c5669]">T</span>
+          <span className="w-5 h-5 rounded-full border-2 border-[#0c5669] flex items-center justify-center text-[9px] font-bold text-[#0c5669]">
+            T
+          </span>
           <span>TOTUS</span>
         </div>
       </div>
-      <span className="absolute left-4 bottom-2 text-[11px] text-[#6b7f85] select-none">Version {versao}</span>
+      <span className="absolute left-4 bottom-2 text-[11px] text-[#6b7f85] select-none">
+        Version {versao}
+      </span>
     </div>
-  )
+  );
 }
 
-export default LoginPage
+export default LoginPage;
