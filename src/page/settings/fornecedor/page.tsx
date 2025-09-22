@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Filter, FileSpreadsheet, Maximize2, MoreHorizontal, Search } from 'lucide-react'
 import { useToast } from '@/components/ui/toast-context'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
 import { useSuppliers } from '@/lib/hooks/use-suppliers'
-import { useCreateSupplier } from '@/lib/hooks/use-create-supplier'
 import { useUpdateSupplier } from '@/lib/hooks/use-update-supplier'
 import { useDeleteSupplier } from '@/lib/hooks/use-delete-supplier'
 import type { Supplier } from '@/lib/types/supplier'
 
 export default function FornecedorPage() {
-  const toastApi = useToast()
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<'ATIVO' | 'INATIVO' | 'TODOS'>('ATIVO')
   const [page, setPage] = useState(1)
@@ -19,29 +18,9 @@ export default function FornecedorPage() {
   const [items, setItems] = useState<Supplier[]>([])
 
   const { data, refetch, isFetching } = useSuppliers({ q, status, page, limit: pageSize, sort: 'createdAt', order: 'asc' })
-  const createMut = useCreateSupplier()
+  // const createMut = useCreateSupplier() // não é mais usado aqui; criação acontece na rota /settings/fornecedor/new
 
-  // Inline draft
-  const [showDraft, setShowDraft] = useState(false)
-  const [draft, setDraft] = useState({ cnpj: '', name: '', uf: '', stateRegistration: '' })
-
-  const handleCreate = async () => {
-    if (!draft.cnpj || !draft.name || !draft.uf) {
-      toastApi.show({ message: 'Preencha CNPJ, Nome e UF', kind: 'info' })
-      return
-    }
-    try {
-      await createMut.mutateAsync({ cnpj: draft.cnpj, name: draft.name, uf: draft.uf, stateRegistration: draft.stateRegistration, active: true })
-      toastApi.show({ message: 'Fornecedor criado', kind: 'success' })
-      setDraft({ cnpj: '', name: '', uf: '', stateRegistration: '' })
-      setShowDraft(false)
-      setPage(1)
-      refetch()
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Erro ao criar'
-      toastApi.show({ message: msg, kind: 'error' })
-    }
-  }
+  // remoção do draft inline; criação será feita na rota /settings/fornecedor/new
 
   useEffect(() => {
     if (!data) return
@@ -87,7 +66,7 @@ export default function FornecedorPage() {
           </div>
         )}
         <div className="flex items-center gap-3">
-          <button type="button" onClick={() => setShowDraft(true)} className="px-3 py-2 rounded-md text-white" style={{ backgroundColor: '#2f8ac9' }}>+ Novo fornecedor</button>
+          <Link to="/settings/fornecedor/new" className="px-3 py-2 rounded-md text-white" style={{ backgroundColor: '#2f8ac9' }}>+ Novo fornecedor</Link>
           <div className="text-sm text-gray-500">Arraste a coluna até aqui para agrupar</div>
           <div className="ml-auto flex items-center gap-2">
             <button aria-label="Filtros" className="p-2 rounded border hover:bg-gray-50"><Filter size={16} /></button>
@@ -126,20 +105,7 @@ export default function FornecedorPage() {
             </tr>
           </thead>
           <tbody>
-            {showDraft && (
-              <tr className="border-t">
-                <td className="px-3 py-2 text-gray-500">...</td>
-                <td className="px-3 py-2"><input className="border rounded px-2 py-1 w-full" value={draft.cnpj} onChange={(e)=>setDraft(d=>({...d, cnpj: e.target.value}))} placeholder="00.000.000/0000-00" /></td>
-                <td className="px-3 py-2"><input className="border rounded px-2 py-1 w-full" value={draft.name} onChange={(e)=>setDraft(d=>({...d, name: e.target.value}))} placeholder="Nome" /></td>
-                <td className="px-3 py-2"><input className="border rounded px-2 py-1 w-full" value={draft.uf} onChange={(e)=>setDraft(d=>({...d, uf: e.target.value}))} placeholder="São Paulo" /></td>
-                <td className="px-3 py-2"><input className="border rounded px-2 py-1 w-full" value={draft.stateRegistration} onChange={(e)=>setDraft(d=>({...d, stateRegistration: e.target.value}))} placeholder="Não informada" /></td>
-                <td className="px-3 py-2"><span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">ATIVO</span></td>
-                <td className="px-3 py-2 flex gap-2 items-center">
-                  <button type="button" title="Salvar" className="px-2 py-1 rounded text-white" style={{ backgroundColor: '#28a745' }} onClick={handleCreate}>✓</button>
-                  <button type="button" title="Cancelar" className="px-2 py-1 rounded text-white" style={{ backgroundColor: '#dc3545' }} onClick={()=>setShowDraft(false)}>×</button>
-                </td>
-              </tr>
-            )}
+            {/* criação inline removida */}
 
             {items.map((sup) => (
               <Row key={sup.id} sup={sup} onChanged={() => { setPage(1); refetch() }} />

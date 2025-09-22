@@ -1,5 +1,4 @@
 import { ChevronRight, type LucideIcon } from "lucide-react"
-
 import {
   Collapsible,
   CollapsibleContent,
@@ -58,7 +57,7 @@ export function NavMain({
       <SidebarMenu>
         {items.map((item) => {
           const hasChildren = !!item.items?.length
-          const active = item.isActive ?? (item.url ? location.pathname === item.url : false)
+          const active = item.isActive ?? ((item.url ? location.pathname === item.url : false) || !!item.items?.some(sub => location.pathname === sub.url))
 
           if (!hasChildren) {
             return (
@@ -97,30 +96,31 @@ export function NavMain({
                     <span className={collapsed ? "text-[10px] leading-4 max-w-[3.25rem] text-center block" : undefined}>
                       {collapsed ? (abbr[item.title] ?? item.title.slice(0, 6)) : item.title}
                     </span>
-                    {(item.title === "Atividades" || item.title === "Manufatura") && (
-                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 keep-size group-data-[collapsible=icon]:hidden" />
-                    )}
+                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 keep-size group-data-[collapsible=icon]:hidden" />
                   </SidebarMenuButton>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    {item.items?.map((subItem) => (
-                      <SidebarMenuSubItem key={subItem.title}>
-                        <SidebarMenuSubButton asChild>
-                          <Link
-                            to={subItem.url}
-                            onClick={() => {
-                              const scroller = document.querySelector('[data-sidebar="content"]') as HTMLElement | null
-                              if (scroller) {
-                                localStorage.setItem('sidebar-scroll-position', scroller.scrollTop.toString())
-                              }
-                            }}
-                          >
-                            <span>{subItem.title}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
+                    {item.items?.map((subItem) => {
+                      const subActive = location.pathname === subItem.url
+                      return (
+                        <SidebarMenuSubItem key={subItem.title}>
+                          <SidebarMenuSubButton asChild isActive={subActive}>
+                            <Link
+                              to={subItem.url}
+                              onClick={() => {
+                                const scroller = document.querySelector('[data-sidebar="content"]') as HTMLElement | null
+                                if (scroller) {
+                                  localStorage.setItem('sidebar-scroll-position', scroller.scrollTop.toString())
+                                }
+                              }}
+                            >
+                              <span>{subItem.title}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      )
+                    })}
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </SidebarMenuItem>

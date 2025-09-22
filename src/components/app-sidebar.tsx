@@ -45,7 +45,15 @@ const data = {
   ],
   navMain: [
     { title: "Início", url: "/dashboard", icon: Home },
-  { title: "Configurações", url: "/settings", icon: Settings2 },
+  { title: "Configurações", url: "/settings", icon: Settings2, items: [
+    { title: "Fluxo de processos", url: "/settings/fluxos" },
+    { title: "Depósito", url: "/settings/deposito" },
+    { title: "Produto/SKU", url: "/settings/products" },
+    { title: "Características de estoque", url: "/settings/caracteristicas-estoque" },
+    { title: "Categoria de produto", url: "/settings/categoria-produto" },
+    { title: "Fornecedor", url: "/settings/fornecedor" },
+    { title: "Usuários", url: "/settings/usuarios" },
+  ] },
     { title: "Estoque", url: "#", icon: Boxes },
     { title: "Recebimento", url: "#", icon: PackagePlus },
     { title: "Expedição", url: "#", icon: Truck },
