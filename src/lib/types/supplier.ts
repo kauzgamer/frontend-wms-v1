@@ -1,6 +1,6 @@
 export type Supplier = {
   id: string
-  documento: string // CNPJ
+  documento: string // CNPJ/CPF
   nome: string
   uf: string
   inscricaoEstadual?: string
@@ -10,7 +10,8 @@ export type Supplier = {
 }
 
 export type SupplierCreateInput = {
-  cnpj: string
+  cnpj?: string
+  cpf?: string
   name: string
   uf: string
   stateRegistration?: string
@@ -19,6 +20,7 @@ export type SupplierCreateInput = {
 
 export type SupplierUpdateInput = Partial<{
   cnpj: string
+  cpf: string
   name: string
   uf: string
   stateRegistration: string

@@ -19,6 +19,7 @@ export default function NewSupplierPage() {
   const [country, setCountry] = useState('BR')
   const [person, setPerson] = useState<PersonType>('PJ')
   const [cnpj, setCnpj] = useState('')
+  const [cpf, setCpf] = useState('')
   const [name, setName] = useState('')
   const [uf, setUf] = useState('')
   const [stateRegistration, setStateRegistration] = useState('')
@@ -29,14 +30,22 @@ export default function NewSupplierPage() {
     if (country !== 'BR') {
       errs.push('No momento, apenas fornecedores do Brasil são suportados.')
     }
-    if (person !== 'PJ') {
-      errs.push('No momento, apenas Pessoa Jurídica é suportada.')
+    if (person === 'FOREIGN') {
+      errs.push('Tipo "Estrangeiro" ainda não suportado.')
     }
-    const onlyDigits = cnpj.replace(/\D/g, '')
-    if (!onlyDigits || onlyDigits.length !== 14) {
-      errs.push('Informe um CNPJ válido com 14 dígitos (somente números).')
+    if (person === 'PJ') {
+      const onlyDigits = cnpj.replace(/\D/g, '')
+      if (!onlyDigits || onlyDigits.length !== 14) {
+        errs.push('Informe um CNPJ válido com 14 dígitos (somente números).')
+      }
     }
-    if (!name.trim()) errs.push('Informe a razão social.')
+    if (person === 'PF') {
+      const onlyDigits = cpf.replace(/\D/g, '')
+      if (!onlyDigits || onlyDigits.length !== 11) {
+        errs.push('Informe um CPF válido com 11 dígitos (somente números).')
+      }
+    }
+    if (!name.trim()) errs.push(person === 'PF' ? 'Informe o nome completo.' : 'Informe a razão social.')
     if (!uf) errs.push('Selecione o estado (UF).')
     setErrors(errs)
     return errs.length === 0
@@ -46,7 +55,10 @@ export default function NewSupplierPage() {
     e.preventDefault()
     if (!validate()) return
     try {
-      await mutateAsync({ cnpj: cnpj.replace(/\D/g, ''), name: name.trim(), uf, stateRegistration: stateRegistration || undefined, active: true })
+      const payload = person === 'PF'
+        ? { cpf: cpf.replace(/\D/g, ''), name: name.trim(), uf, active: true }
+        : { cnpj: cnpj.replace(/\D/g, ''), name: name.trim(), uf, stateRegistration: stateRegistration || undefined, active: true }
+      await mutateAsync(payload)
       toast.show({ message: 'Fornecedor criado com sucesso', kind: 'success' })
       navigate('/settings/fornecedor')
     } catch (err: unknown) {
@@ -123,20 +135,35 @@ export default function NewSupplierPage() {
                   Estrangeiro
                 </label>
               </div>
-              {(person !== 'PJ' || country !== 'BR') && (
-                <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 w-fit">No momento, o cadastro suporta apenas Pessoa Jurídica do Brasil.</div>
+              {(person === 'FOREIGN' || country !== 'BR') && (
+                <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 w-fit">No momento, o cadastro suporta apenas Pessoa Física/Jurídica do Brasil.</div>
               )}
             </div>
 
             {/* Linha de campos */}
-            <div className="flex flex-col gap-1 md:col-span-1">
-              <label className="text-sm font-medium text-[#334b52]">CNPJ</label>
-              <input value={cnpj} onChange={e=>setCnpj(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
-            </div>
-            <div className="flex flex-col gap-1 md:col-span-1">
-              <label className="text-sm font-medium text-[#334b52]">Razão social</label>
-              <input value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome da empresa" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
-            </div>
+            {person === 'PJ' ? (
+              <>
+                <div className="flex flex-col gap-1 md:col-span-1">
+                  <label className="text-sm font-medium text-[#334b52]">CNPJ</label>
+                  <input value={cnpj} onChange={e=>setCnpj(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                </div>
+                <div className="flex flex-col gap-1 md:col-span-1">
+                  <label className="text-sm font-medium text-[#334b52]">Razão social</label>
+                  <input value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome da empresa" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col gap-1 md:col-span-1">
+                  <label className="text-sm font-medium text-[#334b52]">CPF</label>
+                  <input value={cpf} onChange={e=>setCpf(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                </div>
+                <div className="flex flex-col gap-1 md:col-span-1">
+                  <label className="text-sm font-medium text-[#334b52]">Nome completo</label>
+                  <input value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome completo" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                </div>
+              </>
+            )}
             <div className="flex flex-col gap-1 md:col-span-1">
               <label className="text-sm font-medium text-[#334b52]">Estado</label>
               <select value={uf} onChange={e=>setUf(e.target.value)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
@@ -146,10 +173,12 @@ export default function NewSupplierPage() {
                 ))}
               </select>
             </div>
-            <div className="flex flex-col gap-1 md:col-span-1">
-              <label className="text-sm font-medium text-[#334b52]">Inscrição estadual <span className="text-muted-foreground text-xs font-normal">(Opcional)</span></label>
-              <input value={stateRegistration} onChange={e=>setStateRegistration(e.target.value)} placeholder="Não informada" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
-            </div>
+            {person === 'PJ' && (
+              <div className="flex flex-col gap-1 md:col-span-1">
+                <label className="text-sm font-medium text-[#334b52]">Inscrição estadual <span className="text-muted-foreground text-xs font-normal">(Opcional)</span></label>
+                <input value={stateRegistration} onChange={e=>setStateRegistration(e.target.value)} placeholder="Não informada" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+              </div>
+            )}
           </div>
         </section>
 
