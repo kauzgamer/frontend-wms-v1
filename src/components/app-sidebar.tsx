@@ -46,7 +46,6 @@ const data = {
   navMain: [
     { title: "Início", url: "/dashboard", icon: Home },
   { title: "Configurações", url: "/settings", icon: Settings2 },
-  { title: "Categoria de produto", url: "/settings/categoria-produto", icon: Settings2 },
     { title: "Estoque", url: "#", icon: Boxes },
     { title: "Recebimento", url: "#", icon: PackagePlus },
     { title: "Expedição", url: "#", icon: Truck },
