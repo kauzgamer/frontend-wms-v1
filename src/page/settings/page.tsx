@@ -78,7 +78,7 @@ export function SettingsPage() {
             <div className="space-y-0 text-[15px] leading-snug">
               <Link to="/settings/fornecedor" className="block text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Fornecedor</Link>
               <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Transportadora</button>
-              <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Cliente</button>
+              <Link to="/settings/cliente" className="block text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Cliente</Link>
               <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Kit de produtos</button>
             </div>
             <div className="space-y-0 text-[15px] leading-snug">

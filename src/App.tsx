@@ -21,6 +21,8 @@ const CaracteristicasEstoquePage = lazy(() => import("@/page/settings/caracteris
 const CategoriaProdutoPage = lazy(() => import("@/page/settings/categoria-produto/page"))
 const FornecedorPage = lazy(() => import("@/page/settings/fornecedor/page"))
 const NewFornecedorPage = lazy(() => import("@/page/settings/fornecedor/new/page"))
+const ClientePage = lazy(() => import("@/page/settings/cliente/page"))
+const NewClientePage = lazy(() => import("@/page/settings/cliente/new/page"))
 
 // Global route change overlay spinner
 function GlobalRouteLoader({ minDuration = 300 }: { minDuration?: number }) {
@@ -98,6 +100,8 @@ function App() {
           <Route path="/settings/categoria-produto" element={<CategoriaProdutoPage />} />
           <Route path="/settings/fornecedor" element={<FornecedorPage />} />
           <Route path="/settings/fornecedor/new" element={<NewFornecedorPage />} />
+          <Route path="/settings/cliente" element={<ClientePage />} />
+          <Route path="/settings/cliente/new" element={<NewClientePage />} />
           <Route path="/settings/fluxos" element={<FluxosPage />} />
           <Route path="/settings/deposito" element={<DepositoPage />} />
           <Route path="/settings/usuarios" element={<UsuariosPage />} />
