@@ -1,9 +1,9 @@
-import { ChevronRight, type LucideIcon } from "lucide-react"
+import { ChevronRight, type LucideIcon } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 import {
   SidebarGroup,
   SidebarMenu,
@@ -12,106 +12,179 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/components/ui/sidebar"
-import { useSidebar } from "@/components/ui/use-sidebar"
-import { Link, useLocation } from "react-router-dom"
+} from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/use-sidebar";
+import { Link, useLocation } from "react-router-dom";
 
 export function NavMain({
   items,
 }: {
   items: {
-    title: string
-    url: string
-    icon?: LucideIcon
-    isActive?: boolean
+    title: string;
+    url: string;
+    icon?: LucideIcon;
+    isActive?: boolean;
     items?: {
-      title: string
-      url: string
-    }[]
-  }[]
+      title: string;
+      url: string;
+    }[];
+  }[];
 }) {
-  const { state } = useSidebar()
-  const collapsed = state === "collapsed"
-  const location = useLocation()
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+  const location = useLocation();
 
   const abbr: Record<string, string> = {
-    "Estoque": "Estoq",
-    "Recebimento": "Receb",
-    "Expedição": "Exped",
-    "Inventário": "Invent",
-    "Picking": "Picking",
-    "Kit": "Kit",
-    "Docs": "Docs",
-    "Documentos": "Docs",
-    "Integração": "Integra",
-    "Atividades": "Ativid",
-    "Manufatura": "Manufa",
+    Estoque: "Estoq",
+    Recebimento: "Receb",
+    Expedição: "Exped",
+    Inventário: "Invent",
+    Picking: "Picking",
+    Kit: "Kit",
+    Docs: "Docs",
+    Documentos: "Docs",
+    Integração: "Integra",
+    Atividades: "Ativid",
+    Manufatura: "Manufa",
     "Gestão interna": "Gestão",
-    "Configurador": "Config",
-    "Etiqueta": "Etiqueta",
-    "Início": "Início",
-  }
+    Configurador: "Config",
+    Etiqueta: "Etiqueta",
+    Início: "Início",
+  };
 
   return (
     <SidebarGroup>
       <SidebarMenu>
         {items.map((item) => {
-          const hasChildren = !!item.items?.length
-          const active = item.isActive ?? ((item.url ? location.pathname === item.url : false) || !!item.items?.some(sub => location.pathname === sub.url))
+          const hasChildren = !!item.items?.length;
+          const active =
+            item.isActive ??
+            ((item.url ? location.pathname === item.url : false) ||
+              !!item.items?.some((sub) => location.pathname === sub.url));
 
           if (!hasChildren) {
             return (
               <SidebarMenuItem
                 key={item.title}
-                className={`${active ? "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-sidebar-primary" : ""} -mx-2 border-b border-sidebar-border/60 border-x-transparent`}
+                className={`${
+                  active
+                    ? "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-sidebar-primary"
+                    : ""
+                } -mx-2 border-b border-sidebar-border/60 border-x-transparent`}
               >
-                <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={active}
+                  tooltip={item.title}
+                >
                   <Link
                     to={item.url}
                     onClick={() => {
-                      const scroller = document.querySelector('[data-sidebar="content"]') as HTMLElement | null
+                      const scroller = document.querySelector(
+                        '[data-sidebar="content"]'
+                      ) as HTMLElement | null;
                       if (scroller) {
-                        localStorage.setItem('sidebar-scroll-position', scroller.scrollTop.toString())
+                        localStorage.setItem(
+                          "sidebar-scroll-position",
+                          scroller.scrollTop.toString()
+                        );
                       }
                     }}
                   >
                     {item.icon && <item.icon />}
-                    <span className={collapsed ? "text-[10px] leading-4 max-w-[3.25rem] text-center block" : undefined}>
-                      {collapsed ? (abbr[item.title] ?? item.title.slice(0, 6)) : item.title}
+                    <span
+                      className={
+                        collapsed
+                          ? "text-[10px] leading-4 max-w-[3.25rem] text-center block"
+                          : undefined
+                      }
+                    >
+                      {collapsed
+                        ? abbr[item.title] ?? item.title.slice(0, 6)
+                        : item.title}
                     </span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            )
+            );
           }
 
           return (
-            <Collapsible key={item.title} asChild defaultOpen={active} className="group/collapsible">
+            <Collapsible
+              key={item.title}
+              asChild
+              defaultOpen={active}
+              className="group/collapsible"
+            >
               <SidebarMenuItem
-                className={`${active ? "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-sidebar-primary" : ""} -mx-2 border-b border-sidebar-border/60 border-x-transparent`}
+                className={`${
+                  active
+                    ? "before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-sidebar-primary"
+                    : ""
+                } -mx-2 border-b border-sidebar-border/60 border-x-transparent`}
               >
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton isActive={active} tooltip={item.title}>
-                    {item.icon && <item.icon />}
-                    <span className={collapsed ? "text-[10px] leading-4 max-w-[3.25rem] text-center block" : undefined}>
-                      {collapsed ? (abbr[item.title] ?? item.title.slice(0, 6)) : item.title}
-                    </span>
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 keep-size group-data-[collapsible=icon]:hidden" />
+                <div className="flex items-center">
+                  <SidebarMenuButton
+                    asChild
+                    isActive={active}
+                    tooltip={item.title}
+                  >
+                    <Link
+                      to={item.url}
+                      onClick={() => {
+                        const scroller = document.querySelector(
+                          '[data-sidebar="content"]'
+                        ) as HTMLElement | null;
+                        if (scroller) {
+                          localStorage.setItem(
+                            "sidebar-scroll-position",
+                            scroller.scrollTop.toString()
+                          );
+                        }
+                      }}
+                    >
+                      {item.icon && <item.icon />}
+                      <span
+                        className={
+                          collapsed
+                            ? "text-[10px] leading-4 max-w-[3.25rem] text-center block"
+                            : undefined
+                        }
+                      >
+                        {collapsed
+                          ? abbr[item.title] ?? item.title.slice(0, 6)
+                          : item.title}
+                      </span>
+                    </Link>
                   </SidebarMenuButton>
-                </CollapsibleTrigger>
+                  <CollapsibleTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Alternar submenu"
+                      className="ml-auto px-2 text-sidebar-foreground/80 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden"
+                    >
+                      <ChevronRight className="keep-size" />
+                    </button>
+                  </CollapsibleTrigger>
+                </div>
                 <CollapsibleContent>
                   <SidebarMenuSub>
                     {item.items?.map((subItem) => {
-                      const subActive = location.pathname === subItem.url
+                      const subActive = location.pathname === subItem.url;
                       return (
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton asChild isActive={subActive}>
                             <Link
                               to={subItem.url}
                               onClick={() => {
-                                const scroller = document.querySelector('[data-sidebar="content"]') as HTMLElement | null
+                                const scroller = document.querySelector(
+                                  '[data-sidebar="content"]'
+                                ) as HTMLElement | null;
                                 if (scroller) {
-                                  localStorage.setItem('sidebar-scroll-position', scroller.scrollTop.toString())
+                                  localStorage.setItem(
+                                    "sidebar-scroll-position",
+                                    scroller.scrollTop.toString()
+                                  );
                                 }
                               }}
                             >
@@ -119,15 +192,15 @@ export function NavMain({
                             </Link>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>
-                      )
+                      );
                     })}
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </SidebarMenuItem>
             </Collapsible>
-          )
+          );
         })}
       </SidebarMenu>
     </SidebarGroup>
-  )
+  );
 }
