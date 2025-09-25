@@ -7,16 +7,11 @@ export function useCreateSupplier() {
   return useMutation<Supplier, Error, SupplierCreateInput>({
     mutationKey: ['suppliers', 'create'],
     mutationFn: async (input) => {
-      const res = (await apiFetch('/suppliers', {
+      return apiFetch<Supplier>('/suppliers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),
-      })) as Response
-      if (!res.ok) {
-        const msg = (await res.text()) || 'Falha ao criar fornecedor'
-        throw new Error(msg)
-      }
-      return (await res.json()) as Supplier
+      })
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['suppliers'] })

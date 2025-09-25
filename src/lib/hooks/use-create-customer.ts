@@ -7,16 +7,11 @@ export function useCreateCustomer() {
   return useMutation<Customer, Error, CustomerCreateInput>({
     mutationKey: ['customers', 'create'],
     mutationFn: async (input) => {
-      const res = (await apiFetch('/customers', {
+      return apiFetch<Customer>('/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),
-      })) as Response
-      if (!res.ok) {
-        const msg = (await res.text()) || 'Falha ao criar cliente'
-        throw new Error(msg)
-      }
-      return (await res.json()) as Customer
+      })
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['customers'] })

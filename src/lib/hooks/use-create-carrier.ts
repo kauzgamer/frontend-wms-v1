@@ -7,16 +7,11 @@ export function useCreateCarrier() {
   return useMutation<Carrier, Error, CarrierCreateInput>({
     mutationKey: ['carriers', 'create'],
     mutationFn: async (input) => {
-      const res = (await apiFetch('/carriers', {
+      return apiFetch<Carrier>('/carriers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),
-      })) as Response
-      if (!res.ok) {
-        const msg = (await res.text()) || 'Falha ao criar transportadora'
-        throw new Error(msg)
-      }
-      return (await res.json()) as Carrier
+      })
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['carriers'] })
