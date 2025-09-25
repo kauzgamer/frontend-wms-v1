@@ -69,7 +69,8 @@ export default function TransportadoraPage() {
             <button aria-label="Filtros" className="p-2 rounded border hover:bg-gray-50"><Filter size={16} /></button>
             <button aria-label="Exportar XLS" className="p-2 rounded border hover:bg-gray-50"><FileSpreadsheet size={16} /></button>
             <div className="relative">
-              <input className="border rounded pl-8 pr-2 py-1 text-sm w-64" placeholder="Pesquisar por nome ou documento" value={q} onChange={(e) => setQ(e.target.value)} />
+              <label htmlFor="carrier-search" className="sr-only">Pesquisar</label>
+              <input id="carrier-search" name="q" className="border rounded pl-8 pr-2 py-1 text-sm w-64" placeholder="Pesquisar por nome ou documento" value={q} onChange={(e) => setQ(e.target.value)} />
               <Search size={16} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" />
             </div>
             <button aria-label="Tela cheia" className="p-2 rounded border hover:bg-gray-50"><Maximize2 size={16} /></button>
@@ -79,8 +80,8 @@ export default function TransportadoraPage() {
 
       <div className="flex gap-3 items-end">
         <div className="flex flex-col">
-          <label className="text-sm">Situação</label>
-          <select className="border rounded px-2 py-1" value={status} onChange={(e) => { setStatus(e.target.value as 'ATIVO' | 'INATIVO' | 'TODOS'); setPage(1) }}>
+          <label htmlFor="carrier-status" className="text-sm">Situação</label>
+          <select id="carrier-status" name="status" className="border rounded px-2 py-1" value={status} onChange={(e) => { setStatus(e.target.value as 'ATIVO' | 'INATIVO' | 'TODOS'); setPage(1) }}>
             <option value="ATIVO">Ativo</option>
             <option value="INATIVO">Inativo</option>
             <option value="TODOS">Todos</option>
@@ -114,8 +115,8 @@ export default function TransportadoraPage() {
         <div className="flex items-center gap-3">
           <button type="button" className="px-4 py-2 rounded-md text-gray-800 border bg-gray-100 hover:bg-gray-200 disabled:opacity-50" onClick={()=>setPage(p=>p+1)} disabled={isFetching || items.length >= total}>{isFetching? 'Carregando...' : `Carregar mais ${pageSize} resultados`}</button>
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-600">Exibir</span>
-            <select className="border rounded px-2 py-1" value={pageSize} onChange={(e)=>{ const v=parseInt(e.target.value,10); setPageSize(v); setPage(1) }}>
+            <label htmlFor="carrier-pageSize" className="text-gray-600">Exibir</label>
+            <select id="carrier-pageSize" name="pageSize" className="border rounded px-2 py-1" value={pageSize} onChange={(e)=>{ const v=parseInt(e.target.value,10); setPageSize(v); setPage(1) }}>
               <option value={10}>10</option>
               <option value={20}>20</option>
               <option value={50}>50</option>
