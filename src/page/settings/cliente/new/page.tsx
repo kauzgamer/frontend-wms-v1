@@ -114,58 +114,58 @@ export default function NewCustomerPage() {
           <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
             <div className="flex flex-col gap-1 md:col-span-1">
               <label htmlFor="customer-country" className="text-sm font-medium text-[#334b52]">País</label>
-              <select id="customer-country" name="country" value={country} onChange={e=>setCountry(e.target.value)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
+              <select id="customer-country" name="country" autoComplete="country" value={country} onChange={e=>setCountry(e.target.value)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
                 <option value="BR">Brasil</option>
               </select>
             </div>
 
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <label className="text-sm font-medium text-[#334b52]">Tipo de cliente</label>
-              <div className="flex items-center gap-6 text-sm">
-                <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                  <input type="radio" name="ptype" checked={person==='PF'} onChange={()=>setPerson('PF')} />
-                  Pessoa física
-                </label>
-                <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                  <input type="radio" name="ptype" checked={person==='PJ'} onChange={()=>setPerson('PJ')} />
-                  Pessoa jurídica
-                </label>
-                <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                  <input type="radio" name="ptype" checked={person==='FOREIGN'} onChange={()=>setPerson('FOREIGN')} />
-                  Estrangeiro
-                </label>
+            <fieldset className="flex flex-col gap-2 md:col-span-2">
+              <legend id="customer-ptype-legend" className="text-sm font-medium text-[#334b52]">Tipo de cliente</legend>
+              <div className="flex items-center gap-6 text-sm" role="radiogroup" aria-labelledby="customer-ptype-legend">
+                <div className="inline-flex items-center gap-2">
+                  <input id="customer-ptype-pf" type="radio" name="ptype" checked={person==='PF'} onChange={()=>setPerson('PF')} />
+                  <label htmlFor="customer-ptype-pf" className="cursor-pointer select-none">Pessoa física</label>
+                </div>
+                <div className="inline-flex items-center gap-2">
+                  <input id="customer-ptype-pj" type="radio" name="ptype" checked={person==='PJ'} onChange={()=>setPerson('PJ')} />
+                  <label htmlFor="customer-ptype-pj" className="cursor-pointer select-none">Pessoa jurídica</label>
+                </div>
+                <div className="inline-flex items-center gap-2">
+                  <input id="customer-ptype-foreign" type="radio" name="ptype" checked={person==='FOREIGN'} onChange={()=>setPerson('FOREIGN')} />
+                  <label htmlFor="customer-ptype-foreign" className="cursor-pointer select-none">Estrangeiro</label>
+                </div>
               </div>
               {(person === 'FOREIGN' || country !== 'BR') && (
                 <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 w-fit">No momento, o cadastro suporta apenas Pessoa Física/Jurídica do Brasil.</div>
               )}
-            </div>
+            </fieldset>
 
             {person === 'PJ' ? (
               <>
                 <div className="flex flex-col gap-1 md:col-span-1">
                   <label htmlFor="customer-cnpj" className="text-sm font-medium text-[#334b52]">CNPJ</label>
-                  <input id="customer-cnpj" name="cnpj" value={cnpj} onChange={e=>setCnpj(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                  <input id="customer-cnpj" name="cnpj" autoComplete="off" value={cnpj} onChange={e=>setCnpj(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
                 </div>
                 <div className="flex flex-col gap-1 md:col-span-1">
                   <label htmlFor="customer-name" className="text-sm font-medium text-[#334b52]">Razão social</label>
-                  <input id="customer-name" name="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome da empresa" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                  <input id="customer-name" name="name" autoComplete="organization" value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome da empresa" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
                 </div>
               </>
             ) : (
               <>
                 <div className="flex flex-col gap-1 md:col-span-1">
                   <label htmlFor="customer-cpf" className="text-sm font-medium text-[#334b52]">CPF</label>
-                  <input id="customer-cpf" name="cpf" value={cpf} onChange={e=>setCpf(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                  <input id="customer-cpf" name="cpf" autoComplete="off" value={cpf} onChange={e=>setCpf(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
                 </div>
                 <div className="flex flex-col gap-1 md:col-span-1">
                   <label htmlFor="customer-name" className="text-sm font-medium text-[#334b52]">Nome completo</label>
-                  <input id="customer-name" name="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome completo" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                  <input id="customer-name" name="name" autoComplete="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome completo" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
                 </div>
               </>
             )}
             <div className="flex flex-col gap-1 md:col-span-1">
               <label htmlFor="customer-uf" className="text-sm font-medium text-[#334b52]">Estado</label>
-              <select id="customer-uf" name="uf" value={uf} onChange={e=>setUf(e.target.value)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
+              <select id="customer-uf" name="uf" autoComplete="address-level1" value={uf} onChange={e=>setUf(e.target.value)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
                 <option value="">Selecione o estado</option>
                 {BRAZIL_UF.map(u => (
                   <option key={u} value={u}>{u}</option>
@@ -175,7 +175,7 @@ export default function NewCustomerPage() {
             {person === 'PJ' && (
               <div className="flex flex-col gap-1 md:col-span-1">
                 <label htmlFor="customer-stateRegistration" className="text-sm font-medium text-[#334b52]">Inscrição estadual <span className="text-muted-foreground text-xs font-normal">(Opcional)</span></label>
-                <input id="customer-stateRegistration" name="stateRegistration" value={stateRegistration} onChange={e=>setStateRegistration(e.target.value)} placeholder="Não informada" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                <input id="customer-stateRegistration" name="stateRegistration" autoComplete="off" value={stateRegistration} onChange={e=>setStateRegistration(e.target.value)} placeholder="Não informada" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
               </div>
             )}
           </div>
