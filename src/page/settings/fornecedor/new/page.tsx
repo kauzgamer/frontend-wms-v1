@@ -113,8 +113,8 @@ export default function NewSupplierPage() {
           <h2 className="text-xs font-semibold tracking-wide text-[#008bb1] mb-4">DADOS PRINCIPAIS</h2>
           <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
             <div className="flex flex-col gap-1 md:col-span-1">
-              <label className="text-sm font-medium text-[#334b52]">País</label>
-              <select value={country} onChange={e=>setCountry(e.target.value)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
+              <label htmlFor="supplier-country" className="text-sm font-medium text-[#334b52]">País</label>
+              <select id="supplier-country" name="country" value={country} onChange={e=>setCountry(e.target.value)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
                 <option value="BR">Brasil</option>
               </select>
             </div>
@@ -144,29 +144,29 @@ export default function NewSupplierPage() {
             {person === 'PJ' ? (
               <>
                 <div className="flex flex-col gap-1 md:col-span-1">
-                  <label className="text-sm font-medium text-[#334b52]">CNPJ</label>
-                  <input value={cnpj} onChange={e=>setCnpj(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                  <label htmlFor="supplier-cnpj" className="text-sm font-medium text-[#334b52]">CNPJ</label>
+                  <input id="supplier-cnpj" name="cnpj" value={cnpj} onChange={e=>setCnpj(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
                 </div>
                 <div className="flex flex-col gap-1 md:col-span-1">
-                  <label className="text-sm font-medium text-[#334b52]">Razão social</label>
-                  <input value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome da empresa" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                  <label htmlFor="supplier-name" className="text-sm font-medium text-[#334b52]">Razão social</label>
+                  <input id="supplier-name" name="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome da empresa" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
                 </div>
               </>
             ) : (
               <>
                 <div className="flex flex-col gap-1 md:col-span-1">
-                  <label className="text-sm font-medium text-[#334b52]">CPF</label>
-                  <input value={cpf} onChange={e=>setCpf(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                  <label htmlFor="supplier-cpf" className="text-sm font-medium text-[#334b52]">CPF</label>
+                  <input id="supplier-cpf" name="cpf" value={cpf} onChange={e=>setCpf(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
                 </div>
                 <div className="flex flex-col gap-1 md:col-span-1">
-                  <label className="text-sm font-medium text-[#334b52]">Nome completo</label>
-                  <input value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome completo" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                  <label htmlFor="supplier-name" className="text-sm font-medium text-[#334b52]">Nome completo</label>
+                  <input id="supplier-name" name="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome completo" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
                 </div>
               </>
             )}
             <div className="flex flex-col gap-1 md:col-span-1">
-              <label className="text-sm font-medium text-[#334b52]">Estado</label>
-              <select value={uf} onChange={e=>setUf(e.target.value)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
+              <label htmlFor="supplier-uf" className="text-sm font-medium text-[#334b52]">Estado</label>
+              <select id="supplier-uf" name="uf" value={uf} onChange={e=>setUf(e.target.value)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
                 <option value="">Selecione o estado</option>
                 {BRAZIL_UF.map(u => (
                   <option key={u} value={u}>{u}</option>
@@ -175,8 +175,8 @@ export default function NewSupplierPage() {
             </div>
             {person === 'PJ' && (
               <div className="flex flex-col gap-1 md:col-span-1">
-                <label className="text-sm font-medium text-[#334b52]">Inscrição estadual <span className="text-muted-foreground text-xs font-normal">(Opcional)</span></label>
-                <input value={stateRegistration} onChange={e=>setStateRegistration(e.target.value)} placeholder="Não informada" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                <label htmlFor="supplier-stateRegistration" className="text-sm font-medium text-[#334b52]">Inscrição estadual <span className="text-muted-foreground text-xs font-normal">(Opcional)</span></label>
+                <input id="supplier-stateRegistration" name="stateRegistration" value={stateRegistration} onChange={e=>setStateRegistration(e.target.value)} placeholder="Não informada" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
               </div>
             )}
           </div>
