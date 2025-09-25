@@ -1,4 +1,5 @@
-import { useState } from 'react'
+// removed useState; using server data
+import { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -6,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Pencil, Check } from 'lucide-react'
 
-type Structure = {
+type Structure = { 
   id: string
   titulo: string
   descricao: string
@@ -14,7 +15,8 @@ type Structure = {
   ativo: boolean
 }
 
-const initialStructures: Structure[] = [
+const initialStructures: Structure[] = [ 
+  // Fallback structures in case API fails
   {
     id: 'porta-palete',
     titulo: 'Porta palete',
@@ -102,12 +104,30 @@ function Switch({ checked, onChange, id, label }: { checked: boolean; onChange: 
   )
 }
 
+import { usePhysicalStructures } from '@/lib/hooks/use-physical-structures'
+
 export default function EstruturaFisicaPage() {
-  const [items, setItems] = useState<Structure[]>(initialStructures)
+  const { data } = usePhysicalStructures()
   const navigate = useNavigate()
 
-  function toggleActive(id: string) {
-    setItems((prev) => prev.map((s) => (s.id === id ? { ...s, ativo: !s.ativo } : s)))
+  const items: Structure[] = useMemo(() => {
+    if (data && Array.isArray(data)) {
+      return data.map((d) => ({
+        id: d.id,
+        titulo: d.titulo,
+        descricao: d.descricao,
+        origem: d.origem,
+        ativo: d.situacao === 'ATIVO',
+      }))
+    }
+    return initialStructures
+  }, [data])
+
+  function toggleActive(id: string, current: boolean) {
+    // Use direct fetch update per item to avoid type gymnastics
+    import('@/lib/api/physical-structures')
+      .then(({ updatePhysicalStructure }) => updatePhysicalStructure(id, { ativo: !current }))
+      .catch(() => { /* ignore */ })
   }
 
   return (
@@ -165,7 +185,7 @@ export default function EstruturaFisicaPage() {
             </CardContent>
             <CardFooter>
               <div className="flex items-center gap-3">
-                <Switch id={`switch-${s.id}`} label={`Alternar situação de ${s.titulo}`} checked={s.ativo} onChange={() => toggleActive(s.id)} />
+                <Switch id={`switch-${s.id}`} label={`Alternar situação de ${s.titulo}`} checked={s.ativo} onChange={() => toggleActive(s.id, s.ativo)} />
               </div>
               <div className="ml-auto">
                 <Badge className={`${s.origem === 'PADRÃO' ? 'bg-gray-600 text-white' : 'bg-amber-500 text-white'}`}>{s.origem}</Badge>
