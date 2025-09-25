@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -104,6 +104,7 @@ function Switch({ checked, onChange, id, label }: { checked: boolean; onChange: 
 
 export default function EstruturaFisicaPage() {
   const [items, setItems] = useState<Structure[]>(initialStructures)
+  const navigate = useNavigate()
 
   function toggleActive(id: string) {
     setItems((prev) => prev.map((s) => (s.id === id ? { ...s, ativo: !s.ativo } : s)))
@@ -153,7 +154,7 @@ export default function EstruturaFisicaPage() {
               <button
                 aria-label={`Editar ${s.titulo}`}
                 className="p-1 rounded hover:bg-muted text-muted-foreground"
-                onClick={() => { /* futura edição */ }}
+                onClick={() => navigate(`/settings/estrutura-fisica/${s.id}/edit`)}
                 title="Editar"
               >
                 <Pencil className="size-4" />
