@@ -27,3 +27,15 @@ export function useUpdatePhysicalStructure(slug: string) {
     },
   });
 }
+
+export function useUpdateAnyPhysicalStructure() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { slug: string; input: UpdatePhysicalStructureInput }) =>
+      updatePhysicalStructure(vars.slug, vars.input),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ['physical-structures'] });
+      qc.invalidateQueries({ queryKey: ['physical-structures', vars.slug] });
+    },
+  });
+}

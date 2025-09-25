@@ -3,8 +3,10 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Button } from '@/components/ui/button'
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, Check, X } from 'lucide-react'
+import { usePhysicalStructure, useUpdatePhysicalStructure } from '@/lib/hooks/use-physical-structures'
+import type { CoordKey as BackendCoordKey, UpdatePhysicalStructureInput } from '@/lib/types/physical-structures'
 
-type CoordKey = 'B' | 'R' | 'C' | 'N' | 'P' | 'A' | 'AP' // Bloco, Rua, Coluna, Nível, Palete, Andar, Apartamento
+type CoordKey = BackendCoordKey // 'B' | 'R' | 'C' | 'A' | 'AP'
 
 type Coord = {
   key: CoordKey
@@ -16,8 +18,6 @@ const allCoords: Coord[] = [
   { key: 'B', nome: 'Bloco', abrevSugestoes: 'BL, B' },
   { key: 'R', nome: 'Rua', abrevSugestoes: 'RU, R' },
   { key: 'C', nome: 'Coluna', abrevSugestoes: 'CL, CLN' },
-  { key: 'N', nome: 'Nível', abrevSugestoes: 'NI, N' },
-  { key: 'P', nome: 'Palete', abrevSugestoes: 'PA, P' },
   { key: 'A', nome: 'Andar', abrevSugestoes: 'AN, ANZ' },
   { key: 'AP', nome: 'Apartamento', abrevSugestoes: 'AP, APT' },
 ]
@@ -25,21 +25,26 @@ const allCoords: Coord[] = [
 export default function EditEstruturaFisicaPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const slug = id ?? ''
+
+  // Backend data
+  const { data } = usePhysicalStructure(slug)
+  const updateMutation = useUpdatePhysicalStructure(slug)
 
   // Mock initial state based on example (Porta palete)
   // Todos marcados: Bloco (B), Rua (R), Coluna (C), Andar (A), Apartamento (AP)
-  const defaultActive: CoordKey[] = ['B', 'R', 'C', 'A', 'AP']
-  const [ativos, setAtivos] = useState<CoordKey[]>(defaultActive)
+  const defaultActive: BackendCoordKey[] = ['B', 'R', 'C', 'A', 'AP']
+  const [ativos, setAtivos] = useState<BackendCoordKey[]>(defaultActive)
   const [customNome, setCustomNome] = useState<Record<CoordKey, string>>({} as Record<CoordKey, string>)
   const [customAbrev, setCustomAbrev] = useState<Record<CoordKey, string>>({} as Record<CoordKey, string>)
   const [editaNome, setEditaNome] = useState<Record<CoordKey, boolean>>({} as Record<CoordKey, boolean>)
   const [editaAbrev, setEditaAbrev] = useState<Record<CoordKey, boolean>>({} as Record<CoordKey, boolean>)
   const [usaLadoRua, setUsaLadoRua] = useState(false)
+  const [tituloServidor, setTituloServidor] = useState<string>('Estrutura')
 
   const nomeEstrutura = useMemo(() => {
-    if (id === 'porta-palete') return 'Porta palete'
-    return 'Estrutura'
-  }, [id])
+    return tituloServidor
+  }, [tituloServidor])
 
   // Visualization mapping per structure (desktop labels)
   const vizLabelMap: Partial<Record<CoordKey, string>> = useMemo(() => {
@@ -56,7 +61,7 @@ export default function EditEstruturaFisicaPage() {
   const visualizationKeys = ativos
   const visualizationLabels = visualizationKeys.map(k => vizLabelMap[k]!).filter(Boolean)
 
-  function toggleAtivo(key: CoordKey) {
+  function toggleAtivo(key: BackendCoordKey) {
     setAtivos(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
   }
 
@@ -79,16 +84,75 @@ export default function EditEstruturaFisicaPage() {
     )
   }
 
-  // Seed defaults similar to screenshot
+  // Load from backend
   useEffect(() => {
-    // Seed for Porta palete: names and abbreviations aligned to screenshot
-    if (id === 'porta-palete') {
-      setCustomNome({ C: 'COLUNA', A: 'NIVEL', AP: 'PALETE' } as Record<CoordKey, string>)
-      setCustomAbrev({ A: 'N' } as Record<CoordKey, string>)
-      setEditaNome({ C: true, A: true, AP: true } as Record<CoordKey, boolean>)
-      setEditaAbrev({ A: true } as Record<CoordKey, boolean>)
+    if (!data) return
+    setTituloServidor(data.titulo)
+    const active: BackendCoordKey[] = (['B','R','C','A','AP'] as BackendCoordKey[]).filter((k) => data.coords[k].ativo)
+    setAtivos(active)
+  const nome: Record<CoordKey, string> = { B: '', R: '', C: '', A: '', AP: '' }
+  const abrev: Record<CoordKey, string> = { B: '', R: '', C: '', A: '', AP: '' }
+  const eNome: Record<CoordKey, boolean> = { B: false, R: false, C: false, A: false, AP: false }
+  const eAbrev: Record<CoordKey, boolean> = { B: false, R: false, C: false, A: false, AP: false }
+    ;(['B','R','C','A','AP'] as BackendCoordKey[]).forEach((k) => {
+      const c = data.coords[k]
+      eNome[k as CoordKey] = c.editarNome
+      eAbrev[k as CoordKey] = c.editarAbrev
+      if (c.nomeCustom) nome[k as CoordKey] = c.nomeCustom
+      if (c.abrevCustom) abrev[k as CoordKey] = c.abrevCustom
+    })
+    setEditaNome(eNome)
+    setEditaAbrev(eAbrev)
+    setCustomNome(nome)
+    setCustomAbrev(abrev)
+    setUsaLadoRua(Boolean(data.colunaDefineLadoRua))
+  }, [data])
+
+  function buildPatchFromState(): UpdatePhysicalStructureInput {
+    const patch: UpdatePhysicalStructureInput = {}
+    ;(['B','R','C','A','AP'] as BackendCoordKey[]).forEach((k) => {
+      const key = k as CoordKey
+      patch[k] = {
+        ativo: ativos.includes(k),
+        editarNome: !!editaNome[key],
+        editarAbrev: !!editaAbrev[key],
+        ...(editaNome[key] && customNome[key] ? { nomeCustom: customNome[key] } : {}),
+        ...(editaAbrev[key] && customAbrev[key] ? { abrevCustom: customAbrev[key] } : {}),
+      }
+    })
+    patch.colunaDefineLadoRua = usaLadoRua
+    return patch
+  }
+
+  async function onSalvar() {
+    if (!slug) return
+    const body = buildPatchFromState()
+    try {
+  const saved = await updateMutation.mutateAsync(body)
+      // sync UI with server response
+      setTituloServidor(saved.titulo)
+    } catch (e) {
+      console.error('Falha ao salvar estrutura:', e)
     }
-  }, [id])
+  }
+
+  async function onRestaurarPadrao() {
+    if (!slug) return
+    try {
+  const saved = await updateMutation.mutateAsync({ restaurarPadrao: true })
+      // refresh state from server values
+      const active: BackendCoordKey[] = (['B','R','C','A','AP'] as BackendCoordKey[]).filter((k) => saved.coords[k].ativo)
+      setAtivos(active)
+  setEditaNome({ B: false, R: false, C: false, A: false, AP: false })
+  setEditaAbrev({ B: false, R: false, C: false, A: false, AP: false })
+  setCustomNome({ B: '', R: '', C: '', A: '', AP: '' })
+  setCustomAbrev({ B: '', R: '', C: '', A: '', AP: '' })
+      setUsaLadoRua(Boolean(saved.colunaDefineLadoRua))
+      setTituloServidor(saved.titulo)
+    } catch (e) {
+      console.error('Falha ao restaurar padrão:', e)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4 p-6 pt-4">
@@ -121,9 +185,9 @@ export default function EditEstruturaFisicaPage() {
         <div className="mt-4 flex items-center justify-between">
           <h1 className="text-3xl font-semibold leading-tight" style={{ color: '#4a5c60' }}>Editar estrutura física</h1>
           <div className="flex items-center gap-2">
-            <Button variant="outline">Restaurar padrão</Button>
+            <Button variant="outline" onClick={onRestaurarPadrao} disabled={updateMutation.isPending}>Restaurar padrão</Button>
             <Button variant="outline" onClick={() => navigate(-1)}><ChevronLeft className="size-4" />Voltar</Button>
-            <Button className="bg-[#2f8ac9] hover:bg-[#277ab1] text-white">Salvar</Button>
+            <Button className="bg-[#2f8ac9] hover:bg-[#277ab1] text-white" onClick={onSalvar} disabled={updateMutation.isPending}>Salvar</Button>
           </div>
         </div>
       </div>

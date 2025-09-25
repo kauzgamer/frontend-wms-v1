@@ -104,7 +104,7 @@ function Switch({ checked, onChange, id, label }: { checked: boolean; onChange: 
   )
 }
 
-import { usePhysicalStructures } from '@/lib/hooks/use-physical-structures'
+import { usePhysicalStructures, useUpdateAnyPhysicalStructure } from '@/lib/hooks/use-physical-structures'
 
 export default function EstruturaFisicaPage() {
   const { data } = usePhysicalStructures()
@@ -123,11 +123,9 @@ export default function EstruturaFisicaPage() {
     return initialStructures
   }, [data])
 
+  const updater = useUpdateAnyPhysicalStructure()
   function toggleActive(id: string, current: boolean) {
-    // Use direct fetch update per item to avoid type gymnastics
-    import('@/lib/api/physical-structures')
-      .then(({ updatePhysicalStructure }) => updatePhysicalStructure(id, { ativo: !current }))
-      .catch(() => { /* ignore */ })
+    updater.mutate({ slug: id, input: { ativo: !current } })
   }
 
   return (
