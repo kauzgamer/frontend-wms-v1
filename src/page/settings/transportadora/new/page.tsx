@@ -114,58 +114,58 @@ export default function NewCarrierPage() {
           <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
             <div className="flex flex-col gap-1 md:col-span-1">
               <label htmlFor="carrier-country" className="text-sm font-medium text-[#334b52]">País</label>
-              <select id="carrier-country" name="country" value={country} onChange={e=>setCountry(e.target.value)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
+              <select id="carrier-country" name="country" autoComplete="country" value={country} onChange={e=>setCountry(e.target.value)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
                 <option value="BR">Brasil</option>
               </select>
             </div>
 
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <label className="text-sm font-medium text-[#334b52]">Tipo de transportadora</label>
-              <div className="flex items-center gap-6 text-sm">
-                <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                  <input type="radio" name="ptype" checked={person==='PF'} onChange={()=>setPerson('PF')} />
-                  Pessoa física
-                </label>
-                <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                  <input type="radio" name="ptype" checked={person==='PJ'} onChange={()=>setPerson('PJ')} />
-                  Pessoa jurídica
-                </label>
-                <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                  <input type="radio" name="ptype" checked={person==='FOREIGN'} onChange={()=>setPerson('FOREIGN')} />
-                  Estrangeiro
-                </label>
+            <fieldset className="flex flex-col gap-2 md:col-span-2">
+              <legend id="carrier-ptype-legend" className="text-sm font-medium text-[#334b52]">Tipo de transportadora</legend>
+              <div className="flex items-center gap-6 text-sm" role="radiogroup" aria-labelledby="carrier-ptype-legend">
+                <div className="inline-flex items-center gap-2">
+                  <input id="carrier-ptype-pf" type="radio" name="ptype" checked={person==='PF'} onChange={()=>setPerson('PF')} />
+                  <label htmlFor="carrier-ptype-pf" className="cursor-pointer select-none">Pessoa física</label>
+                </div>
+                <div className="inline-flex items-center gap-2">
+                  <input id="carrier-ptype-pj" type="radio" name="ptype" checked={person==='PJ'} onChange={()=>setPerson('PJ')} />
+                  <label htmlFor="carrier-ptype-pj" className="cursor-pointer select-none">Pessoa jurídica</label>
+                </div>
+                <div className="inline-flex items-center gap-2">
+                  <input id="carrier-ptype-foreign" type="radio" name="ptype" checked={person==='FOREIGN'} onChange={()=>setPerson('FOREIGN')} />
+                  <label htmlFor="carrier-ptype-foreign" className="cursor-pointer select-none">Estrangeiro</label>
+                </div>
               </div>
               {(person === 'FOREIGN' || country !== 'BR') && (
                 <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 w-fit">No momento, o cadastro suporta apenas Pessoa Física/Jurídica do Brasil.</div>
               )}
-            </div>
+            </fieldset>
 
             {person === 'PJ' ? (
               <>
                 <div className="flex flex-col gap-1 md:col-span-1">
                   <label htmlFor="carrier-cnpj" className="text-sm font-medium text-[#334b52]">CNPJ</label>
-                  <input id="carrier-cnpj" name="cnpj" value={cnpj} onChange={e=>setCnpj(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                  <input id="carrier-cnpj" name="cnpj" autoComplete="off" value={cnpj} onChange={e=>setCnpj(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
                 </div>
                 <div className="flex flex-col gap-1 md:col-span-1">
                   <label htmlFor="carrier-name" className="text-sm font-medium text-[#334b52]">Razão social</label>
-                  <input id="carrier-name" name="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome da empresa" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                  <input id="carrier-name" name="name" autoComplete="organization" value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome da empresa" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
                 </div>
               </>
             ) : (
               <>
                 <div className="flex flex-col gap-1 md:col-span-1">
                   <label htmlFor="carrier-cpf" className="text-sm font-medium text-[#334b52]">CPF</label>
-                  <input id="carrier-cpf" name="cpf" value={cpf} onChange={e=>setCpf(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                  <input id="carrier-cpf" name="cpf" autoComplete="off" value={cpf} onChange={e=>setCpf(e.target.value)} placeholder="Informe somente os números" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
                 </div>
                 <div className="flex flex-col gap-1 md:col-span-1">
                   <label htmlFor="carrier-name" className="text-sm font-medium text-[#334b52]">Nome completo</label>
-                  <input id="carrier-name" name="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome completo" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                  <input id="carrier-name" name="name" autoComplete="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Informe o nome completo" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
                 </div>
               </>
             )}
             <div className="flex flex-col gap-1 md:col-span-1">
               <label htmlFor="carrier-uf" className="text-sm font-medium text-[#334b52]">Estado</label>
-              <select id="carrier-uf" name="uf" value={uf} onChange={e=>setUf(e.target.value)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
+              <select id="carrier-uf" name="uf" autoComplete="address-level1" value={uf} onChange={e=>setUf(e.target.value)} className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]">
                 <option value="">Selecione o estado</option>
                 {BRAZIL_UF.map(u => (
                   <option key={u} value={u}>{u}</option>
@@ -175,7 +175,7 @@ export default function NewCarrierPage() {
             {person === 'PJ' && (
               <div className="flex flex-col gap-1 md:col-span-1">
                 <label htmlFor="carrier-stateRegistration" className="text-sm font-medium text-[#334b52]">Inscrição estadual <span className="text-muted-foreground text-xs font-normal">(Opcional)</span></label>
-                <input id="carrier-stateRegistration" name="stateRegistration" value={stateRegistration} onChange={e=>setStateRegistration(e.target.value)} placeholder="Não informada" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
+                <input id="carrier-stateRegistration" name="stateRegistration" autoComplete="off" value={stateRegistration} onChange={e=>setStateRegistration(e.target.value)} placeholder="Não informada" className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]" />
               </div>
             )}
           </div>
