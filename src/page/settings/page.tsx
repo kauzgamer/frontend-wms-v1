@@ -45,10 +45,12 @@ export function SettingsPage() {
     <MapPinned className="size-9" style={{ color: '#0c9abe' }} />
           <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Endereços</span>
         </Card>
-  <Card className="aspect-[6/5] flex flex-col items-center justify-center gap-2 text-center cursor-pointer hover:shadow-sm transition p-4">
-    <StructureIcon className="size-9" style={{ color: '#0c9abe' }} />
-          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Estrutura física</span>
-        </Card>
+  <Link to="/settings/estrutura-fisica" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0c9abe] rounded-md">
+    <Card className="aspect-[6/5] flex flex-col items-center justify-center gap-2 text-center cursor-pointer hover:shadow-sm transition p-4">
+      <StructureIcon className="size-9" style={{ color: '#0c9abe' }} />
+      <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Estrutura física</span>
+    </Card>
+  </Link>
   <Card className="aspect-[6/5] flex flex-col items-center justify-center gap-2 text-center cursor-pointer hover:shadow-sm transition p-4">
     <ListChecks className="size-9" style={{ color: '#0c9abe' }} />
           <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Grupo de atividade</span>
