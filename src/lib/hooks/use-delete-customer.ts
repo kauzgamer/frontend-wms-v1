@@ -6,12 +6,7 @@ export function useDeleteCustomer() {
   return useMutation<{ deleted: boolean }, Error, string>({
     mutationKey: ['customers', 'delete'],
     mutationFn: async (id) => {
-      const res = (await apiFetch(`/customers/${id}`, { method: 'DELETE' })) as Response
-      if (!res.ok) {
-        const msg = (await res.text()) || 'Falha ao excluir cliente'
-        throw new Error(msg)
-      }
-      return (await res.json()) as { deleted: boolean }
+      return apiFetch<{ deleted: boolean }>(`/customers/${id}`, { method: 'DELETE' })
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['customers'] })

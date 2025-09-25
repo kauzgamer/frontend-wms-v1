@@ -6,12 +6,7 @@ export function useDeleteCarrier() {
   return useMutation<{ deleted: boolean }, Error, string>({
     mutationKey: ['carriers', 'delete'],
     mutationFn: async (id) => {
-      const res = (await apiFetch(`/carriers/${id}`, { method: 'DELETE' })) as Response
-      if (!res.ok) {
-        const msg = (await res.text()) || 'Falha ao excluir transportadora'
-        throw new Error(msg)
-      }
-      return (await res.json()) as { deleted: boolean }
+      return apiFetch<{ deleted: boolean }>(`/carriers/${id}`, { method: 'DELETE' })
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['carriers'] })

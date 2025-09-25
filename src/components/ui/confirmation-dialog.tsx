@@ -36,9 +36,9 @@ export function ConfirmationDialog({
               </button>
             </Dialog.Close>
           </div>
-          <div className="px-5 py-4 text-sm text-foreground/90">
+          <Dialog.Description className="px-5 py-4 text-sm text-foreground/90">
             {description}
-          </div>
+          </Dialog.Description>
           <div className="px-5 py-4 border-t flex items-center justify-end gap-3">
             <button
               className="h-9 rounded border px-4 text-sm hover:bg-muted"

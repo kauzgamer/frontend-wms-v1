@@ -6,12 +6,7 @@ export function useDeleteSupplier() {
   return useMutation<{ deleted: boolean }, Error, string>({
     mutationKey: ['suppliers', 'delete'],
     mutationFn: async (id) => {
-      const res = (await apiFetch(`/suppliers/${id}`, { method: 'DELETE' })) as Response
-      if (!res.ok) {
-        const msg = (await res.text()) || 'Falha ao excluir fornecedor'
-        throw new Error(msg)
-      }
-      return (await res.json()) as { deleted: boolean }
+      return apiFetch<{ deleted: boolean }>(`/suppliers/${id}`, { method: 'DELETE' })
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['suppliers'] })

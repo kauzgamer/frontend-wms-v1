@@ -7,17 +7,11 @@ export function useUpdateCustomer() {
   return useMutation<Customer | null, Error, { id: string; data: CustomerUpdateInput }>({
     mutationKey: ['customers', 'update'],
     mutationFn: async (vars) => {
-      const res = (await apiFetch(`/customers/${vars.id}`, {
+      return apiFetch<Customer>(`/customers/${vars.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(vars.data),
-      })) as Response
-      if (res.status === 404) return null
-      if (!res.ok) {
-        const msg = (await res.text()) || 'Falha ao atualizar cliente'
-        throw new Error(msg)
-      }
-      return (await res.json()) as Customer
+      })
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['customers'] })
