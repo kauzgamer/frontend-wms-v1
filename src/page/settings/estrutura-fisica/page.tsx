@@ -15,68 +15,68 @@ type Structure = {
   ativo: boolean
 }
 
-const initialStructures: Structure[] = [ 
+const initialStructures: Structure[] = [
   // Fallback structures in case API fails
   {
     id: 'porta-palete',
     titulo: 'Porta palete',
-    descricao: 'Rua (R); COLUNA (C); NIVEL (N); PALETE (P);',
+    descricao: 'Bloco; Rua (R); Coluna (C); Andar (N); Apartamento (P)',
     origem: 'ALTERADO',
     ativo: true,
   },
   {
     id: 'blocado-armazenagem',
     titulo: 'Blocado armazenagem',
-    descricao: 'Quadra (Q); Rua (R);',
+    descricao: 'Setor (SE); Quadra (Q); Rua (R)',
     origem: 'PADRÃO',
     ativo: true,
   },
   {
     id: 'patio',
     titulo: 'Pátio',
-    descricao: 'Quadra (Q); Rua (R);',
+    descricao: 'Quadra (Q); Rua (R)',
     origem: 'PADRÃO',
     ativo: false,
   },
   {
     id: 'gaveteiro',
     titulo: 'Gaveteiro',
-    descricao: 'Armário (A); Corredor (C); Gaveta (G);',
+    descricao: 'Armário (AR); Corredor (CO); Gaveta (G)',
     origem: 'PADRÃO',
     ativo: false,
   },
   {
     id: 'flowrack',
     titulo: 'Flowrack',
-    descricao: 'Bloco (B); Rua (R); Coluna (C); Andar (A);',
+    descricao: 'Bloco (B); Rua (R); Coluna (C); Andar (A)',
     origem: 'PADRÃO',
     ativo: false,
   },
   {
     id: 'estanteria',
-    titulo: 'Estanteria',
-    descricao: 'Estante (E); Corredor (C); Posição (P);',
+    titulo: 'Estantéria',
+    descricao: 'Estante (E); Corredor (CO); Posição (P)',
     origem: 'PADRÃO',
     ativo: false,
   },
   {
     id: 'drive-through',
     titulo: 'Drive through',
-    descricao: 'Bloco (B); Rua (R); Coluna (C);',
+    descricao: 'Bloco (B); Rua (R); Coluna (C)',
     origem: 'PADRÃO',
     ativo: false,
   },
   {
     id: 'drive-in',
     titulo: 'Drive in',
-    descricao: 'Bloco (B); Rua (R); Coluna (C);',
+    descricao: 'Bloco (B); Rua (R); Coluna (C)',
     origem: 'PADRÃO',
     ativo: false,
   },
   {
     id: 'cantilever',
     titulo: 'Cantilever',
-    descricao: 'Bloco (B); Rua (R); Coluna (C); Andar (A);',
+    descricao: 'Bloco (B); Rua (R); Coluna (C); Andar (A)',
     origem: 'PADRÃO',
     ativo: false,
   },

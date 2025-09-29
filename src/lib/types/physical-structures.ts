@@ -2,10 +2,11 @@ export type OrigemTipo = 'PADRÃO' | 'ALTERADO';
 
 export type Situacao = 'ATIVO' | 'INATIVO';
 
-export type CoordKey = 'B' | 'R' | 'C' | 'A' | 'AP';
+export type CoordKey = string; // Agora é uma string para suportar mais tipos
 
 export interface CoordConfig {
   ativo: boolean;
+  tipo: string; // Tipo da coordenada (B, R, C, A, AP, SE, Q, etc.)
   nomePadrao: string;
   abrevPadrao: string;
   editarNome: boolean;
@@ -40,9 +41,5 @@ export interface UpdatePhysicalStructureInput {
   ativo?: boolean;
   restaurarPadrao?: boolean;
   colunaDefineLadoRua?: boolean;
-  B?: Partial<CoordConfig>;
-  R?: Partial<CoordConfig>;
-  C?: Partial<CoordConfig>;
-  A?: Partial<CoordConfig>;
-  AP?: Partial<CoordConfig>;
+  coordenadas?: Record<string, Partial<CoordConfig>>;
 }
