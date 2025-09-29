@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, Check } from 'lucide-react';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
@@ -6,19 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { usePhysicalStructures } from '@/lib/hooks/use-physical-structures';
+import { usePhysicalStructures, usePhysicalStructure } from '@/lib/hooks/use-physical-structures';
 import { usePreviewAddresses, useCreateAddresses } from '@/lib/hooks/use-addresses';
 import { useToast } from '@/components/ui/toast-context';
-import type { AddressWizardState, AddressPreview } from '@/lib/types/addresses';
-
-const STEPS = [
-  { id: 1, label: 'Início' },
-  { id: 2, label: 'Criar rua' },
-  { id: 3, label: 'Criar coluna' },
-  { id: 4, label: 'Criar nível' },
-  { id: 5, label: 'Criar palete' },
-  { id: 6, label: 'Criar endereços' },
-];
+import type { AddressWizardState, AddressPreview, CoordinateRange } from '@/lib/types/addresses';
+import type { CoordConfig } from '@/lib/types/physical-structures';
 
 export default function NewEnderecoPage() {
   const navigate = useNavigate();
@@ -31,57 +23,143 @@ export default function NewEnderecoPage() {
     step: 1,
     depositoId: '',
     estruturaFisicaId: '',
-    estruturaFisicaNome: 'Porta palete',
-    rua: { inicio: '', fim: '', usarPrefixo: false },
-    coluna: { inicio: 1, fim: 10 },
-    nivel: { inicio: 0, fim: 4, acessiveisAMao: [0] },
-    palete: { inicio: 1, fim: 2 },
+    estruturaFisicaNome: '',
+    coordenadas: [],
   });
 
   const [preview, setPreview] = useState<AddressPreview[]>([]);
   const [activeTab, setActiveTab] = useState<'armazenagem' | 'funcional'>('armazenagem');
 
+  // Buscar detalhes da estrutura física selecionada
+  const { data: physicalStructureDetail } = usePhysicalStructure(wizardState.estruturaFisicaId);
+
+  // Extrair coordenadas ativas da estrutura física
+  const activeCoordinates = useMemo<CoordConfig[]>(() => {
+    if (!physicalStructureDetail) return [];
+    return Object.values(physicalStructureDetail.coords)
+      .filter(coord => coord.ativo)
+      .sort((a, b) => {
+        // Ordenar por tipo para manter consistência
+        const order = ['B', 'SE', 'R', 'Q', 'C', 'CO', 'N', 'A', 'P', 'G', 'E', 'AR'];
+        const indexA = order.indexOf(a.tipo);
+        const indexB = order.indexOf(b.tipo);
+        if (indexA === -1 && indexB === -1) return 0;
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+      });
+  }, [physicalStructureDetail]);
+
+  // Pré-calcular listas de valores para cada coordenada
+  const coordinateValuesLists = useMemo(() => {
+    return wizardState.coordenadas.map(coord => {
+      if (!coord.inicio || !coord.fim) return [];
+      
+      const isNumeric = ['C', 'N', 'P', 'A', 'G', 'Q', 'B', 'SE', 'CO', 'E', 'AR'].includes(coord.tipo);
+      const isAlpha = coord.tipo === 'R';
+      
+      if (isNumeric) {
+        const start = Number(coord.inicio);
+        const end = Number(coord.fim);
+        if (isNaN(start) || isNaN(end)) return [];
+        const count = end - start + 1;
+        return Array.from({ length: count }, (_, i) => start + i);
+      }
+      
+      if (isAlpha) {
+        const start = String(coord.inicio).toUpperCase().charCodeAt(0);
+        const end = String(coord.fim).toUpperCase().charCodeAt(0);
+        const count = end - start + 1;
+        return Array.from({ length: count }, (_, i) => String.fromCharCode(start + i));
+      }
+      
+      return [];
+    });
+  }, [wizardState.coordenadas]);
+
+  // Inicializar coordenadas quando estrutura física é selecionada
+  useEffect(() => {
+    if (activeCoordinates.length > 0 && wizardState.coordenadas.length === 0) {
+      const initialCoordenadas: CoordinateRange[] = activeCoordinates.map(coord => ({
+        tipo: coord.tipo,
+        nome: coord.nomeCustom || coord.nomePadrao,
+        abrev: coord.abrevCustom || coord.abrevPadrao,
+        inicio: '',
+        fim: '',
+        usarPrefixo: true,
+      }));
+      setWizardState(s => ({ ...s, coordenadas: initialCoordenadas }));
+    }
+  }, [activeCoordinates, wizardState.coordenadas.length]);
+
+  // Gerar etapas dinâmicas
+  const steps = useMemo(() => {
+    const baseSteps = [{ id: 1, label: 'Início' }];
+    const coordSteps = activeCoordinates.map((coord, index) => ({
+      id: index + 2,
+      label: `Criar ${coord.nomeCustom || coord.nomePadrao}`,
+    }));
+    const finalStep = { id: coordSteps.length + 2, label: 'Criar endereços' };
+    return [...baseSteps, ...coordSteps, finalStep];
+  }, [activeCoordinates]);
+
+  const totalSteps = steps.length;
+
+  // Atualizar coordenada específica
+  const updateCoordinate = (index: number, updates: Partial<CoordinateRange>) => {
+    setWizardState(s => ({
+      ...s,
+      coordenadas: s.coordenadas.map((coord, i) => 
+        i === index ? { ...coord, ...updates } : coord
+      ),
+    }));
+  };
+
   // Step 1: Início - seleção de tipo de endereço
   const renderStepInicio = () => (
     <div className="space-y-6">
-      <div className="flex gap-4">
+      {/* Tabs */}
+      <div className="flex border-b">
         <button
           onClick={() => setActiveTab('armazenagem')}
-          className={`flex-1 p-6 border-2 rounded-lg transition-colors ${
+          className={`flex-1 py-4 px-6 text-base font-medium transition-colors relative ${
             activeTab === 'armazenagem'
-              ? 'border-cyan-500 bg-cyan-50'
-              : 'border-gray-200 hover:border-gray-300'
+              ? 'text-white bg-[#1a3b47]'
+              : 'text-gray-600 bg-white hover:bg-gray-50'
           }`}
         >
-          <h3 className="text-lg font-semibold">Endereços de armazenagem</h3>
+          Endereços de armazenagem
         </button>
         <button
           onClick={() => setActiveTab('funcional')}
-          className={`flex-1 p-6 border-2 rounded-lg transition-colors ${
+          className={`flex-1 py-4 px-6 text-base font-medium transition-colors relative ${
             activeTab === 'funcional'
-              ? 'border-cyan-500 bg-cyan-50'
-              : 'border-gray-200 hover:border-gray-300'
+              ? 'text-white bg-[#1a3b47]'
+              : 'text-gray-600 bg-white hover:bg-gray-50'
           }`}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2">
             <span className="text-cyan-500">ⓘ</span>
-            <h3 className="text-lg font-semibold">Endereços funcionais</h3>
+            <span>Endereços funcionais</span>
           </div>
         </button>
       </div>
 
       {activeTab === 'armazenagem' && (
-        <div className="space-y-4">
+        <div className="space-y-8 pt-4">
+          {/* Seção DADOS */}
           <div>
-            <h4 className="text-sm font-medium mb-2 text-gray-600">DADOS</h4>
-            <div className="space-y-3">
+            <h4 className="text-xs font-semibold mb-4 text-cyan-600 tracking-wider">DADOS</h4>
+            <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">
+                <label className="text-sm font-normal mb-2 block">
                   Depósito
-                  <button className="ml-2 text-cyan-600 text-xs">Novo</button>
+                  <button className="ml-2 text-cyan-600 text-xs font-medium hover:underline">
+                    Novo
+                  </button>
                 </label>
                 <select
-                  className="w-full border rounded-md px-3 py-2"
+                  className="w-full border border-gray-300 rounded px-3 py-2.5 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                   value={wizardState.depositoId}
                   onChange={(e) =>
                     setWizardState((s) => ({ ...s, depositoId: e.target.value }))
@@ -93,9 +171,9 @@ export default function NewEnderecoPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-1 block">Estrutura física</label>
+                <label className="text-sm font-normal mb-2 block">Estrutura física</label>
                 <select
-                  className="w-full border rounded-md px-3 py-2"
+                  className="w-full border border-gray-300 rounded px-3 py-2.5 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                   value={wizardState.estruturaFisicaId}
                   onChange={(e) => {
                     const selected = physicalStructures?.find((s) => s.id === e.target.value);
@@ -103,27 +181,32 @@ export default function NewEnderecoPage() {
                       ...s,
                       estruturaFisicaId: e.target.value,
                       estruturaFisicaNome: selected?.titulo || '',
+                      coordenadas: [], // Reset coordenadas ao mudar estrutura
                     }));
                   }}
                 >
                   <option value="">Selecione a estrutura física</option>
-                  {physicalStructures?.map((structure) => (
-                    <option key={structure.id} value={structure.id}>
-                      {structure.titulo}
-                    </option>
-                  ))}
+                  {physicalStructures
+                    ?.filter(s => s.situacao === 'ATIVO')
+                    .map((structure) => (
+                      <option key={structure.id} value={structure.id}>
+                        {structure.titulo}
+                      </option>
+                    ))}
                 </select>
               </div>
             </div>
           </div>
 
+          {/* Seção CAPACIDADE */}
           <div>
-            <h4 className="text-sm font-medium mb-2 text-gray-600">CAPACIDADE</h4>
-            <div className="grid grid-cols-2 gap-3">
+            <h4 className="text-xs font-semibold mb-4 text-cyan-600 tracking-wider">CAPACIDADE</h4>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-4">
               <div>
-                <label className="text-sm mb-1 block">Unitizador</label>
+                <label className="text-sm font-normal mb-2 block">Unitizador</label>
                 <Input
                   placeholder="Capacidade unitizador"
+                  className="bg-white"
                   value={wizardState.capacidade?.unitizador || ''}
                   onChange={(e) =>
                     setWizardState((s) => ({
@@ -134,10 +217,11 @@ export default function NewEnderecoPage() {
                 />
               </div>
               <div>
-                <label className="text-sm mb-1 block">Peso</label>
+                <label className="text-sm font-normal mb-2 block">Peso</label>
                 <Input
                   placeholder="Capacidade peso"
                   type="number"
+                  className="bg-white"
                   value={wizardState.capacidade?.peso || ''}
                   onChange={(e) =>
                     setWizardState((s) => ({
@@ -148,10 +232,11 @@ export default function NewEnderecoPage() {
                 />
               </div>
               <div>
-                <label className="text-sm mb-1 block">Altura</label>
+                <label className="text-sm font-normal mb-2 block">Altura</label>
                 <Input
                   placeholder="Capacidade altura"
                   type="number"
+                  className="bg-white"
                   value={wizardState.capacidade?.altura || ''}
                   onChange={(e) =>
                     setWizardState((s) => ({
@@ -162,10 +247,11 @@ export default function NewEnderecoPage() {
                 />
               </div>
               <div>
-                <label className="text-sm mb-1 block">Largura</label>
+                <label className="text-sm font-normal mb-2 block">Largura</label>
                 <Input
                   placeholder="Capacidade largura"
                   type="number"
+                  className="bg-white"
                   value={wizardState.capacidade?.largura || ''}
                   onChange={(e) =>
                     setWizardState((s) => ({
@@ -176,10 +262,11 @@ export default function NewEnderecoPage() {
                 />
               </div>
               <div>
-                <label className="text-sm mb-1 block">Comprimento</label>
+                <label className="text-sm font-normal mb-2 block">Comprimento</label>
                 <Input
                   placeholder="Capacidade comprimento"
                   type="number"
+                  className="bg-white"
                   value={wizardState.capacidade?.comprimento || ''}
                   onChange={(e) =>
                     setWizardState((s) => ({
@@ -196,93 +283,138 @@ export default function NewEnderecoPage() {
     </div>
   );
 
-  // Step 2: Criar rua
-  const renderStepRua = () => {
-    const totalRuas = useMemo(() => {
-      if (!wizardState.rua.inicio || !wizardState.rua.fim) return 0;
-      const start = wizardState.rua.inicio.charCodeAt(0);
-      const end = wizardState.rua.fim.charCodeAt(0);
-      return end - start + 1;
-    }, [wizardState.rua]);
+  // Renderizar etapa de coordenada dinâmica
+  const renderCoordinateStep = (coordIndex: number) => {
+    const coord = wizardState.coordenadas[coordIndex];
+    if (!coord) return null;
 
-    const ruasList = useMemo(() => {
-      if (!wizardState.rua.inicio || !wizardState.rua.fim) return [];
-      const start = wizardState.rua.inicio.charCodeAt(0);
-      const end = wizardState.rua.fim.charCodeAt(0);
-      const ruas = [];
-      for (let i = start; i <= end; i++) {
-        ruas.push(String.fromCharCode(i));
-      }
-      return ruas;
-    }, [wizardState.rua]);
+    // Determinar se é numérico ou alfabético
+    const isNumeric = ['C', 'N', 'P', 'A', 'G', 'Q', 'B', 'SE', 'CO', 'E', 'AR'].includes(coord.tipo);
+    const isAlpha = coord.tipo === 'R';
+
+    // Usar lista de valores pré-calculada
+    const valuesList = coordinateValuesLists[coordIndex] || [];
+    const totalCoords = valuesList.length;
+
+    // Permitir marcar acessíveis à mão apenas para níveis
+    const canMarkHandAccessible = coord.tipo === 'N' || coord.nome.toLowerCase().includes('nível') || coord.nome.toLowerCase().includes('andar');
 
     return (
       <div className="grid grid-cols-2 gap-6">
         <div>
-          <h3 className="text-sm font-medium mb-2 text-cyan-600">RUA (R)</h3>
+          <h3 className="text-sm font-medium mb-2 text-cyan-600">
+            {coord.nome.toUpperCase()} ({coord.abrev})
+          </h3>
           
           <div className="space-y-4">
-            <div>
-              <label className="flex items-center gap-2 mb-3">
-                <input
-                  type="checkbox"
-                  checked={!wizardState.rua.usarPrefixo}
-                  onChange={(e) =>
-                    setWizardState((s) => ({
-                      ...s,
-                      rua: { ...s.rua, usarPrefixo: !e.target.checked },
-                    }))
-                  }
-                  className="size-4"
-                />
-                <span className="text-sm">Não utilizo prefixo para identificar: rua</span>
-              </label>
-            </div>
+            {isAlpha && (
+              <div>
+                <label className="flex items-center gap-2 mb-3">
+                  <input
+                    type="checkbox"
+                    checked={!coord.usarPrefixo}
+                    onChange={(e) =>
+                      updateCoordinate(coordIndex, { usarPrefixo: !e.target.checked })
+                    }
+                    className="size-4"
+                  />
+                  <span className="text-sm">Não utilizo prefixo para identificar: {coord.nome.toLowerCase()}</span>
+                </label>
+              </div>
+            )}
 
             <div>
               <label className="text-sm font-medium mb-2 block">
-                Criar rua De/Até
+                Criar {coord.nome.toLowerCase()} De/Até
                 <div className="text-xs text-gray-500">Informe o valor inicial e final</div>
               </label>
               <div className="flex gap-2">
                 <Input
-                  placeholder="A"
-                  maxLength={1}
-                  value={wizardState.rua.inicio}
-                  onChange={(e) =>
-                    setWizardState((s) => ({
-                      ...s,
-                      rua: { ...s.rua, inicio: e.target.value.toUpperCase() },
-                    }))
-                  }
+                  placeholder={isAlpha ? 'A' : '0'}
+                  maxLength={isAlpha ? 1 : undefined}
+                  type={isNumeric ? 'number' : 'text'}
+                  value={coord.inicio}
+                  onChange={(e) => {
+                    const value = isAlpha ? e.target.value.toUpperCase() : e.target.value;
+                    updateCoordinate(coordIndex, { inicio: value });
+                  }}
                 />
                 <Input
-                  placeholder="B"
-                  maxLength={1}
-                  value={wizardState.rua.fim}
-                  onChange={(e) =>
-                    setWizardState((s) => ({
-                      ...s,
-                      rua: { ...s.rua, fim: e.target.value.toUpperCase() },
-                    }))
-                  }
+                  placeholder={isAlpha ? 'Z' : '10'}
+                  maxLength={isAlpha ? 1 : undefined}
+                  type={isNumeric ? 'number' : 'text'}
+                  value={coord.fim}
+                  onChange={(e) => {
+                    const value = isAlpha ? e.target.value.toUpperCase() : e.target.value;
+                    updateCoordinate(coordIndex, { fim: value });
+                  }}
                 />
               </div>
             </div>
+
+            {canMarkHandAccessible && totalCoords > 0 && (
+              <div>
+                <label className="flex items-center gap-2 mb-3">
+                  <input
+                    type="checkbox"
+                    checked={(coord.acessiveisAMao?.length || 0) > 0}
+                    onChange={(e) => {
+                      if (e.target.checked && (!coord.acessiveisAMao || coord.acessiveisAMao.length === 0)) {
+                        updateCoordinate(coordIndex, { acessiveisAMao: [coord.inicio] });
+                      } else if (!e.target.checked) {
+                        updateCoordinate(coordIndex, { acessiveisAMao: [] });
+                      }
+                    }}
+                    className="size-4"
+                  />
+                  <span className="text-sm font-medium">Marcar acessíveis à mão</span>
+                </label>
+
+                {(coord.acessiveisAMao?.length || 0) > 0 && (
+                  <div className="space-y-2 pl-6 max-h-60 overflow-y-auto">
+                    {valuesList.map((value) => (
+                      <label key={value} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={coord.acessiveisAMao?.includes(value) || false}
+                          onChange={(e) => {
+                            const current = coord.acessiveisAMao || [];
+                            if (e.target.checked) {
+                              updateCoordinate(coordIndex, {
+                                acessiveisAMao: [...current, value].sort(),
+                              });
+                            } else {
+                              updateCoordinate(coordIndex, {
+                                acessiveisAMao: current.filter((v) => v !== value),
+                              });
+                            }
+                          }}
+                          className="size-4"
+                        />
+                        <span className="text-sm">{value}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
         <div>
           <h3 className="text-sm font-medium mb-2 text-cyan-600">VISUALIZAÇÃO</h3>
-          <div className="text-cyan-600 mb-2">RUA (R)</div>
+          <div className="text-cyan-600 mb-2">{coord.nome.toUpperCase()} ({coord.abrev})</div>
           
-          {totalRuas > 0 && (
+          {totalCoords > 0 && (
             <div className="bg-gray-800 text-white rounded-lg p-4">
-              <div className="text-xs mb-2">{totalRuas} COORDENADAS A SEREM CRIADAS</div>
-              <div className="space-y-1">
-                {ruasList.map((rua) => (
-                  <div key={rua} className="text-sm">Rua {rua};</div>
+              <div className="text-xs mb-2">{totalCoords} COORDENADAS A SEREM CRIADAS</div>
+              <div className="space-y-1 max-h-60 overflow-y-auto">
+                {valuesList.slice(0, 20).map((value) => (
+                  <div key={value} className="text-sm">{coord.nome} {value};</div>
                 ))}
+                {totalCoords > 20 && (
+                  <div className="text-xs text-gray-400">... e mais {totalCoords - 20} coordenadas</div>
+                )}
               </div>
             </div>
           )}
@@ -291,253 +423,7 @@ export default function NewEnderecoPage() {
     );
   };
 
-  // Step 3: Criar coluna
-  const renderStepColuna = () => {
-    const totalColunas = wizardState.coluna.fim - wizardState.coluna.inicio + 1;
-    const colunasList = Array.from(
-      { length: totalColunas },
-      (_, i) => wizardState.coluna.inicio + i
-    );
-
-    return (
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <h3 className="text-sm font-medium mb-2 text-cyan-600">COLUNA (C)</h3>
-          
-          <div>
-            <label className="text-sm font-medium mb-2 block">
-              Criar coluna De/Até
-              <div className="text-xs text-gray-500">Informe o valor inicial e final</div>
-            </label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="1"
-                type="number"
-                value={wizardState.coluna.inicio}
-                onChange={(e) =>
-                  setWizardState((s) => ({
-                    ...s,
-                    coluna: { ...s.coluna, inicio: Number(e.target.value) },
-                  }))
-                }
-              />
-              <Input
-                placeholder="10"
-                type="number"
-                value={wizardState.coluna.fim}
-                onChange={(e) =>
-                  setWizardState((s) => ({
-                    ...s,
-                    coluna: { ...s.coluna, fim: Number(e.target.value) },
-                  }))
-                }
-              />
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-medium mb-2 text-cyan-600">VISUALIZAÇÃO</h3>
-          <div className="text-cyan-600 mb-2">COLUNA (C)</div>
-          
-          <div className="bg-gray-800 text-white rounded-lg p-4">
-            <div className="text-xs mb-2">{totalColunas} COORDENADAS A SEREM CRIADAS</div>
-            <div className="space-y-1">
-              {colunasList.map((coluna) => (
-                <div key={coluna} className="text-sm">COLUNA {coluna};</div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Step 4: Criar nível
-  const renderStepNivel = () => {
-    const totalNiveis = wizardState.nivel.fim - wizardState.nivel.inicio + 1;
-    const niveisList = Array.from(
-      { length: totalNiveis },
-      (_, i) => wizardState.nivel.inicio + i
-    );
-
-    return (
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <h3 className="text-sm font-medium mb-2 text-cyan-600">NÍVEL (N)</h3>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                Criar nível De/Até
-                <div className="text-xs text-gray-500">Informe o valor inicial e final</div>
-              </label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="0"
-                  type="number"
-                  value={wizardState.nivel.inicio}
-                  onChange={(e) =>
-                    setWizardState((s) => ({
-                      ...s,
-                      nivel: { ...s.nivel, inicio: Number(e.target.value) },
-                    }))
-                  }
-                />
-                <Input
-                  placeholder="4"
-                  type="number"
-                  value={wizardState.nivel.fim}
-                  onChange={(e) =>
-                    setWizardState((s) => ({
-                      ...s,
-                      nivel: { ...s.nivel, fim: Number(e.target.value) },
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2 mb-3">
-                <input
-                  type="checkbox"
-                  checked={wizardState.nivel.acessiveisAMao.length > 0}
-                  onChange={(e) => {
-                    if (e.target.checked && wizardState.nivel.acessiveisAMao.length === 0) {
-                      setWizardState((s) => ({
-                        ...s,
-                        nivel: { ...s.nivel, acessiveisAMao: [wizardState.nivel.inicio] },
-                      }));
-                    } else if (!e.target.checked) {
-                      setWizardState((s) => ({
-                        ...s,
-                        nivel: { ...s.nivel, acessiveisAMao: [] },
-                      }));
-                    }
-                  }}
-                  className="size-4"
-                />
-                <span className="text-sm font-medium">Marcar acessíveis à mão</span>
-              </label>
-
-              {wizardState.nivel.acessiveisAMao.length > 0 && (
-                <div className="space-y-2 pl-6">
-                  {niveisList.map((nivel) => (
-                    <label key={nivel} className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={wizardState.nivel.acessiveisAMao.includes(nivel)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setWizardState((s) => ({
-                              ...s,
-                              nivel: {
-                                ...s.nivel,
-                                acessiveisAMao: [...s.nivel.acessiveisAMao, nivel].sort(),
-                              },
-                            }));
-                          } else {
-                            setWizardState((s) => ({
-                              ...s,
-                              nivel: {
-                                ...s.nivel,
-                                acessiveisAMao: s.nivel.acessiveisAMao.filter((n) => n !== nivel),
-                              },
-                            }));
-                          }
-                        }}
-                        className="size-4"
-                      />
-                      <span className="text-sm">{nivel}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-medium mb-2 text-cyan-600">VISUALIZAÇÃO</h3>
-          <div className="text-cyan-600 mb-2">NÍVEL (N)</div>
-          
-          <div className="bg-gray-800 text-white rounded-lg p-4">
-            <div className="text-xs mb-2">{totalNiveis} COORDENADAS A SEREM CRIADAS</div>
-            <div className="space-y-1">
-              {niveisList.map((nivel) => (
-                <div key={nivel} className="text-sm">NÍVEL {nivel};</div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Step 5: Criar palete
-  const renderStepPalete = () => {
-    const totalPaletes = wizardState.palete.fim - wizardState.palete.inicio + 1;
-    const paletesList = Array.from(
-      { length: totalPaletes },
-      (_, i) => wizardState.palete.inicio + i
-    );
-
-    return (
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <h3 className="text-sm font-medium mb-2 text-cyan-600">PALETE (P)</h3>
-          
-          <div>
-            <label className="text-sm font-medium mb-2 block">
-              Criar palete De/Até
-              <div className="text-xs text-gray-500">Informe o valor inicial e final</div>
-            </label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="1"
-                type="number"
-                value={wizardState.palete.inicio}
-                onChange={(e) =>
-                  setWizardState((s) => ({
-                    ...s,
-                    palete: { ...s.palete, inicio: Number(e.target.value) },
-                  }))
-                }
-              />
-              <Input
-                placeholder="2"
-                type="number"
-                value={wizardState.palete.fim}
-                onChange={(e) =>
-                  setWizardState((s) => ({
-                    ...s,
-                    palete: { ...s.palete, fim: Number(e.target.value) },
-                  }))
-                }
-              />
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-medium mb-2 text-cyan-600">VISUALIZAÇÃO</h3>
-          <div className="text-cyan-600 mb-2">PALETE (P)</div>
-          
-          <div className="bg-gray-800 text-white rounded-lg p-4">
-            <div className="text-xs mb-2">{totalPaletes} COORDENADAS A SEREM CRIADAS</div>
-            <div className="space-y-1">
-              {paletesList.map((palete) => (
-                <div key={palete} className="text-sm">PALETE {palete};</div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Step 6: Visualizar endereços
+  // Step final: Visualizar endereços
   const renderStepVisualizacao = () => {
     const totalEnderecos = preview.length;
 
@@ -604,30 +490,32 @@ export default function NewEnderecoPage() {
               ))}
             </tbody>
           </table>
+          {preview.length > 10 && (
+            <div className="border-t p-3 text-center text-sm text-muted-foreground">
+              ... e mais {preview.length - 10} endereços
+            </div>
+          )}
         </div>
       </div>
     );
   };
 
   const handleNext = async () => {
-    if (wizardState.step === 5) {
-      // Gerar preview antes de ir para o último step
+    if (wizardState.step === totalSteps - 1) {
+      // Última etapa antes da visualização - gerar preview
       try {
         const result = await previewMutation.mutateAsync({
           depositoId: wizardState.depositoId,
           estruturaFisicaId: wizardState.estruturaFisicaId,
-          rua: wizardState.rua,
-          coluna: wizardState.coluna,
-          nivel: wizardState.nivel,
-          palete: wizardState.palete,
+          coordenadas: wizardState.coordenadas,
           capacidade: wizardState.capacidade,
         });
         setPreview(result.enderecos);
         setWizardState((s) => ({ ...s, step: s.step + 1 }));
       } catch (error) {
-        toast.error('Erro ao gerar preview dos endereços');
+        toast.show({ message: 'Erro ao gerar preview dos endereços', kind: 'error' });
       }
-    } else if (wizardState.step < 6) {
+    } else if (wizardState.step < totalSteps) {
       setWizardState((s) => ({ ...s, step: s.step + 1 }));
     }
   };
@@ -643,64 +531,100 @@ export default function NewEnderecoPage() {
       await createMutation.mutateAsync({
         depositoId: wizardState.depositoId,
         estruturaFisicaId: wizardState.estruturaFisicaId,
-        rua: wizardState.rua,
-        coluna: wizardState.coluna,
-        nivel: wizardState.nivel,
-        palete: wizardState.palete,
+        coordenadas: wizardState.coordenadas,
         capacidade: wizardState.capacidade,
       });
-      toast.success(`${preview.length} endereços criados com sucesso!`);
+      toast.show({ message: `${preview.length} endereços criados com sucesso!`, kind: 'success' });
       navigate('/settings/endereco');
     } catch (error) {
-      toast.error('Erro ao criar endereços');
+      toast.show({ message: 'Erro ao criar endereços', kind: 'error' });
     }
   };
 
   const canGoNext = () => {
-    switch (wizardState.step) {
-      case 1:
-        return wizardState.depositoId && wizardState.estruturaFisicaId;
-      case 2:
-        return wizardState.rua.inicio && wizardState.rua.fim;
-      case 3:
-        return wizardState.coluna.inicio && wizardState.coluna.fim;
-      case 4:
-        return wizardState.nivel.inicio !== null && wizardState.nivel.fim !== null;
-      case 5:
-        return wizardState.palete.inicio && wizardState.palete.fim;
-      default:
-        return true;
+    if (wizardState.step === 1) {
+      return wizardState.depositoId && wizardState.estruturaFisicaId;
     }
+    
+    if (wizardState.step >= 2 && wizardState.step < totalSteps) {
+      const coordIndex = wizardState.step - 2;
+      const coord = wizardState.coordenadas[coordIndex];
+      return coord && coord.inicio && coord.fim;
+    }
+    
+    return true;
+  };
+
+  // Renderizar conteúdo da etapa atual
+  const renderCurrentStep = () => {
+    if (wizardState.step === 1) {
+      return renderStepInicio();
+    }
+    
+    if (wizardState.step === totalSteps) {
+      return renderStepVisualizacao();
+    }
+    
+    // Etapas de coordenadas
+    const coordIndex = wizardState.step - 2;
+    return renderCoordinateStep(coordIndex);
+  };
+
+  // Breadcrumb dinâmico baseado na etapa
+  const renderBreadcrumb = () => {
+    const isFirstStep = wizardState.step === 1;
+    
+    return (
+      <Breadcrumb>
+        <BreadcrumbList className="bg-background rounded-md border px-3 py-2 shadow-xs">
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/dashboard">Início</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/settings">Configurador</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link to="/settings/endereco">Cadastro de endereço</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            {isFirstStep ? (
+              <BreadcrumbPage>Criar endereços</BreadcrumbPage>
+            ) : (
+              <BreadcrumbLink asChild>
+                <button onClick={() => setWizardState(s => ({ ...s, step: 1 }))}>
+                  Criar endereços
+                </button>
+              </BreadcrumbLink>
+            )}
+          </BreadcrumbItem>
+          {!isFirstStep && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>
+                  {activeTab === 'armazenagem' ? 'Endereços de armazenagem' : 'Endereços funcionais'}
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
   };
 
   return (
     <div className="flex flex-col gap-6 p-6 pt-4">
       <div>
-        <Breadcrumb>
-          <BreadcrumbList className="bg-background rounded-md border px-3 py-2 shadow-xs">
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/dashboard">Início</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/settings">Configurador</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/settings/endereco">Cadastro de endereço</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Criar endereços</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        {renderBreadcrumb()}
 
         <div className="mt-4 flex items-center justify-between">
           <h1 className="text-3xl font-semibold leading-tight" style={{ color: '#4a5c60' }}>
@@ -712,7 +636,7 @@ export default function NewEnderecoPage() {
                 Anterior
               </Button>
             )}
-            {wizardState.step < 6 ? (
+            {wizardState.step < totalSteps ? (
               <Button onClick={handleNext} disabled={!canGoNext() || previewMutation.isPending}>
                 {previewMutation.isPending ? 'Carregando...' : 'Próximo'}
               </Button>
@@ -730,52 +654,51 @@ export default function NewEnderecoPage() {
         </div>
       </div>
 
-      {/* Progress stepper */}
-      <div className="flex items-center justify-between max-w-4xl mx-auto w-full">
-        {STEPS.map((step, index) => (
-          <div key={step.id} className="flex items-center">
-            <div className="flex flex-col items-center">
-              <div
-                className={`size-10 rounded-full flex items-center justify-center font-semibold transition-colors ${
-                  wizardState.step === step.id
-                    ? 'bg-cyan-500 text-white'
-                    : wizardState.step > step.id
-                    ? 'bg-cyan-500 text-white'
-                    : 'bg-gray-200 text-gray-500'
-                }`}
-              >
-                {wizardState.step > step.id ? <Check className="size-5" /> : step.id}
+      {/* Progress stepper dinâmico */}
+      <div className="overflow-x-auto">
+        <div className="flex items-center justify-start gap-2 min-w-max pb-2">
+          {steps.map((step, index) => (
+            <div key={step.id} className="flex items-center">
+              <div className="flex flex-col items-center">
+                <div
+                  className={`size-10 rounded-full flex items-center justify-center font-semibold transition-colors ${
+                    wizardState.step === step.id
+                      ? 'bg-cyan-500 text-white'
+                      : wizardState.step > step.id
+                      ? 'bg-cyan-500 text-white'
+                      : 'bg-gray-200 text-gray-500'
+                  }`}
+                >
+                  {wizardState.step > step.id ? <Check className="size-5" /> : step.id}
+                </div>
+                <div
+                  className={`mt-2 text-xs font-medium whitespace-nowrap ${
+                    wizardState.step >= step.id ? 'text-cyan-600' : 'text-gray-400'
+                  }`}
+                >
+                  {step.label}
+                </div>
               </div>
-              <div
-                className={`mt-2 text-sm font-medium ${
-                  wizardState.step >= step.id ? 'text-cyan-600' : 'text-gray-400'
-                }`}
-              >
-                {step.label}
-              </div>
+              {index < steps.length - 1 && (
+                <div
+                  className={`h-0.5 w-16 mx-2 transition-colors ${
+                    wizardState.step > step.id ? 'bg-cyan-500' : 'bg-gray-200'
+                  }`}
+                />
+              )}
             </div>
-            {index < STEPS.length - 1 && (
-              <div
-                className={`h-0.5 w-20 mx-2 transition-colors ${
-                  wizardState.step > step.id ? 'bg-cyan-500' : 'bg-gray-200'
-                }`}
-              />
-            )}
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Content card */}
       <Card>
         <CardContent className="p-6">
-          <h2 className="text-2xl font-semibold mb-6">{wizardState.estruturaFisicaNome}</h2>
+          <h2 className="text-2xl font-semibold mb-6">
+            {wizardState.estruturaFisicaNome || 'Selecione uma estrutura física'}
+          </h2>
 
-          {wizardState.step === 1 && renderStepInicio()}
-          {wizardState.step === 2 && renderStepRua()}
-          {wizardState.step === 3 && renderStepColuna()}
-          {wizardState.step === 4 && renderStepNivel()}
-          {wizardState.step === 5 && renderStepPalete()}
-          {wizardState.step === 6 && renderStepVisualizacao()}
+          {renderCurrentStep()}
         </CardContent>
       </Card>
     </div>
