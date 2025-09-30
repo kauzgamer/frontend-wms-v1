@@ -429,10 +429,7 @@ export default function EnderecoPage() {
             </Dialog.Portal>
           </Dialog.Root>
 
-          {/* Área de agrupamento */}
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 mb-4 text-center text-sm text-muted-foreground bg-gray-50">
-            Arraste a coluna até aqui para agrupar
-          </div>
+          {/* Área de agrupamento removida a pedido do cliente */}
 
           {/* Tabela de endereços */}
           {isLoading ? (
