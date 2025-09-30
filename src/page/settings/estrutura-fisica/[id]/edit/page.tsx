@@ -13,7 +13,9 @@ const ALL_COORD_TYPES = [
   { tipo: 'B', nome: 'Bloco', abrevSugestoes: 'BL, B' },
   { tipo: 'R', nome: 'Rua', abrevSugestoes: 'RU, R' },
   { tipo: 'C', nome: 'Coluna', abrevSugestoes: 'CL, CLN' },
-  { tipo: 'A', nome: 'Andar', abrevSugestoes: 'AN, ANZ' },
+  { tipo: 'N', nome: 'Nível', abrevSugestoes: 'N, NIV' },
+  { tipo: 'A', nome: 'Andar', abrevSugestoes: 'AN, A' },
+  { tipo: 'P', nome: 'Palete', abrevSugestoes: 'P, PAL' },
   { tipo: 'AP', nome: 'Apartamento', abrevSugestoes: 'AP, APT' },
   { tipo: 'SE', nome: 'Setor', abrevSugestoes: 'SE, SET' },
   { tipo: 'Q', nome: 'Quadra', abrevSugestoes: 'Q, QD' },
@@ -21,7 +23,6 @@ const ALL_COORD_TYPES = [
   { tipo: 'CO', nome: 'Corredor', abrevSugestoes: 'CO, COR' },
   { tipo: 'G', nome: 'Gaveta', abrevSugestoes: 'G, GAV' },
   { tipo: 'E', nome: 'Estante', abrevSugestoes: 'E, EST' },
-  { tipo: 'P', nome: 'Posição', abrevSugestoes: 'P, POS' },
 ] as const;
 
 export default function EditEstruturaFisicaPage() {
@@ -49,12 +50,14 @@ export default function EditEstruturaFisicaPage() {
   // Coordenadas disponíveis para esta estrutura
   const coordenadasDisponiveis = useMemo(() => {
     if (!data) return []
-    return Object.values(data.coords).map(coord => ({
-      tipo: coord.tipo,
-      nome: coord.nomeCustom || coord.nomePadrao,
-      abrev: coord.abrevCustom || coord.abrevPadrao,
-      ativo: coord.ativo
-    }))
+    return Object.values(data.coords)
+      .filter(coord => coord.tipo) // Filtrar coordenadas sem tipo
+      .map(coord => ({
+        tipo: coord.tipo,
+        nome: coord.nomeCustom || coord.nomePadrao,
+        abrev: coord.abrevCustom || coord.abrevPadrao,
+        ativo: coord.ativo
+      }))
   }, [data])
 
   // Mapeamento para visualização
@@ -72,7 +75,6 @@ export default function EditEstruturaFisicaPage() {
   }, [coordenadasDisponiveis])
 
   const visualizationKeys = Array.from(ativos)
-  const visualizationLabels = visualizationKeys.map(k => vizLabelMap[k]!).filter(Boolean)
 
   function toggleAtivo(key: BackendCoordKey) {
     setAtivos(prev => {
@@ -265,8 +267,8 @@ export default function EditEstruturaFisicaPage() {
           </div>
           <div className="mt-2 text-[12px] font-semibold mb-2 text-gray-600">VISUALIZAÇÃO</div>
           <div className="flex flex-wrap gap-2">
-            {visualizationLabels.map((label) => (
-              <span key={label} className="inline-flex items-center rounded bg-green-600 text-white px-2.5 py-1 text-xs font-semibold">{label}</span>
+            {visualizationKeys.map((key) => (
+              <span key={key} className="inline-flex items-center rounded bg-green-600 text-white px-2.5 py-1 text-xs font-semibold">{vizLabelMap[key] || key}</span>
             ))}
           </div>
         </div>
@@ -310,7 +312,7 @@ export default function EditEstruturaFisicaPage() {
         {/* Right: Coordinate configuration */}
         <div className="lg:col-span-3 space-y-4">
           {Array.from(ativos).map((tipo) => {
-            const coord = ALL_COORD_TYPES.find(c => c.tipo === tipo)!
+            const coord = ALL_COORD_TYPES.find(c => c.tipo === tipo)
             const coordData = data?.coords[tipo]
             if (!coordData) return null
 
@@ -318,6 +320,7 @@ export default function EditEstruturaFisicaPage() {
             const nomeVal = customNome[tipo] ?? ''
             const abrevVal = customAbrev[tipo] ?? ''
             const isColuna = tipo === 'C'
+            const abrevSugestoes = coord?.abrevSugestoes || 'Ex: ' + coordData.abrevPadrao
 
             return (
               <div key={tipo} className="bg-white">
@@ -365,7 +368,7 @@ export default function EditEstruturaFisicaPage() {
                   {/* Editar abreviatura do sistema? */}
                   <div>
                     <div className="text-sm font-medium">Editar abreviatura do sistema?</div>
-                    <div className="text-xs text-muted-foreground mb-2">Outras opções: {coord.abrevSugestoes}</div>
+                    <div className="text-xs text-muted-foreground mb-2">Outras opções: {abrevSugestoes}</div>
                     <div className="flex items-center gap-4">
                       <label className="inline-flex items-center gap-2 text-sm">
                         <input type="radio" name={`edita-abrev-${tipo}`} checked={!!editaAbrev[tipo]} onChange={() => setEditaAbrev(p => ({ ...p, [tipo]: true }))} />

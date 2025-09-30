@@ -18,6 +18,8 @@ export function useAddresses(depositoId?: string) {
   return useQuery<AddressSummary[]>({
     queryKey: ['addresses', depositoId],
     queryFn: () => listAddresses(depositoId),
+    retry: false, // Não tentar novamente se falhar
+    staleTime: 30000, // Cache por 30 segundos
   });
 }
 
