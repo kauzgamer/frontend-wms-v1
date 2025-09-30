@@ -259,6 +259,7 @@ export default function EnderecoPage() {
               <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[940px] max-w-[95vw] rounded-md bg-white shadow-xl border">
                 <div className="px-6 py-5 border-b">
                   <Dialog.Title className="text-2xl font-semibold">Pesquisa Avançada</Dialog.Title>
+                  <Dialog.Description className="sr-only">Defina critérios adicionais de filtragem para a lista de endereços.</Dialog.Description>
                 </div>
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex flex-col gap-2">
@@ -386,6 +387,7 @@ export default function EnderecoPage() {
               <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[860px] max-w-[95vw] max-h-[80vh] overflow-auto rounded-md bg-white shadow-xl border">
                 <div className="px-6 py-5 border-b">
                   <Dialog.Title className="text-2xl font-semibold">Gerenciador de colunas</Dialog.Title>
+                  <Dialog.Description className="sr-only">Selecione as colunas que deseja exibir na tabela de endereços.</Dialog.Description>
                 </div>
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 text-[15px]">
                   {[
