@@ -1,15 +1,109 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { HomeIcon, Lock, Shield, Bell, Eye, EyeOff, Globe, Moon, Sun, Smartphone } from 'lucide-react';
+import { useProfile } from '@/lib/hooks/use-profile';
+import { useUpdatePassword } from '@/lib/hooks/use-update-password';
+import { useUpdatePreferences } from '@/lib/hooks/use-update-preferences';
+import { useDeactivateAccount } from '@/lib/hooks/use-deactivate-account';
+import { useDeleteAccount } from '@/lib/hooks/use-delete-account';
+import { useToast } from '@/components/ui/toast-context';
+import { useNavigate } from 'react-router-dom';
 
 export default function AccountPage() {
+  const navigate = useNavigate();
+  const { data: profileData } = useProfile();
+  const updatePasswordMutation = useUpdatePassword();
+  const updatePreferencesMutation = useUpdatePreferences();
+  const deactivateAccountMutation = useDeactivateAccount();
+  const deleteAccountMutation = useDeleteAccount();
+  const { show } = useToast();
+
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  const [preferences, setPreferences] = useState({
+    language: 'pt-BR',
+    timezone: 'America/Sao_Paulo',
+    theme: 'light',
+    emailNotifications: true,
+    pushNotifications: false,
+    weeklyDigest: true,
+  });
+
+  useEffect(() => {
+    if (profileData) {
+      setPreferences({
+        language: profileData.language || 'pt-BR',
+        timezone: profileData.timezone || 'America/Sao_Paulo',
+        theme: profileData.theme || 'light',
+        emailNotifications: profileData.emailNotifications ?? true,
+        pushNotifications: profileData.pushNotifications ?? false,
+        weeklyDigest: profileData.weeklyDigest ?? true,
+      });
+    }
+  }, [profileData]);
+
+  const handlePasswordChange = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      show({ kind: 'error', message: 'As senhas não coincidem.' });
+      return;
+    }
+    if (passwordData.newPassword.length < 8) {
+      show({ kind: 'error', message: 'A senha deve ter no mínimo 8 caracteres.' });
+      return;
+    }
+    try {
+      await updatePasswordMutation.mutateAsync(passwordData);
+      show({ kind: 'success', message: 'Senha alterada com sucesso.' });
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch {
+      show({ kind: 'error', message: 'Erro ao alterar senha. Verifique a senha atual.' });
+    }
+  };
+
+  const handlePreferencesChange = async () => {
+    try {
+      await updatePreferencesMutation.mutateAsync(preferences);
+      show({ kind: 'success', message: 'Preferências atualizadas com sucesso.' });
+    } catch {
+      show({ kind: 'error', message: 'Erro ao atualizar preferências.' });
+    }
+  };
+
+  const handleDeactivate = async () => {
+    if (confirm('Tem certeza que deseja desativar sua conta?')) {
+      try {
+        await deactivateAccountMutation.mutateAsync();
+        show({ kind: 'success', message: 'Conta desativada com sucesso.' });
+        navigate('/login');
+      } catch {
+        show({ kind: 'error', message: 'Erro ao desativar conta.' });
+      }
+    }
+  };
+
+  const handleDelete = async () => {
+    if (confirm('Tem certeza que deseja EXCLUIR sua conta permanentemente? Esta ação não pode ser desfeita!')) {
+      try {
+        await deleteAccountMutation.mutateAsync();
+        show({ kind: 'success', message: 'Conta marcada para exclusão.' });
+        navigate('/login');
+      } catch {
+        show({ kind: 'error', message: 'Erro ao excluir conta.' });
+      }
+    }
+  };
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 pt-4 max-w-[calc(100vw-80px)]">
@@ -48,8 +142,13 @@ export default function AccountPage() {
           <Button asChild size="lg" variant="outline" className="border-2 border-cyan-600 text-cyan-700 hover:bg-cyan-50 whitespace-nowrap">
             <Link to="/settings">Voltar</Link>
           </Button>
-          <Button size="lg" className="bg-cyan-600 hover:bg-cyan-700 text-white whitespace-nowrap">
-            Salvar Alterações
+          <Button
+            size="lg"
+            className="bg-cyan-600 hover:bg-cyan-700 text-white whitespace-nowrap"
+            onClick={handlePreferencesChange}
+            disabled={updatePreferencesMutation.isPending}
+          >
+            {updatePreferencesMutation.isPending ? 'Salvando...' : 'Salvar Alterações'}
           </Button>
         </div>
       </div>
@@ -69,6 +168,8 @@ export default function AccountPage() {
               <div className="relative">
                 <Input
                   type={showCurrentPassword ? 'text' : 'password'}
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                   placeholder="Digite sua senha atual"
                   className="h-11 pr-10"
                 />
@@ -87,6 +188,8 @@ export default function AccountPage() {
               <div className="relative">
                 <Input
                   type={showNewPassword ? 'text' : 'password'}
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                   placeholder="Digite sua nova senha"
                   className="h-11 pr-10"
                 />
@@ -106,6 +209,8 @@ export default function AccountPage() {
               <div className="relative">
                 <Input
                   type={showConfirmPassword ? 'text' : 'password'}
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                   placeholder="Confirme sua nova senha"
                   className="h-11 pr-10"
                 />
@@ -119,8 +224,12 @@ export default function AccountPage() {
               </div>
             </div>
 
-            <Button className="bg-cyan-600 hover:bg-cyan-700 text-white w-fit">
-              Alterar Senha
+            <Button
+              className="bg-cyan-600 hover:bg-cyan-700 text-white w-fit"
+              onClick={handlePasswordChange}
+              disabled={updatePasswordMutation.isPending}
+            >
+              {updatePasswordMutation.isPending ? 'Alterando...' : 'Alterar Senha'}
             </Button>
           </div>
         </div>
@@ -274,8 +383,13 @@ export default function AccountPage() {
                   Sua conta será temporariamente desativada. Você pode reativá-la a qualquer momento fazendo login.
                 </p>
               </div>
-              <Button variant="outline" className="border-red-300 text-red-700 hover:bg-red-50 whitespace-nowrap flex-shrink-0">
-                Desativar
+              <Button
+                variant="outline"
+                className="border-red-300 text-red-700 hover:bg-red-50 whitespace-nowrap flex-shrink-0"
+                onClick={handleDeactivate}
+                disabled={deactivateAccountMutation.isPending}
+              >
+                {deactivateAccountMutation.isPending ? 'Desativando...' : 'Desativar'}
               </Button>
             </div>
 
@@ -288,8 +402,13 @@ export default function AccountPage() {
                   Uma vez excluída, não há como voltar atrás. Por favor, tenha certeza.
                 </p>
               </div>
-              <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white whitespace-nowrap flex-shrink-0">
-                Excluir Conta
+              <Button
+                variant="destructive"
+                className="bg-red-600 hover:bg-red-700 text-white whitespace-nowrap flex-shrink-0"
+                onClick={handleDelete}
+                disabled={deleteAccountMutation.isPending}
+              >
+                {deleteAccountMutation.isPending ? 'Excluindo...' : 'Excluir Conta'}
               </Button>
             </div>
           </div>

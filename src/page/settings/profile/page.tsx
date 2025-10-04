@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Card } from '@/components/ui/card';
@@ -5,9 +6,62 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { HomeIcon, Camera, Mail, Phone, MapPin, Briefcase, Calendar } from 'lucide-react';
 import { useAuth } from '@/lib/use-auth';
+import { useProfile } from '@/lib/hooks/use-profile';
+import { useUpdateProfile } from '@/lib/hooks/use-update-profile';
+import { useToast } from '@/components/ui/toast-context';
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const { data: profileData } = useProfile();
+  const updateProfileMutation = useUpdateProfile();
+  const { show } = useToast();
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    jobTitle: '',
+    location: '',
+    bio: '',
+  });
+
+  useEffect(() => {
+    if (profileData) {
+      setFormData({
+        name: profileData.name || '',
+        email: profileData.email || '',
+        phone: profileData.phone || '',
+        jobTitle: profileData.jobTitle || '',
+        location: profileData.location || '',
+        bio: profileData.bio || '',
+      });
+    } else if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: user.name || '',
+        email: user.email || '',
+      }));
+    }
+  }, [profileData, user]);
+
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = async () => {
+    try {
+      await updateProfileMutation.mutateAsync(formData);
+      show({
+        kind: 'success',
+        message: 'Perfil atualizado com sucesso.',
+      });
+    } catch {
+      show({
+        kind: 'error',
+        message: 'Não foi possível salvar as alterações. Tente novamente.',
+      });
+    }
+  };
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 pt-4 max-w-[calc(100vw-80px)]">
@@ -46,8 +100,13 @@ export default function ProfilePage() {
           <Button asChild size="lg" variant="outline" className="border-2 border-cyan-600 text-cyan-700 hover:bg-cyan-50 whitespace-nowrap">
             <Link to="/settings">Voltar</Link>
           </Button>
-          <Button size="lg" className="bg-cyan-600 hover:bg-cyan-700 text-white whitespace-nowrap">
-            Salvar Alterações
+          <Button
+            size="lg"
+            className="bg-cyan-600 hover:bg-cyan-700 text-white whitespace-nowrap"
+            onClick={handleSave}
+            disabled={updateProfileMutation.isPending}
+          >
+            {updateProfileMutation.isPending ? 'Salvando...' : 'Salvar Alterações'}
           </Button>
         </div>
       </div>
@@ -82,7 +141,8 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-gray-700">Nome Completo</label>
               <Input
-                defaultValue={user?.name || ''}
+                value={formData.name}
+                onChange={(e) => handleChange('name', e.target.value)}
                 placeholder="Digite seu nome completo"
                 className="h-11"
               />
@@ -95,7 +155,8 @@ export default function ProfilePage() {
               </label>
               <Input
                 type="email"
-                defaultValue={user?.email || ''}
+                value={formData.email}
+                onChange={(e) => handleChange('email', e.target.value)}
                 placeholder="seu.email@exemplo.com"
                 className="h-11"
               />
@@ -108,6 +169,8 @@ export default function ProfilePage() {
               </label>
               <Input
                 type="tel"
+                value={formData.phone}
+                onChange={(e) => handleChange('phone', e.target.value)}
                 placeholder="(00) 00000-0000"
                 className="h-11"
               />
@@ -119,6 +182,8 @@ export default function ProfilePage() {
                 Cargo
               </label>
               <Input
+                value={formData.jobTitle}
+                onChange={(e) => handleChange('jobTitle', e.target.value)}
                 placeholder="Seu cargo ou função"
                 className="h-11"
               />
@@ -130,6 +195,8 @@ export default function ProfilePage() {
                 Localização
               </label>
               <Input
+                value={formData.location}
+                onChange={(e) => handleChange('location', e.target.value)}
                 placeholder="Cidade, Estado"
                 className="h-11"
               />
@@ -139,6 +206,8 @@ export default function ProfilePage() {
               <label className="text-sm font-semibold text-gray-700">Bio</label>
               <textarea
                 rows={4}
+                value={formData.bio}
+                onChange={(e) => handleChange('bio', e.target.value)}
                 placeholder="Conte um pouco sobre você..."
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               />

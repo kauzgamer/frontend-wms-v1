@@ -6,6 +6,27 @@ export interface User {
   provider: string
   providerId: string
   picture?: string
+  // Profile fields
+  phone?: string
+  jobTitle?: string
+  location?: string
+  bio?: string
+  // Preferences
+  language?: string
+  timezone?: string
+  theme?: string
+  // Notifications
+  emailNotifications?: boolean
+  pushNotifications?: boolean
+  weeklyDigest?: boolean
+  // Security
+  twoFactorEnabled?: boolean
+  // Status
+  status?: string
+  // Timestamps
+  lastLoginAt?: Date
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 export interface AuthContextType {
