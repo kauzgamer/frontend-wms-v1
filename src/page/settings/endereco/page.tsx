@@ -463,7 +463,7 @@ export default function EnderecoPage() {
                   <thead>
                     <tr className="border-b bg-white">
                       {/* Cabeçalho da coluna de ações vazio, igual ao print */}
-                      <th className="p-3 sticky left-0 z-20 bg-gray-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]" style={{ width: '64px', minWidth: '64px', maxWidth: '64px' }} />
+                      <th className="w-10 border-r sticky left-0 z-20 bg-white" />
                       {visibleCols.deposito && (
                       <th className="p-3 font-medium text-xs whitespace-nowrap" style={{ width: '110px' }}>
                         <div className="relative flex items-center justify-between">
@@ -593,15 +593,16 @@ export default function EnderecoPage() {
                         className="border-t hover:bg-muted/30 cursor-pointer transition-colors divide-x divide-gray-200"
                         onClick={() => navigate(`/settings/endereco/${addr.id}`)}
                       >
-                        <td className="p-3 text-sm sticky left-0 z-10 bg-white hover:bg-muted/30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                        <td className="px-2 text-center align-middle relative border-r sticky left-0 z-10 bg-white hover:bg-muted/30">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button
-                                className="inline-flex items-center justify-center rounded-md border bg-white hover:bg-muted/50 w-8 h-8"
+                                className="px-2.5 py-1.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-[#0c9abe] text-[#0c9abe] hover:bg-[#e3f5f9] font-bold text-lg leading-none"
+                                style={{letterSpacing:'2px'}}
                                 onClick={(e) => e.stopPropagation()}
                                 aria-label="Ações do endereço"
                               >
-                                <MoreVertical className="size-4" />
+                                ...
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
