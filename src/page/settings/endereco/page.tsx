@@ -6,7 +6,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { useAddresses } from '@/lib/hooks/use-addresses';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { AddressDetail, AddressFunction } from '@/lib/types/addresses';
@@ -130,9 +130,9 @@ export default function EnderecoPage() {
   const endResult = Math.min(currentPage * pageSize, filteredAddresses.length);
 
   return (
-    <div className="flex flex-col gap-6 p-6 pt-4">
+    <div className="flex flex-1 flex-col gap-6 p-6 pt-4 max-w-[calc(100vw-80px)]">
       {/* Breadcrumb e header */}
-      <div>
+      <div className="w-full">
         <Breadcrumb>
           <BreadcrumbList className="bg-background rounded-md border px-3 py-2 shadow-xs">
             <BreadcrumbItem>
@@ -153,18 +153,18 @@ export default function EnderecoPage() {
           </BreadcrumbList>
         </Breadcrumb>
         
-        <div className="mt-4 flex items-center justify-between">
-          <h1 className="text-3xl font-semibold leading-tight" style={{ color: '#4a5c60' }}>
+        <div className="mt-4 flex items-center justify-between gap-4">
+          <h1 className="text-3xl font-semibold leading-tight flex-shrink-0" style={{ color: '#4a5c60' }}>
             Cadastro de endereço
           </h1>
-          <div className="flex gap-3">
-            <Button asChild size="lg" variant="outline" className="border-2 border-cyan-600 text-cyan-700 hover:bg-cyan-50">
+          <div className="flex gap-3 flex-shrink-0">
+            <Button asChild size="lg" variant="outline" className="border-2 border-cyan-600 text-cyan-700 hover:bg-cyan-50 whitespace-nowrap">
               <Link to="/settings">Voltar</Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-2 border-cyan-600 text-cyan-700 hover:bg-cyan-50">
+            <Button size="lg" variant="outline" className="border-2 border-cyan-600 text-cyan-700 hover:bg-cyan-50 whitespace-nowrap">
               Imprimir em lote
             </Button>
-            <Button size="lg" className="bg-cyan-600 hover:bg-cyan-700 text-white">
+            <Button size="lg" className="bg-cyan-600 hover:bg-cyan-700 text-white whitespace-nowrap">
               Alterar em lote
             </Button>
           </div>
@@ -172,85 +172,79 @@ export default function EnderecoPage() {
       </div>
 
       {/* Card de endereços */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Endereços</h2>
-
-            {/* Toolbar superior (gerenciador de colunas, export, busca, avançada, tela cheia) */}
-            <div className="hidden md:flex items-center text-cyan-700">
-              <div className="h-6 w-px bg-gray-200 mx-3" />
-              <button
-                className="p-2 rounded hover:bg-cyan-50"
-                title="Gerenciador de colunas"
-                aria-label="Gerenciador de colunas"
-                onClick={() => { setDraftVisibleCols(visibleCols); setOpenColumns(true); }}
-              >
-                <SlidersHorizontal className="size-5" />
-              </button>
-              <div className="h-6 w-px bg-gray-200 mx-3" />
-              <div className="flex items-center gap-2">
-                <button className="rounded border border-cyan-600 text-cyan-700 px-2 py-1 text-xs font-semibold hover:bg-cyan-50">
-                  XLS
-                </button>
-                <button className="rounded border border-cyan-600 text-cyan-700 px-2 py-1 text-xs font-semibold hover:bg-cyan-50">
-                  PDF
-                </button>
-              </div>
-              <div className="h-6 w-px bg-gray-200 mx-3" />
-              <div className="relative">
-                <Input
-                  placeholder="Pesquisar"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pr-10 w-[340px]"
-                />
-                <SearchIcon className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-cyan-700" />
-              </div>
-              <button className="ml-3 text-cyan-700 font-medium hover:underline">
-                <span onClick={() => setOpenAdvanced(true)}>Pesquisa.Avançada</span>
-              </button>
-              <div className="h-6 w-px bg-gray-200 mx-3" />
-              <button className="p-2 rounded hover:bg-cyan-50" title="Tela cheia">
-                <Maximize2 className="size-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Botão Novo endereço e Filtros na mesma linha */}
-          <div className="flex items-center gap-4 mb-4">
-            <Button 
-              onClick={() => navigate('/settings/endereco/new')}
-              className="bg-cyan-600 hover:bg-cyan-700"
-            >
-              <Plus className="size-4" /> Novo endereço
-            </Button>
-            
-            {/* Chip "Filtrando por" conforme print: Situação: Ativo, Bloqueado [X] */}
+      <Card className="p-0 overflow-hidden border w-full">
+        {/* Top control bar */}
+        <div className="flex items-center gap-3 px-5 py-3 border-b bg-white/60 overflow-x-auto">
+          <Button 
+            onClick={() => navigate('/settings/endereco/new')}
+            size="sm"
+            className="bg-[#0082a1] hover:bg-[#006c85] text-white h-9 px-4 text-[13px] font-semibold tracking-wide"
+          >
+            <Plus className="size-4 mr-1" /> NOVO ENDEREÇO
+          </Button>
+          
+          {/* Chip "Filtrando por" */}
+          <div className="text-[11px] flex items-center gap-2">
             {filterSituacao !== 'ALL' && (
-              <div className="flex items-center gap-2 text-[13px]">
-                <span className="text-sm font-medium">Filtrando por:</span>
-                <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 bg-white leading-none text-gray-700">
-                  <span className="font-medium">Situação:</span>
-                  <span className="text-[#0c9abe] font-semibold">
-                    {filterSituacao === 'AB'
-                      ? 'Ativo, Bloqueado'
-                      : filterSituacao === 'ATIVO'
-                        ? 'Ativo'
-                        : 'Bloqueado'}
-                  </span>
-                  <button
-                    className="text-muted-foreground hover:text-foreground text-xs leading-none"
-                    aria-label="Limpar filtro de situação"
-                    onClick={() => setFilterSituacao('ALL')}
-                  >
-                    ×
-                  </button>
+              <span className="inline-flex items-center gap-2 rounded-md border px-2 py-1 bg-white leading-none">
+                <span className="font-medium" style={{color:'#555'}}>Situação:</span>
+                <span className="text-[#0c9abe] font-semibold">
+                  {filterSituacao === 'AB'
+                    ? 'Ativo, Bloqueado'
+                    : filterSituacao === 'ATIVO'
+                      ? 'Ativo'
+                      : 'Bloqueado'}
                 </span>
-              </div>
+                <button
+                  className="text-muted-foreground hover:text-foreground text-xs leading-none"
+                  aria-label="Limpar filtro de situação"
+                  onClick={() => setFilterSituacao('ALL')}
+                >
+                  ×
+                </button>
+              </span>
             )}
-            {/* Campo de busca movido para a barra superior */}
           </div>
+          
+          {/* Toolbar direita */}
+          <div className="ml-auto flex items-center gap-3 flex-shrink-0">
+            <button
+              className="text-[#0c9abe] hover:opacity-80 transition text-sm flex-shrink-0"
+              title="Gerenciador de colunas"
+              onClick={() => { setDraftVisibleCols(visibleCols); setOpenColumns(true); }}
+            >
+              <SlidersHorizontal className="size-4" />
+            </button>
+            <button className="text-[#0c9abe] hover:opacity-80 transition text-sm inline-flex items-center gap-1 flex-shrink-0">
+              <span className="text-xs font-semibold">XLS</span>
+            </button>
+            <button className="text-[#0c9abe] hover:opacity-80 transition text-sm inline-flex items-center gap-1 flex-shrink-0">
+              <span className="text-xs font-semibold">PDF</span>
+            </button>
+            <div className="relative w-44 flex-shrink-0">
+              <SearchIcon className="size-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-7 pr-3 h-9 rounded-md border bg-white text-sm w-full focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe] placeholder:text-muted-foreground"
+                placeholder="Pesquisar"
+              />
+            </div>
+            <button className="text-[#0c9abe] hover:underline text-sm font-medium whitespace-nowrap flex-shrink-0" onClick={() => setOpenAdvanced(true)}>
+              Pesquisa Avançada
+            </button>
+            <div className="h-6 w-px bg-border flex-shrink-0" />
+            <button className="text-[#0c9abe] hover:opacity-80 flex-shrink-0" title="Tela cheia">
+              <Maximize2 className="size-4" />
+            </button>
+            <button
+              onClick={() => navigate('/settings')}
+              className="bg-[#0c9abe] hover:bg-[#0a869d] text-white rounded-md px-4 h-9 text-sm font-medium whitespace-nowrap flex-shrink-0"
+            >
+              Voltar
+            </button>
+          </div>
+        </div>
 
           {/* Modal de Pesquisa Avançada */}
           <Dialog.Root open={openAdvanced} onOpenChange={setOpenAdvanced}>
@@ -463,16 +457,15 @@ export default function EnderecoPage() {
               </Button>
             </div>
           ) : (
-            <div className="border rounded-lg overflow-hidden">
-              {/* Limitamos a largura visível para caber até a coluna "Acessível a mão"; colunas seguintes exigem scroll */}
-              <div className="overflow-x-auto overflow-y-auto max-h-[600px] max-w-[1100px]">
-                <table className="w-full" style={{ minWidth: '2000px' }}>
-                  <thead className="bg-gray-100 sticky top-0 z-10">
-                    <tr className="text-gray-700 divide-x divide-gray-200">
+            <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[13px]">
+                  <thead>
+                    <tr className="border-b bg-white">
                       {/* Cabeçalho da coluna de ações vazio, igual ao print */}
-                      <th className="p-3 sticky left-0 z-20 bg-gray-100" style={{ width: '64px' }} />
+                      <th className="p-3 sticky left-0 z-20 bg-gray-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]" style={{ width: '64px', minWidth: '64px', maxWidth: '64px' }} />
                       {visibleCols.deposito && (
-                      <th className="p-3 font-medium text-xs whitespace-nowrap" style={{ width: '100px' }}>
+                      <th className="p-3 font-medium text-xs whitespace-nowrap" style={{ width: '110px' }}>
                         <div className="relative flex items-center justify-between">
                           <span className="text-cyan-700">Depósito</span>
                           <DropdownMenu>
@@ -490,12 +483,12 @@ export default function EnderecoPage() {
                       </th>
                       )}
                       {visibleCols.enderecoCompleto && (
-                      <th className="p-3 font-medium text-xs whitespace-nowrap" style={{ width: '280px' }}>
-                        <div className="relative flex items-center justify-between">
-                          <span className="text-cyan-700">Endereço completo (Desktop)</span>
+                      <th className="p-3 font-medium text-xs" style={{ width: '240px' }}>
+                        <div className="relative flex items-center justify-between gap-2">
+                          <span className="text-cyan-700 truncate">Endereço completo (Desktop)</span>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1">
+                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1 flex-shrink-0">
                                 <MoreVertical className="size-4" />
                               </button>
                             </DropdownMenuTrigger>
@@ -507,12 +500,12 @@ export default function EnderecoPage() {
                       </th>
                       )}
                       {visibleCols.enderecoAbreviado && (
-                      <th className="p-3 font-medium text-xs whitespace-nowrap" style={{ width: '220px' }}>
-                        <div className="relative flex items-center justify-between">
-                          <span className="text-cyan-700">Endereço abreviado (Dispositivos móveis)</span>
+                      <th className="p-3 font-medium text-xs" style={{ width: '200px' }}>
+                        <div className="relative flex items-center justify-between gap-2">
+                          <span className="text-cyan-700 truncate">Endereço abreviado (Dispositivos móveis)</span>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1">
+                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1 flex-shrink-0">
                                 <MoreVertical className="size-4" />
                               </button>
                             </DropdownMenuTrigger>
@@ -525,11 +518,11 @@ export default function EnderecoPage() {
                       )}
                       {visibleCols.estruturaFisica && (
                       <th className="p-3 font-medium text-xs whitespace-nowrap" style={{ width: '140px' }}>
-                        <div className="relative flex items-center justify-between">
+                        <div className="relative flex items-center justify-between gap-2">
                           <span className="text-cyan-700">Estrutura física</span>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1">
+                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1 flex-shrink-0">
                                 <MoreVertical className="size-4" />
                               </button>
                             </DropdownMenuTrigger>
@@ -541,12 +534,12 @@ export default function EnderecoPage() {
                       </th>
                       )}
                       {visibleCols.funcao && (
-                      <th className="p-3 font-medium text-xs whitespace-nowrap" style={{ width: '120px' }}>
-                        <div className="relative flex items-center justify-between">
+                      <th className="p-3 font-medium text-xs whitespace-nowrap" style={{ width: '130px' }}>
+                        <div className="relative flex items-center justify-between gap-2">
                           <span className="text-cyan-700">Função</span>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1">
+                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1 flex-shrink-0">
                                 <MoreVertical className="size-4" />
                               </button>
                             </DropdownMenuTrigger>
@@ -559,7 +552,7 @@ export default function EnderecoPage() {
                       )}
                       {visibleCols.acessivelAMao && (
                       <th className="p-3 font-medium text-xs whitespace-nowrap" style={{ width: '180px' }}>
-                        <div className="relative flex items-center justify-between">
+                        <div className="relative flex items-center justify-between gap-2">
                           <span className="text-cyan-700">Acessível a mão</span>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -600,7 +593,7 @@ export default function EnderecoPage() {
                         className="border-t hover:bg-muted/30 cursor-pointer transition-colors divide-x divide-gray-200"
                         onClick={() => navigate(`/settings/endereco/${addr.id}`)}
                       >
-                        <td className="p-3 text-sm whitespace-nowrap sticky left-0 z-10 bg-white">
+                        <td className="p-3 text-sm sticky left-0 z-10 bg-white hover:bg-muted/30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button
@@ -622,8 +615,8 @@ export default function EnderecoPage() {
                           </DropdownMenu>
                         </td>
                         {visibleCols.deposito && (<td className="p-3 text-sm whitespace-nowrap">{addr.deposito}</td>)}
-                        {visibleCols.enderecoCompleto && (<td className="p-3 text-sm whitespace-nowrap">{addr.enderecoCompleto}</td>)}
-                        {visibleCols.enderecoAbreviado && (<td className="p-3 text-sm whitespace-nowrap">{addr.enderecoAbreviado}</td>)}
+                        {visibleCols.enderecoCompleto && (<td className="p-3 text-sm"><div className="truncate">{addr.enderecoCompleto}</div></td>)}
+                        {visibleCols.enderecoAbreviado && (<td className="p-3 text-sm"><div className="truncate">{addr.enderecoAbreviado}</div></td>)}
                         {visibleCols.estruturaFisica && (<td className="p-3 text-sm whitespace-nowrap">{addr.estruturaFisica}</td>)}
                         {visibleCols.funcao && (<td className="p-3 text-sm whitespace-nowrap">{addr.funcao}</td>)}
                         {visibleCols.acessivelAMao && (<td className="p-3 text-sm whitespace-nowrap">
@@ -655,10 +648,10 @@ export default function EnderecoPage() {
                     )})}
                   </tbody>
                 </table>
-              </div>
+            </div>
               
-              {/* Footer com paginação */}
-              <div className="border-t p-3 bg-white">
+            {/* Footer com paginação */}
+            <div className="border-t p-3 bg-white">
                 <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
                   <span className="font-medium">
                     {startResult} - {endResult} DE {filteredAddresses.length} RESULTADOS
@@ -692,10 +685,9 @@ export default function EnderecoPage() {
                     </div>
                   </div>
                 </div>
-              </div>
             </div>
+            </>
           )}
-        </CardContent>
       </Card>
     </div>
   );
