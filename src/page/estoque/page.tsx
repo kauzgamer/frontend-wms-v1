@@ -34,7 +34,8 @@ export default function EstoquePage() {
     limit,
   });
 
-  const stocks = data ?? [];
+  // Backend retorna array diretamente
+  const stocks = Array.isArray(data) ? data : [];
 
   function formatDate(date: string | null) {
     if (!date) return '-';
