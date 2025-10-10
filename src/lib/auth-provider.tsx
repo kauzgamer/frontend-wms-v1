@@ -33,20 +33,45 @@ export function AuthProvider({ children }: AuthProviderProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
+    
     if (!response.ok) {
-      // Try to surface backend error message (e.g., "Invalid credentials" or lock info)
+      // Extrair mensagens de erro detalhadas do backend
+      let errorMessage = "Falha no login";
+      
       try {
         const errData = await response.json();
-        const message =
-          typeof errData?.message === "string"
-            ? errData.message
-            : Array.isArray(errData?.message)
-            ? errData.message.join("\n")
-            : "Falha no login";
-        throw new Error(message);
-      } catch {
-        throw new Error("Falha no login");
+        
+        // Tratamento de erros de validação Zod do backend
+        if (Array.isArray(errData?.message)) {
+          // Erros de validação Zod vêm como array
+          errorMessage = errData.message.join(" • ");
+        } else if (typeof errData?.message === "string") {
+          // Erros simples (credenciais inválidas, conta bloqueada, etc)
+          errorMessage = errData.message;
+        } else if (errData?.error) {
+          errorMessage = errData.error;
+        }
+        
+        // Mensagens específicas por status HTTP
+        if (response.status === 401) {
+          if (!errorMessage || errorMessage === "Falha no login") {
+            errorMessage = "Email ou senha incorretos";
+          }
+        } else if (response.status === 403) {
+          if (!errorMessage || errorMessage === "Falha no login") {
+            errorMessage = "Conta bloqueada. Tente novamente mais tarde.";
+          }
+        } else if (response.status === 400) {
+          if (!errorMessage || errorMessage === "Falha no login") {
+            errorMessage = "Dados inválidos. Verifique os campos e tente novamente.";
+          }
+        }
+      } catch (parseError) {
+        // Se não conseguir parsear o JSON, usa mensagem genérica
+        console.error("Erro ao parsear resposta do servidor:", parseError);
       }
+      
+      throw new Error(errorMessage);
     }
     const data = await response.json();
     const loginResponseSchema = z.object({

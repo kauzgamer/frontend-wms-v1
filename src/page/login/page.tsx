@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { User, Lock } from "lucide-react";
 import { useAuth } from "@/lib/use-auth";
+import { useToast } from "@/components/ui/toast-context";
 import { frontendLoginSchema } from "@/lib/validation/auth";
 import logo from "@/assets/logo-simple.svg";
 
@@ -9,6 +10,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const toast = useToast();
   const [loginValue, setLoginValue] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,17 +28,32 @@ export function LoginPage() {
     setError("");
 
     try {
-      // Validate with zod
+      // Validação client-side com Zod
       const parsed = frontendLoginSchema.safeParse({
-        email: loginValue,
+        email: loginValue.trim(),
         password: senha,
       });
+      
       if (!parsed.success) {
-        setError(parsed.error.issues.map((issue) => issue.message).join("\n"));
+        const errorMessages = parsed.error.issues.map((issue) => issue.message).join(" • ");
+        setError(errorMessages);
+        toast.show({
+          message: errorMessages,
+          kind: "error",
+        });
         setLoading(false);
         return;
       }
+
+      // Tentar fazer login
       await login(parsed.data.email, parsed.data.password);
+      
+      // Sucesso - mostrar toast e redirecionar
+      toast.show({
+        message: "Login realizado com sucesso!",
+        kind: "success",
+      });
+      
       // Redirect to intended page or dashboard
       navigate(from, { replace: true });
     } catch (e) {
@@ -45,6 +62,10 @@ export function LoginPage() {
           ? e.message
           : "Credenciais inválidas. Tente novamente.";
       setError(msg);
+      toast.show({
+        message: msg,
+        kind: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -98,7 +119,9 @@ export function LoginPage() {
             />
           </div>
           {error && (
-            <div className="text-red-600 text-sm text-center">{error}</div>
+            <div className="text-red-600 text-sm text-center bg-red-50 border border-red-200 rounded px-3 py-2">
+              {error}
+            </div>
           )}
           <button
             type="submit"
