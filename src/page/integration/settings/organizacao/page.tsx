@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useOrganization } from '@/lib/hooks/use-organization'
 import { useSaveOrganization } from '@/lib/hooks/use-save-organization'
+import { upsertOrganizationSchema } from '@/lib/validation/organization'
+import { useToast } from '@/components/ui/toast-context'
 
 interface OrganizacaoForm {
   codigo: string
@@ -17,6 +19,7 @@ interface OrganizacaoForm {
 
 export function OrganizacaoIntegrationPage() {
   const navigate = useNavigate()
+  const toast = useToast()
   const { data: org, isLoading } = useOrganization()
   const saveOrg = useSaveOrganization()
   const [form, setForm] = useState<OrganizacaoForm>({
@@ -27,7 +30,6 @@ export function OrganizacaoIntegrationPage() {
     timezone: 'America/Sao_Paulo'
   })
   const [saving, setSaving] = useState(false)
-  const [touched, setTouched] = useState<Record<string, boolean>>({})
 
   // Prefill when loading existing organization
   useEffect(() => {
@@ -44,30 +46,36 @@ export function OrganizacaoIntegrationPage() {
 
   function update<K extends keyof OrganizacaoForm>(key: K, value: OrganizacaoForm[K]) {
     setForm(f => ({ ...f, [key]: value }))
-    setTouched(t => ({ ...t, [key]: true }))
   }
 
-  const errors: Partial<Record<keyof OrganizacaoForm, string>> = {}
-  if (touched.codigo && !form.codigo) errors.codigo = 'Informe o código'
-  if (touched.nome && !form.nome) errors.nome = 'Informe o nome'
-  if (touched.cnpj && form.cnpj && !/^\d{14}$/.test(form.cnpj.replace(/\D/g,''))) errors.cnpj = 'CNPJ inválido'
-
-  const hasErrors = Object.keys(errors).length > 0
-
   async function handleSave() {
-    setTouched({ codigo: true, nome: true, cnpj: true, ativo: true, timezone: true })
-    if (hasErrors) return
     setSaving(true)
+    
     try {
-      await saveOrg.mutateAsync({
+      // Construir payload
+      const payload = {
         codigo: form.codigo,
         nome: form.nome,
-        cnpj: form.cnpj || undefined,
+        cnpj: form.cnpj.replace(/\D/g, ''),
         ativo: form.ativo,
-        timezone: form.timezone,
-      })
-      // opcional: feedback visual real (toast)
-      // reload form with latest data is handled by query invalidation in hook
+        timezone: form.timezone || undefined,
+      }
+      
+      // Validação Zod
+      const parsed = upsertOrganizationSchema.safeParse(payload)
+      if (!parsed.success) {
+        parsed.error.issues.forEach((issue) => {
+          toast.show({ message: issue.message, kind: 'error' })
+        })
+        setSaving(false)
+        return
+      }
+      
+      await saveOrg.mutateAsync(parsed.data)
+      toast.show({ message: 'Organização salva com sucesso', kind: 'success' })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar organização'
+      toast.show({ message: msg, kind: 'error' })
     } finally {
       setSaving(false)
     }
@@ -110,7 +118,7 @@ export function OrganizacaoIntegrationPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => navigate(-1)} className="h-9"><ChevronLeft className="size-4" /> Voltar</Button>
-          <Button onClick={handleSave} disabled={saving || hasErrors || isLoading} className="h-9 bg-[#0c9abe] hover:bg-[#0a869d] text-white">
+          <Button onClick={handleSave} disabled={saving || isLoading} className="h-9 bg-[#0c9abe] hover:bg-[#0a869d] text-white">
             <Save className="size-4 mr-1" /> {saving ? 'Salvando...' : isLoading ? 'Carregando...' : 'Salvar'}
           </Button>
         </div>
@@ -128,31 +136,28 @@ export function OrganizacaoIntegrationPage() {
               <input
                 value={form.codigo}
                 onChange={e => update('codigo', e.target.value.toUpperCase())}
-                className={`h-9 rounded-md border px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe] ${errors.codigo ? 'border-red-500' : ''}`}
+                className="h-9 rounded-md border px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
                 placeholder="Ex: ORG01"
               />
-              {errors.codigo && <span className="text-[11px] text-red-600">{errors.codigo}</span>}
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium uppercase tracking-wide">Nome *</label>
               <input
                 value={form.nome}
                 onChange={e => update('nome', e.target.value)}
-                className={`h-9 rounded-md border px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe] ${errors.nome ? 'border-red-500' : ''}`}
+                className="h-9 rounded-md border px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
                 placeholder="Razão social"
               />
-              {errors.nome && <span className="text-[11px] text-red-600">{errors.nome}</span>}
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium uppercase tracking-wide">CNPJ</label>
               <input
                 value={form.cnpj}
                 onChange={e => update('cnpj', e.target.value.replace(/\D/g,''))}
-                className={`h-9 rounded-md border px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe] ${errors.cnpj ? 'border-red-500' : ''}`}
+                className="h-9 rounded-md border px-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
                 placeholder="Somente números"
                 maxLength={14}
               />
-              {errors.cnpj && <span className="text-[11px] text-red-600">{errors.cnpj}</span>}
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium uppercase tracking-wide">Time zone</label>

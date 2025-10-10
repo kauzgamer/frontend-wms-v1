@@ -13,7 +13,7 @@ export type CustomerCreateInput = {
   cnpj?: string
   cpf?: string
   name: string
-  uf: string
+  uf?: string
   stateRegistration?: string
   active?: boolean
 }

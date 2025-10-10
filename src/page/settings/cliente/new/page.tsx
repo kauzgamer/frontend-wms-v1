@@ -4,6 +4,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { HomeIcon } from 'lucide-react'
 import { useToast } from '@/components/ui/toast-context'
 import { useCreateCustomer } from '@/lib/hooks/use-create-customer'
+import { createCustomerSchema } from '@/lib/validation/customers'
 
 type PersonType = 'PF' | 'PJ' | 'FOREIGN'
 
@@ -25,45 +26,43 @@ export default function NewCustomerPage() {
   const [stateRegistration, setStateRegistration] = useState('')
   const [errors, setErrors] = useState<string[]>([])
 
-  function validate(): boolean {
-    const errs: string[] = []
-    if (country !== 'BR') {
-      errs.push('No momento, apenas clientes do Brasil são suportados.')
-    }
-    if (person === 'FOREIGN') {
-      errs.push('Tipo "Estrangeiro" ainda não suportado.')
-    }
-    if (person === 'PJ') {
-      const onlyDigits = cnpj.replace(/\D/g, '')
-      if (!onlyDigits || onlyDigits.length !== 14) {
-        errs.push('Informe um CNPJ válido com 14 dígitos (somente números).')
-      }
-    }
-    if (person === 'PF') {
-      const onlyDigits = cpf.replace(/\D/g, '')
-      if (!onlyDigits || onlyDigits.length !== 11) {
-        errs.push('Informe um CPF válido com 11 dígitos (somente números).')
-      }
-    }
-    if (!name.trim()) errs.push(person === 'PF' ? 'Informe o nome completo.' : 'Informe a razão social.')
-    if (!uf) errs.push('Selecione o estado (UF).')
-    setErrors(errs)
-    return errs.length === 0
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!validate()) return
+    
+    // Validações de regras de negócio
+    if (country !== 'BR') {
+      setErrors(['No momento, apenas clientes do Brasil são suportados.'])
+      return
+    }
+    if (person === 'FOREIGN') {
+      setErrors(['Tipo "Estrangeiro" ainda não suportado.'])
+      return
+    }
+    
     try {
+      // Construir payload
       const payload = person === 'PF'
-        ? { cpf: cpf.replace(/\D/g, ''), name: name.trim(), uf, active: true }
-        : { cnpj: cnpj.replace(/\D/g, ''), name: name.trim(), uf, stateRegistration: stateRegistration || undefined, active: true }
-      await mutateAsync(payload)
+        ? { cpf: cpf.replace(/\D/g, ''), name: name.trim(), uf: uf.toUpperCase(), active: true }
+        : { cnpj: cnpj.replace(/\D/g, ''), name: name.trim(), uf: uf.toUpperCase(), stateRegistration: stateRegistration || undefined, active: true }
+      
+      // Validação Zod
+      const parsed = createCustomerSchema.safeParse(payload)
+      if (!parsed.success) {
+        setErrors(parsed.error.issues.map(i => i.message))
+        parsed.error.issues.forEach(issue => {
+          toast.show({ message: issue.message, kind: 'error' })
+        })
+        return
+      }
+      
+      // Salvar
+      await mutateAsync(parsed.data)
       toast.show({ message: 'Cliente criado com sucesso', kind: 'success' })
       navigate('/settings/cliente')
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro ao salvar cliente'
       setErrors([msg])
+      toast.show({ message: msg, kind: 'error' })
     }
   }
 
