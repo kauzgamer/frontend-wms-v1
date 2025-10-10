@@ -54,7 +54,7 @@ const data = {
     { title: "Fornecedor", url: "/settings/fornecedor" },
     { title: "Usuários", url: "/settings/usuarios" },
   ] },
-    { title: "Estoque", url: "#", icon: Boxes },
+    { title: "Estoque", url: "/estoque", icon: Boxes },
     { title: "Recebimento", url: "#", icon: PackagePlus },
     { title: "Expedição", url: "#", icon: Truck },
     { title: "Inventário", url: "#", icon: ClipboardList },

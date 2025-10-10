@@ -29,6 +29,8 @@ const EstruturaFisicaPage = lazy(() => import("@/page/settings/estrutura-fisica/
 const EditEstruturaFisicaPage = lazy(() => import("@/page/settings/estrutura-fisica/[id]/edit/page"))
 const EnderecoPage = lazy(() => import("@/page/settings/endereco/page"))
 const NewEnderecoPage = lazy(() => import("@/page/settings/endereco/new/page"))
+const EstoquePage = lazy(() => import("@/page/estoque/page"))
+const NewEstoquePage = lazy(() => import("@/page/estoque/new/page"))
 const ProfilePage = lazy(() => import("@/page/settings/profile/page"))
 const AccountPage = lazy(() => import("@/page/settings/account/page"))
 
@@ -110,6 +112,8 @@ function App() {
           <Route path="/settings/estrutura-fisica/:id/edit" element={<EditEstruturaFisicaPage />} />
           <Route path="/settings/endereco" element={<EnderecoPage />} />
           <Route path="/settings/endereco/new" element={<NewEnderecoPage />} />
+          <Route path="/estoque" element={<EstoquePage />} />
+          <Route path="/estoque/new" element={<NewEstoquePage />} />
           <Route path="/settings/profile" element={<ProfilePage />} />
           <Route path="/settings/account" element={<AccountPage />} />
           <Route path="/settings/fornecedor" element={<FornecedorPage />} />
