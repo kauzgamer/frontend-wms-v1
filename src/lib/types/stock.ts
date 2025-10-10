@@ -1,19 +1,28 @@
+// ⚠️ MÓDULO SOMENTE LEITURA - Tipos para consulta de estoque
+
 export interface Stock {
   id: string;
   productId: string;
   skuId: string | null;
   addressId: string;
+  estabelecimento: string | null;
+  deposito: string | null;
   lote: string | null;
-  quantity: number;
-  quantityReserved: number;
-  quantityAvailable: number;
-  unitOfMeasure: string | null;
   validade: string | null;
   fabricacao: string | null;
   documentoOrigem: string | null;
-  status: 'DISPONIVEL' | 'RESERVADO' | 'BLOQUEADO' | 'AVARIADO';
-  attributes: Record<string, string | number> | null;
+  status: 'DISPONIVEL' | 'RESERVADO' | 'BLOQUEADO' | 'QUARENTENA';
   observacao: string | null;
+  attributes: Record<string, unknown> | null;
+
+  // Campos de quantidade (sistema de alocação)
+  quantidadeData: number;
+  quantidadeAtual: number;
+  quantidadeDisponivel: number;
+  quantidadeAlocada: number;
+  quantidadeAlocadaProducao: number;
+  quantidadeAlocadaPedido: number;
+
   createdAt: string;
   updatedAt: string;
 
@@ -26,6 +35,7 @@ export interface Stock {
   sku?: {
     id: string;
     description: string;
+    unitsPerSku: number;
   } | null;
   address?: {
     id: string;
@@ -39,18 +49,16 @@ export interface StockWithDetails extends Stock {
     id: string;
     name: string | null;
     sku: string | null;
-    unitOfMeasure: string | null;
   };
   sku: {
     id: string;
     description: string;
+    unitsPerSku: number;
   } | null;
   address: {
     id: string;
     enderecoCompleto: string;
     enderecoAbreviado: string;
-    deposito: string;
-    situacao: string;
   };
 }
 
@@ -66,7 +74,9 @@ export interface StockListResponse {
 
 export interface ProductStockTotal {
   productId: string;
-  totalQuantity: number;
-  totalReserved: number;
-  totalAvailable: number;
+  totalQuantidadeAtual: number;
+  totalQuantidadeDisponivel: number;
+  totalQuantidadeAlocada: number;
+  totalQuantidadeAlocadaProducao: number;
+  totalQuantidadeAlocadaPedido: number;
 }
