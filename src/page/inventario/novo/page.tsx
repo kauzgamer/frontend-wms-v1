@@ -1,22 +1,57 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
+import { useCreateInventory } from '@/lib/hooks/use-inventory'
+import { useToast } from '@/components/ui/toast-context'
+import { useNavigate } from 'react-router-dom'
 
 export default function NovoInventarioPage() {
   const [step, setStep] = useState(1)
+  const createMutation = useCreateInventory()
+  const toast = useToast()
+  const navigate = useNavigate()
+  const identificadorRef = useRef<HTMLInputElement>(null)
+  const descricaoRef = useRef<HTMLInputElement>(null)
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-semibold" style={{ color: '#4a5c60' }}>Novo inventário</h1>
         <div className="flex gap-2">
-          <Button variant="outline">Cancelar</Button>
-          <Button onClick={() => setStep((s) => Math.min(5, s + 1))}>{step < 5 ? 'Próximo' : 'Salvar'}</Button>
+          <Button variant="outline" onClick={() => navigate('/inventario')}>Cancelar</Button>
+          <Button
+            onClick={async () => {
+              if (step < 5) {
+                setStep((s) => Math.min(5, s + 1))
+                return
+              }
+              // Salvar
+              const payload = {
+                identificador: identificadorRef.current?.value?.trim() || undefined,
+                descricao: descricaoRef.current?.value?.trim() || '',
+              }
+              if (!payload.descricao) {
+                toast.show({ kind: 'error', message: 'Descrição é obrigatória' })
+                return
+              }
+              try {
+                await createMutation.mutateAsync(payload)
+                toast.show({ kind: 'success', message: 'Inventário criado com sucesso' })
+                navigate('/inventario')
+              } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : 'Erro ao criar inventário'
+                toast.show({ kind: 'error', message: msg })
+              }
+            }}
+            disabled={createMutation.isPending}
+          >
+            {step < 5 ? 'Próximo' : createMutation.isPending ? 'Salvando...' : 'Salvar'}
+          </Button>
         </div>
       </div>
 
       <Stepper step={step} />
 
       <div className="border rounded-md p-4 bg-white">
-        {step === 1 && <SecaoInicio />}
+        {step === 1 && <SecaoInicio identificadorRef={identificadorRef} descricaoRef={descricaoRef} />}
         {step === 2 && <SecaoEscopo />}
         {step === 3 && <SecaoCritérios />}
         {step === 4 && <SecaoIntegracao />}
@@ -40,7 +75,7 @@ function Stepper({ step }: { step: number }) {
   )
 }
 
-function SecaoInicio() {
+function SecaoInicio({ identificadorRef, descricaoRef }: { identificadorRef: React.RefObject<HTMLInputElement | null>, descricaoRef: React.RefObject<HTMLInputElement | null> }) {
   return (
     <div className="space-y-6">
       <div>
@@ -56,11 +91,11 @@ function SecaoInicio() {
           </div>
           <div>
             <label className="text-sm mb-2 block">Identificador</label>
-            <input className="w-full border rounded px-3 py-2 text-sm bg-white" placeholder="Gerado automaticamente" defaultValue={Math.floor(Math.random()*1e8).toString().padStart(8,'0')} />
+            <input ref={identificadorRef} className="w-full border rounded px-3 py-2 text-sm bg-white" placeholder="Gerado automaticamente" defaultValue={Math.floor(Math.random()*1e8).toString().padStart(8,'0')} />
           </div>
           <div>
             <label className="text-sm mb-2 block">Descrição</label>
-            <input className="w-full border rounded px-3 py-2 text-sm bg-white" placeholder="Descrição" defaultValue="Test" />
+            <input ref={descricaoRef} className="w-full border rounded px-3 py-2 text-sm bg-white" placeholder="Descrição" defaultValue="Test" />
           </div>
         </div>
       </div>

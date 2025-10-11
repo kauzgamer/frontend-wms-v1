@@ -32,3 +32,17 @@ export interface ListInventoriesResponse {
     total: number
   }
 }
+
+// Entrada para criação de inventário (alinhado ao backend)
+export interface CreateInventoryInput {
+  identificador?: string
+  descricao: string
+}
+
+// Resultado da criação (backend retorna um resumo)
+export type CreateInventoryResult = InventorySummary
+
+export interface CreateInventoryInput {
+  identificador?: string
+  descricao: string
+}

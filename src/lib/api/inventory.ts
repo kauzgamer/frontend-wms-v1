@@ -1,5 +1,11 @@
 import { apiFetch } from './client'
-import type { InventoryDashboard, ListInventoriesParams, ListInventoriesResponse } from '../types/inventory'
+import type {
+  InventoryDashboard,
+  ListInventoriesParams,
+  ListInventoriesResponse,
+  CreateInventoryInput,
+  CreateInventoryResult,
+} from '../types/inventory'
 
 export async function getInventoryDashboard(): Promise<InventoryDashboard> {
   // Endpoint backend a definir: GET /inventory/dashboard
@@ -15,4 +21,11 @@ export async function listInventories(params: ListInventoriesParams = {}): Promi
   if (params.status && params.status !== 'TODOS') qs.set('status', params.status)
   const suffix = qs.toString() ? `?${qs.toString()}` : ''
   return apiFetch<ListInventoriesResponse>(`/inventory${suffix}`)
+}
+
+export async function createInventory(input: CreateInventoryInput): Promise<CreateInventoryResult> {
+  return apiFetch<CreateInventoryResult>('/inventory', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
