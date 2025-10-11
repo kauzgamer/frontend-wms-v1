@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createInventory, getInventoryDashboard, listInventories } from '../api/inventory'
+import { createInventory, getInventoryDashboard, listInventories, getInventory } from '../api/inventory'
 import type {
   ListInventoriesParams,
   ListInventoriesResponse,
@@ -34,5 +34,14 @@ export function useCreateInventory() {
       qc.invalidateQueries({ queryKey: ['inventory'] })
       qc.invalidateQueries({ queryKey: ['inventory', 'dashboard'] })
     },
+  })
+}
+
+export function useInventory(id?: string) {
+  return useQuery<CreateInventoryResult>({
+    queryKey: ['inventory', id],
+    queryFn: () => getInventory(id!),
+    enabled: !!id,
+    staleTime: 10_000,
   })
 }

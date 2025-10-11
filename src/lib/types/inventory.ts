@@ -41,8 +41,3 @@ export interface CreateInventoryInput {
 
 // Resultado da criação (backend retorna um resumo)
 export type CreateInventoryResult = InventorySummary
-
-export interface CreateInventoryInput {
-  identificador?: string
-  descricao: string
-}

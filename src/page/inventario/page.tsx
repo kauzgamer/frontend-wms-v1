@@ -66,7 +66,7 @@ export default function InventarioPage() {
             </thead>
             <tbody>
               {((data as ListInventoriesResponse | undefined)?.data?.length ?? 0) > 0 ? (data as ListInventoriesResponse).data.map((inv: InventorySummary) => (
-                <tr key={inv.id} className="border-t">
+                  <tr key={inv.id} className="border-t hover:bg-muted/50 cursor-pointer" onClick={() => window.location.assign(`/inventario/${inv.id}`)}>
                   <Td>{inv.identificador}</Td>
                   <Td>{inv.descricao}</Td>
                   <Td>{new Date(inv.criadoEm).toLocaleString()}</Td>

@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { useCreateInventory } from '@/lib/hooks/use-inventory'
+import { createInventorySchema } from '@/lib/validation/inventory'
 import { useToast } from '@/components/ui/toast-context'
 import { useNavigate } from 'react-router-dom'
 
@@ -24,16 +25,17 @@ export default function NovoInventarioPage() {
                 return
               }
               // Salvar
-              const payload = {
+              const raw = {
                 identificador: identificadorRef.current?.value?.trim() || undefined,
                 descricao: descricaoRef.current?.value?.trim() || '',
               }
-              if (!payload.descricao) {
-                toast.show({ kind: 'error', message: 'Descrição é obrigatória' })
+              const parsed = createInventorySchema.safeParse(raw)
+              if (!parsed.success) {
+                parsed.error.issues.forEach((i) => toast.show({ kind: 'error', message: i.message }))
                 return
               }
               try {
-                await createMutation.mutateAsync(payload)
+                await createMutation.mutateAsync(parsed.data)
                 toast.show({ kind: 'success', message: 'Inventário criado com sucesso' })
                 navigate('/inventario')
               } catch (e: unknown) {
@@ -95,7 +97,7 @@ function SecaoInicio({ identificadorRef, descricaoRef }: { identificadorRef: Rea
           </div>
           <div>
             <label className="text-sm mb-2 block">Descrição</label>
-            <input ref={descricaoRef} className="w-full border rounded px-3 py-2 text-sm bg-white" placeholder="Descrição" defaultValue="Test" />
+            <input ref={descricaoRef} className="w-full border rounded px-3 py-2 text-sm bg-white" placeholder="Descrição" defaultValue="" />
           </div>
         </div>
       </div>

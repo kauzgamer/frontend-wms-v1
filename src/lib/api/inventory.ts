@@ -29,3 +29,7 @@ export async function createInventory(input: CreateInventoryInput): Promise<Crea
     body: JSON.stringify(input),
   })
 }
+
+export async function getInventory(id: string): Promise<CreateInventoryResult> {
+  return apiFetch<CreateInventoryResult>(`/inventory/${id}`)
+}
