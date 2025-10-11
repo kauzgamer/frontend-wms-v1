@@ -10,8 +10,7 @@ import {
 import type { 
   AddressSummary, 
   AddressDetail, 
-  CreateAddressInput, 
-  CreateAddressResponse 
+  CreateAddressInput 
 } from '../types/addresses';
 
 export function useAddresses(depositoId?: string) {
@@ -42,9 +41,10 @@ export function useCreateAddresses() {
 }
 
 export function usePreviewAddresses() {
-  return useMutation<CreateAddressResponse, Error, CreateAddressInput>({
-    mutationFn: (input: CreateAddressInput) => previewAddresses(input),
-  });
+  return useMutation({
+    mutationFn: (params: { depositoId: string; estruturaFisicaId: string; coordenadas: any[] }) =>
+      previewAddresses(params),
+  })
 }
 
 export function useUpdateAddress(id: string) {

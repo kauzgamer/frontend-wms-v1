@@ -38,7 +38,19 @@ export interface CreateInventoryInput {
   identificador?: string
   descricao: string
   tipo?: 'GERAL' | 'ENDERECO' | 'PRODUTO'
-  escopo?: Record<string, unknown>
+  escopo?: Array<{
+    id: string
+    depositoId: string
+    estruturaFisicaId: string
+    coordenadas: Array<{
+      tipo: string
+      nome: string
+      abrev: string
+      inicio: string | number
+      fim: string | number
+    }>
+    situacao?: string
+  }>
 }
 
 // Resultado da criação (backend retorna um resumo)

@@ -361,34 +361,12 @@ export default function NewEnderecoPage() {
     if (wizardState.step === totalSteps - 1) {
       // Última etapa antes da visualização - gerar preview
       try {
-        // Sanitizar capacidade: remover números <= 0 e strings vazias
-        const cap = wizardState.capacidade
-          ? {
-              ...(wizardState.capacidade.unitizador && wizardState.capacidade.unitizador.trim()
-                ? { unitizador: wizardState.capacidade.unitizador.trim() }
-                : {}),
-              ...(wizardState.capacidade.peso && wizardState.capacidade.peso > 0
-                ? { peso: wizardState.capacidade.peso }
-                : {}),
-              ...(wizardState.capacidade.altura && wizardState.capacidade.altura > 0
-                ? { altura: wizardState.capacidade.altura }
-                : {}),
-              ...(wizardState.capacidade.largura && wizardState.capacidade.largura > 0
-                ? { largura: wizardState.capacidade.largura }
-                : {}),
-              ...(wizardState.capacidade.comprimento && wizardState.capacidade.comprimento > 0
-                ? { comprimento: wizardState.capacidade.comprimento }
-                : {}),
-            }
-          : undefined;
-
         const result = await previewMutation.mutateAsync({
           depositoId: wizardState.depositoId,
           estruturaFisicaId: wizardState.estruturaFisicaId,
           coordenadas: wizardState.coordenadas,
-          capacidade: cap && Object.keys(cap).length > 0 ? cap : undefined,
         });
-        setPreview(result.enderecos);
+        setPreview(result);
         setWizardState((s) => ({ ...s, step: s.step + 1 }));
       } catch {
         toast.show({ message: 'Erro ao gerar preview dos endereços', kind: 'error' });

@@ -1,5 +1,5 @@
 import { apiFetch } from './client';
-import type { AddressSummary, AddressDetail, CreateAddressInput, CreateAddressResponse } from '../types/addresses';
+import type { AddressSummary, AddressDetail, CreateAddressInput, CreateAddressResponse, AddressPreview } from '../types/addresses';
 
 export function listAddresses(depositoId?: string) {
   const params = depositoId ? `?depositoId=${depositoId}` : '';
@@ -17,11 +17,17 @@ export function createAddresses(input: CreateAddressInput) {
   });
 }
 
-export function previewAddresses(input: CreateAddressInput) {
-  return apiFetch<CreateAddressResponse>('/addresses/preview', {
+export async function previewAddresses(params: { depositoId: string; estruturaFisicaId: string; coordenadas: Array<{ tipo: string; nome: string; abrev: string; inicio: string | number; fim: string | number }> }): Promise<AddressPreview[]> {
+  const result = await apiFetch<{ total: number; enderecos: Array<{ enderecoCompleto: string; enderecoAbreviado: string; alcance: unknown }> }>('/addresses/preview', {
     method: 'POST',
-    body: JSON.stringify(input),
-  });
+    body: JSON.stringify(params),
+  })
+  // O backend já retorna no formato correto
+  return result.enderecos.map(end => ({
+    enderecoCompleto: end.enderecoCompleto,
+    enderecoAbreviado: end.enderecoAbreviado,
+    alcance: end.alcance as 'ACESSÍVEL A MÃO' | 'NÃO ACESSÍVEL A MÃO',
+  }))
 }
 
 export function updateAddress(id: string, data: Partial<AddressDetail>) {
