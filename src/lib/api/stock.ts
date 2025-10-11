@@ -28,7 +28,8 @@ export async function getStocks(
   if (query?.limit) params.append('limit', query.limit.toString());
 
   const url = `/stock${params.toString() ? `?${params.toString()}` : ''}`;
-  return apiFetch<StockWithDetails[]>(url);
+  const resp = await apiFetch<{ data: StockWithDetails[]; meta: { total: number; page: number; limit: number; totalPages: number } }>(url);
+  return resp.data;
 }
 
 /**
