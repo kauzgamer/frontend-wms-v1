@@ -54,29 +54,47 @@ export default function NewEnderecoPage() {
   // Pré-calcular listas de valores para cada coordenada
   const coordinateValuesLists = useMemo(() => {
     return wizardState.coordenadas.map(coord => {
-      if (!coord.inicio || !coord.fim) return [];
+      if (coord.inicio === undefined || coord.fim === undefined || coord.inicio === '' || coord.fim === '') return [];
       
       const isNumeric = ['C', 'N', 'P', 'A', 'G', 'Q', 'B', 'SE', 'CO', 'E', 'AR'].includes(coord.tipo);
       const isAlpha = coord.tipo === 'R';
       
       if (isNumeric) {
-        const start = Number(coord.inicio);
-        const end = Number(coord.fim);
-        if (isNaN(start) || isNaN(end)) return [];
-        const count = end - start + 1;
-        return Array.from({ length: count }, (_, i) => start + i);
+        const startNum = Number(coord.inicio);
+        const endNum = Number(coord.fim);
+        if (isNaN(startNum) || isNaN(endNum)) return [];
+        const from = Math.min(startNum, endNum);
+        const to = Math.max(startNum, endNum);
+        const count = to - from + 1;
+        return Array.from({ length: count }, (_, i) => from + i);
       }
       
       if (isAlpha) {
-        const start = String(coord.inicio).toUpperCase().charCodeAt(0);
-        const end = String(coord.fim).toUpperCase().charCodeAt(0);
-        const count = end - start + 1;
-        return Array.from({ length: count }, (_, i) => String.fromCharCode(start + i));
+        const s = String(coord.inicio).toUpperCase();
+        const e = String(coord.fim).toUpperCase();
+        if (s.length === 0 || e.length === 0) return [];
+        const start = s.charCodeAt(0);
+        const end = e.charCodeAt(0);
+        if (isNaN(start) || isNaN(end)) return [];
+        const from = Math.min(start, end);
+        const to = Math.max(start, end);
+        const count = to - from + 1;
+        return Array.from({ length: count }, (_, i) => String.fromCharCode(from + i));
       }
       
       return [];
     });
   }, [wizardState.coordenadas]);
+
+  // Estimativa local do total de endereços (produto dos comprimentos de cada coordenada)
+  const estimatedTotal = useMemo(() => {
+    if (!coordinateValuesLists || coordinateValuesLists.length === 0) return 0;
+    try {
+      return coordinateValuesLists.reduce((acc, list) => acc * (list.length || 0), 1);
+    } catch {
+      return 0;
+    }
+  }, [coordinateValuesLists]);
 
   // Inicializar coordenadas quando estrutura física é selecionada
   useEffect(() => {
@@ -268,6 +286,9 @@ export default function NewEnderecoPage() {
         <div>
           <h3 className="text-xl font-semibold mb-2">Visualizar endereços a serem criados</h3>
           <Badge className="bg-green-500 text-white">{totalEnderecos} ENDEREÇOS</Badge>
+          <div className="text-xs text-muted-foreground mt-1">
+            Estimativa local: {estimatedTotal}
+          </div>
         </div>
 
         <div className="border rounded-lg p-4 bg-amber-50 border-amber-200">
