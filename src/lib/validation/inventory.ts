@@ -13,6 +13,11 @@ export const createInventorySchema = z.object({
     .trim()
     .min(1, 'Descrição é obrigatória')
     .max(200, 'Descrição deve ter no máximo 200 caracteres'),
+  tipo: z
+    .enum(['GERAL', 'ENDERECO', 'PRODUTO'] as const, 'Tipo de inventário inválido')
+    .optional()
+    .default('GERAL'),
+  escopo: z.object({}).catchall(z.any()).optional(),
 })
 
 export type CreateInventoryForm = z.infer<typeof createInventorySchema>

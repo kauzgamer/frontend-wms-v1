@@ -37,6 +37,8 @@ export interface ListInventoriesResponse {
 export interface CreateInventoryInput {
   identificador?: string
   descricao: string
+  tipo?: 'GERAL' | 'ENDERECO' | 'PRODUTO'
+  escopo?: Record<string, unknown>
 }
 
 // Resultado da criação (backend retorna um resumo)
