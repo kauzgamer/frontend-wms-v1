@@ -8,3 +8,10 @@ export function useOrganization() {
     queryFn: () => apiFetch<Organization | null>('/organization'),
   })
 }
+
+export function useDeposits() {
+  return useQuery({
+    queryKey: ['organization', 'deposits'],
+    queryFn: () => apiFetch<Array<{ id: string; nome: string }>>('/organization/deposits'),
+  })
+}

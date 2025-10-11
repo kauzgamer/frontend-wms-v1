@@ -1,11 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { CoordinateRange } from '../types/addresses';
 import { 
   listAddresses, 
   getAddress, 
   createAddresses, 
   previewAddresses, 
   updateAddress, 
-  deleteAddress 
+  deleteAddress,
+  getStreetsByDeposit,
+  getAddressesByStreet
 } from '../api/addresses';
 import type { 
   AddressSummary, 
@@ -42,7 +45,7 @@ export function useCreateAddresses() {
 
 export function usePreviewAddresses() {
   return useMutation({
-    mutationFn: (params: { depositoId: string; estruturaFisicaId: string; coordenadas: any[] }) =>
+    mutationFn: (params: { depositoId: string; estruturaFisicaId: string; coordenadas: CoordinateRange[] }) =>
       previewAddresses(params),
   })
 }
@@ -65,5 +68,23 @@ export function useDeleteAddress() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['addresses'] });
     },
+  });
+}
+
+export function useStreetsByDeposit(depositoId: string | undefined) {
+  return useQuery<string[]>({
+    queryKey: ['addresses', 'streets', depositoId],
+    queryFn: () => getStreetsByDeposit(depositoId!),
+    enabled: !!depositoId,
+    staleTime: 30000,
+  });
+}
+
+export function useAddressesByStreet(depositoId: string | undefined, street: string | undefined) {
+  return useQuery({
+    queryKey: ['addresses', 'by-street', depositoId, street],
+    queryFn: () => getAddressesByStreet(depositoId!, street!),
+    enabled: !!depositoId && !!street,
+    staleTime: 30000,
   });
 }

@@ -1,4 +1,5 @@
 import { Input } from '@/components/ui/input';
+import { useDeposits } from '@/lib/hooks/use-organization';
 import type { AddressWizardState } from '@/lib/types/addresses';
 import type { PhysicalStructureSummary } from '@/lib/types/physical-structures';
 
@@ -17,6 +18,7 @@ export function StepInicio({
   activeTab,
   setActiveTab,
 }: StepInicioProps) {
+  const { data: depositos } = useDeposits();
   return (
     <div className="space-y-6">
       {/* Tabs */}
@@ -67,7 +69,11 @@ export function StepInicio({
                   }
                 >
                   <option value="">Selecione o depósito</option>
-                  <option value="000000000000000000000001">Principal</option>
+                  {depositos?.map((deposito) => (
+                    <option key={deposito.id} value={deposito.id}>
+                      {deposito.nome}
+                    </option>
+                  ))}
                 </select>
               </div>
 

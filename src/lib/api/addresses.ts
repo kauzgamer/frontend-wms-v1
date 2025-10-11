@@ -42,3 +42,11 @@ export function deleteAddress(id: string) {
     method: 'DELETE',
   });
 }
+
+export function getStreetsByDeposit(depositoId: string) {
+  return apiFetch<string[]>(`/addresses/streets/${depositoId}`);
+}
+
+export function getAddressesByStreet(depositoId: string, street: string) {
+  return apiFetch<Array<{ id: string; enderecoCompleto: string; enderecoAbreviado: string; funcao: string; acessivelAMao: boolean; situacao: string }>>(`/addresses/by-street?depositoId=${depositoId}&street=${street}`);
+}

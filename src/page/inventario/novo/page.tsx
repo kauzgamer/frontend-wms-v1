@@ -4,10 +4,10 @@ import { useCreateInventory } from '@/lib/hooks/use-inventory'
 import { createInventorySchema } from '@/lib/validation/inventory'
 import { useToast } from '@/components/ui/toast-context'
 import { useNavigate } from 'react-router-dom'
+import { useDeposits } from '@/lib/hooks/use-organization'
 import { usePhysicalStructures } from '@/lib/hooks/use-physical-structures'
-import { usePreviewAddresses } from '@/lib/hooks/use-addresses'
+import { useStreetsByDeposit, useAddressesByStreet } from '@/lib/hooks/use-addresses'
 import type { PhysicalStructureSummary } from '@/lib/types/physical-structures'
-import type { AddressPreview } from '@/lib/types/addresses'
 
 type AddressInScope = {
   id: string
@@ -21,6 +21,14 @@ type AddressInScope = {
     fim: string | number
   }>
   situacao?: string
+  enderecoEspecifico?: {
+    id: string
+    enderecoCompleto: string
+    enderecoAbreviado: string
+    funcao: string
+    acessivelAMao: boolean
+    situacao: string
+  }
 }
 
 export default function NovoInventarioPage() {
@@ -61,6 +69,11 @@ export default function NovoInventarioPage() {
                 return
               }
               try {
+                // Validação adicional: se tipo ENDERECO exigir escopo
+                if (tipo === 'ENDERECO' && escopo.length === 0) {
+                  toast.show({ kind: 'error', message: 'Adicione pelo menos 1 endereço ao escopo.' })
+                  return
+                }
                 await handleSubmit()
                 toast.show({ kind: 'success', message: 'Inventário criado com sucesso' })
                 navigate('/inventario')
@@ -69,7 +82,7 @@ export default function NovoInventarioPage() {
                 toast.show({ kind: 'error', message })
               }
             }}
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || (step === 5 && tipo === 'ENDERECO' && escopo.length === 0)}
           >
             {step < 5 ? 'Próximo' : createMutation.isPending ? 'Salvando...' : 'Salvar'}
           </Button>
@@ -96,7 +109,14 @@ export default function NovoInventarioPage() {
         )}
   {step === 3 && <SecaoCriterios />}
         {step === 4 && <SecaoIntegracao />}
-        {step === 5 && <SecaoResumo />}
+        {step === 5 && (
+          <SecaoResumo
+            tipo={tipo}
+            identificador={identificadorRef.current?.value?.trim() || ''}
+            descricao={descricaoRef.current?.value?.trim() || ''}
+            escopo={escopo}
+          />
+        )}
       </div>
     </div>
   )
@@ -148,64 +168,76 @@ function SecaoEscopo({ tipo, escopo, setEscopo }: { tipo: 'ENDERECO' | 'PRODUTO'
   // Estado para seleção de escopo
   const [depositoSelecionado, setDepositoSelecionado] = useState<string>('')
   const [estruturaSelecionada, setEstruturaSelecionada] = useState<string>('')
-  const [ranges, setRanges] = useState({
-    ruaInicio: 'A',
-    ruaFim: 'A',
-    predioInicio: '',
-    predioFim: '',
-    nivelInicio: '',
-    nivelFim: '',
-  })
-  const [enderecosGerados, setEnderecosGerados] = useState<AddressPreview[]>([])
+  const [ruaSelecionada, setRuaSelecionada] = useState<string>('')
+  const [enderecosDisponiveis, setEnderecosDisponiveis] = useState<Array<{ id: string; enderecoCompleto: string; enderecoAbreviado: string; funcao: string; acessivelAMao: boolean; situacao: string }>>([])
   const [enderecosSelecionados, setEnderecosSelecionados] = useState<string[]>([])
 
-  const depositos: Array<{ id: string; nome: string }> = [] // TODO: implementar hook para deposits
+  const { data: depositos } = useDeposits()
   const { data: estruturas } = usePhysicalStructures()
-  const previewMutation = usePreviewAddresses()
+  const { data: ruas } = useStreetsByDeposit(depositoSelecionado || undefined)
+  const { data: enderecosPorRua } = useAddressesByStreet(depositoSelecionado || undefined, ruaSelecionada || undefined)
+
+  // Atualizar endereços disponíveis quando a rua muda
+  React.useEffect(() => {
+    if (enderecosPorRua) {
+      setEnderecosDisponiveis(enderecosPorRua)
+      setEnderecosSelecionados([]) // Limpar seleção quando rua muda
+    }
+  }, [enderecosPorRua])
 
   const handleDepositoChange = (dep: string) => {
     setDepositoSelecionado(dep)
     setEstruturaSelecionada('')
-    setEnderecosGerados([])
+    setRuaSelecionada('')
+    setEnderecosDisponiveis([])
     setEnderecosSelecionados([])
   }
 
   const handleEstruturaChange = (est: string) => {
     setEstruturaSelecionada(est)
-    setEnderecosGerados([])
+    setRuaSelecionada('')
+    setEnderecosDisponiveis([])
     setEnderecosSelecionados([])
   }
 
-  const gerarPreview = async () => {
-    if (!depositoSelecionado || !estruturaSelecionada) return
-    const coordenadas = [
-      { tipo: 'R', nome: 'Rua', abrev: 'R', inicio: ranges.ruaInicio, fim: ranges.ruaFim },
-      { tipo: 'C', nome: 'Prédio', abrev: 'C', inicio: ranges.predioInicio ? Number(ranges.predioInicio) : 1, fim: ranges.predioFim ? Number(ranges.predioFim) : 1 },
-      { tipo: 'N', nome: 'Nível', abrev: 'N', inicio: ranges.nivelInicio ? Number(ranges.nivelInicio) : 0, fim: ranges.nivelFim ? Number(ranges.nivelFim) : 0 },
-    ]
-    try {
-      const result = await previewMutation.mutateAsync({ depositoId: depositoSelecionado, estruturaFisicaId: estruturaSelecionada, coordenadas })
-      setEnderecosGerados(result)
-    } catch (e) {
-      console.error('Erro ao gerar preview', e)
-    }
+  const handleRuaChange = (rua: string) => {
+    setRuaSelecionada(rua)
+    setEnderecosSelecionados([])
   }
 
   const adicionarSelecionados = () => {
-    // Para o escopo, precisamos transformar AddressPreview em AddressInScope
-    const selecionados = enderecosGerados
-      .filter(addr => enderecosSelecionados.includes(addr.enderecoAbreviado))
-      .map((_, index) => ({
-        id: `scope-${Date.now()}-${index}`,
+    if (enderecosSelecionados.length === 0) return
+
+    // Para o escopo, precisamos transformar os endereços selecionados em AddressInScope
+    const alreadyAddedIds = new Set(
+      escopo.map((e) => e.enderecoEspecifico?.id).filter(Boolean) as string[],
+    )
+
+    const selecionados = enderecosSelecionados
+      .filter((enderecoId) => !alreadyAddedIds.has(enderecoId))
+      .map((enderecoId) => {
+      const endereco = enderecosDisponiveis.find(e => e.id === enderecoId)
+      return {
+        id: `scope-${enderecoId}`,
         depositoId: depositoSelecionado,
         estruturaFisicaId: estruturaSelecionada,
         coordenadas: [
-          { tipo: 'R', nome: 'Rua', abrev: 'R', inicio: ranges.ruaInicio, fim: ranges.ruaFim },
-          { tipo: 'C', nome: 'Prédio', abrev: 'C', inicio: ranges.predioInicio ? Number(ranges.predioInicio) : 1, fim: ranges.predioFim ? Number(ranges.predioFim) : 1 },
-          { tipo: 'N', nome: 'Nível', abrev: 'N', inicio: ranges.nivelInicio ? Number(ranges.nivelInicio) : 0, fim: ranges.nivelFim ? Number(ranges.nivelFim) : 0 },
+          { tipo: 'R', nome: 'Rua', abrev: 'R', inicio: ruaSelecionada, fim: ruaSelecionada },
+          // Para endereços específicos, usamos coordenadas vazias ou baseadas no endereço
+          { tipo: 'C', nome: 'Prédio', abrev: 'C', inicio: '', fim: '' },
+          { tipo: 'N', nome: 'Nível', abrev: 'N', inicio: '', fim: '' },
         ],
         situacao: 'ATIVO' as const,
-      }))
+        enderecoEspecifico: endereco, // Adicionar referência ao endereço específico
+      }
+    })
+
+    if (selecionados.length === 0) {
+      // nada novo para adicionar
+      setEnderecosSelecionados([])
+      return
+    }
+
     setEscopo([...escopo, ...selecionados])
     setEnderecosSelecionados([])
   }
@@ -259,82 +291,90 @@ function SecaoEscopo({ tipo, escopo, setEscopo }: { tipo: 'ENDERECO' | 'PRODUTO'
 
       {estruturaSelecionada && (
         <>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm mb-2 block">Rua (A-Z)</label>
-              <div className="flex gap-2">
-                <input
-                  value={ranges.ruaInicio}
-                  onChange={(e) => setRanges({ ...ranges, ruaInicio: e.target.value.toUpperCase() })}
-                  className="w-full border rounded px-3 py-2 text-sm"
-                />
-                <input
-                  value={ranges.ruaFim}
-                  onChange={(e) => setRanges({ ...ranges, ruaFim: e.target.value.toUpperCase() })}
-                  className="w-full border rounded px-3 py-2 text-sm"
-                />
-              </div>
+              <label className="text-sm mb-2 block">Rua Ativa</label>
+              <select
+                value={ruaSelecionada}
+                onChange={(e) => handleRuaChange(e.target.value)}
+                className="w-full border rounded px-3 py-2 text-sm bg-white"
+                disabled={!ruas || ruas.length === 0}
+              >
+                <option value="">Selecione uma rua</option>
+                {ruas?.map((rua) => (
+                  <option key={rua} value={rua}>Rua {rua}</option>
+                ))}
+              </select>
             </div>
-            <div>
-              <label className="text-sm mb-2 block">Prédio (número)</label>
-              <div className="flex gap-2">
-                <input
-                  value={ranges.predioInicio}
-                  onChange={(e) => setRanges({ ...ranges, predioInicio: e.target.value })}
-                  className="w-full border rounded px-3 py-2 text-sm"
-                />
-                <input
-                  value={ranges.predioFim}
-                  onChange={(e) => setRanges({ ...ranges, predioFim: e.target.value })}
-                  className="w-full border rounded px-3 py-2 text-sm"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-sm mb-2 block">Nível (número)</label>
-              <div className="flex gap-2">
-                <input
-                  value={ranges.nivelInicio}
-                  onChange={(e) => setRanges({ ...ranges, nivelInicio: e.target.value })}
-                  className="w-full border rounded px-3 py-2 text-sm"
-                />
-                <input
-                  value={ranges.nivelFim}
-                  onChange={(e) => setRanges({ ...ranges, nivelFim: e.target.value })}
-                  className="w-full border rounded px-3 py-2 text-sm"
-                />
+            <div className="flex items-end">
+              <div className="text-sm text-muted-foreground">
+                {ruas?.length ? `${ruas.length} ruas ativas encontradas` : 'Selecione depósito e estrutura primeiro'}
               </div>
             </div>
           </div>
 
-          <Button onClick={gerarPreview} disabled={previewMutation.isPending}>
-            {previewMutation.isPending ? 'Gerando...' : 'Gerar Preview'}
-          </Button>
-
-          {enderecosGerados.length > 0 && (
+          {ruaSelecionada && enderecosDisponiveis.length > 0 && (
             <div className="border rounded p-4">
-              <h4 className="text-sm font-semibold mb-2">Endereços Gerados</h4>
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                {enderecosGerados.map((addr) => (
-                  <label key={addr.enderecoAbreviado} className="flex items-center gap-2 text-sm">
+              <h4 className="text-sm font-semibold mb-2">Endereços da Rua {ruaSelecionada} ({enderecosDisponiveis.length} endereços)</h4>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                <div className="flex items-center gap-2 mb-2">
+                  <button
+                    onClick={() => {
+                      if (enderecosSelecionados.length === enderecosDisponiveis.length) {
+                        setEnderecosSelecionados([])
+                      } else {
+                        setEnderecosSelecionados(enderecosDisponiveis.map(e => e.id))
+                      }
+                    }}
+                    className="text-xs text-cyan-600 hover:text-cyan-800 underline"
+                  >
+                    {enderecosSelecionados.length === enderecosDisponiveis.length ? 'Desmarcar todos' : 'Selecionar todos'}
+                  </button>
+                  <span className="text-xs text-muted-foreground">
+                    {enderecosSelecionados.length} de {enderecosDisponiveis.length} selecionados
+                  </span>
+                </div>
+                {enderecosDisponiveis.map((endereco) => {
+                  const jaAdicionado = escopo.some(e => e.enderecoEspecifico?.id === endereco.id)
+                  return (
+                  <label key={endereco.id} className={`flex items-center gap-2 text-sm hover:bg-gray-50 p-1 rounded ${jaAdicionado ? 'opacity-60' : ''}`}>
                     <input
                       type="checkbox"
-                      checked={enderecosSelecionados.includes(addr.enderecoAbreviado)}
+                      checked={jaAdicionado ? true : enderecosSelecionados.includes(endereco.id)}
+                      disabled={jaAdicionado}
                       onChange={(e) => {
+                        if (jaAdicionado) return
                         if (e.target.checked) {
-                          setEnderecosSelecionados([...enderecosSelecionados, addr.enderecoAbreviado])
+                          setEnderecosSelecionados([...enderecosSelecionados, endereco.id])
                         } else {
-                          setEnderecosSelecionados(enderecosSelecionados.filter(id => id !== addr.enderecoAbreviado))
+                          setEnderecosSelecionados(enderecosSelecionados.filter(id => id !== endereco.id))
                         }
                       }}
+                      className="rounded"
                     />
-                    {addr.enderecoAbreviado}
+                    <div className="flex-1">
+                      <div className="font-medium">{endereco.enderecoAbreviado}</div>
+                      <div className="text-xs text-muted-foreground">{endereco.enderecoCompleto}</div>
+                    </div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-2">
+                      {endereco.acessivelAMao ? 'Acessível' : 'Não acessível'}
+                      {jaAdicionado && <span className="px-2 py-0.5 border rounded text-[10px]">Já no escopo</span>}
+                    </div>
                   </label>
-                ))}
+                  )
+                })}
               </div>
-              <Button onClick={adicionarSelecionados} className="mt-2" disabled={enderecosSelecionados.length === 0}>
-                Adicionar Selecionados
+              <Button onClick={adicionarSelecionados} className="mt-4" disabled={enderecosSelecionados.length === 0}>
+                Adicionar {enderecosSelecionados.length} Endereço{enderecosSelecionados.length !== 1 ? 's' : ''} Selecionado{enderecosSelecionados.length !== 1 ? 's' : ''}
               </Button>
+            </div>
+          )}
+
+          {ruaSelecionada && enderecosDisponiveis.length === 0 && (
+            <div className="border rounded p-4 bg-yellow-50">
+              <div className="text-sm text-yellow-800">
+                Nenhum endereço encontrado para a Rua {ruaSelecionada}
+              </div>
             </div>
           )}
         </>
@@ -345,8 +385,14 @@ function SecaoEscopo({ tipo, escopo, setEscopo }: { tipo: 'ENDERECO' | 'PRODUTO'
           <h4 className="text-sm font-semibold mb-2">Escopo Atual ({escopo.length} endereços)</h4>
           <div className="space-y-2 max-h-40 overflow-y-auto">
             {escopo.map((addr: AddressInScope) => (
-              <div key={addr.id} className="flex justify-between items-center text-sm">
-                <span>{addr.coordenadas.map((c) => `${c.abrev}${c.inicio}`).join('-')}</span>
+              <div key={addr.id} className="flex justify-between items-center text-sm p-2 border rounded">
+                <div className="flex-1">
+                  <div className="font-medium">{addr.enderecoEspecifico?.enderecoAbreviado || `Rua ${addr.coordenadas[0]?.inicio}`}</div>
+                  <div className="text-xs text-muted-foreground">{addr.enderecoEspecifico?.enderecoCompleto || 'Endereço específico'}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {addr.enderecoEspecifico?.acessivelAMao ? 'Acessível a mão' : 'Não acessível a mão'}
+                  </div>
+                </div>
                 <Button variant="outline" size="sm" onClick={() => removerDoEscopo(addr.id)}>Remover</Button>
               </div>
             ))}
@@ -393,11 +439,47 @@ function SecaoIntegracao() {
   )
 }
 
-function SecaoResumo() {
+function SecaoResumo({
+  tipo,
+  identificador,
+  descricao,
+  escopo,
+}: {
+  tipo: 'ENDERECO' | 'PRODUTO' | 'GERAL'
+  identificador: string
+  descricao: string
+  escopo: AddressInScope[]
+}) {
+  const totalEnderecos = escopo.length
   return (
     <div className="space-y-6">
       <h3 className="text-sm font-semibold text-cyan-600">RESUMO</h3>
-      <div className="text-sm text-muted-foreground">Revise as informações antes de salvar.</div>
+      <div className="grid grid-cols-2 gap-6 text-sm">
+        <div className="space-y-2">
+          <div><span className="font-medium">Identificador:</span> {identificador || 'Automático'}</div>
+          <div><span className="font-medium">Descrição:</span> {descricao || '-'}</div>
+          <div><span className="font-medium">Tipo:</span> {tipo}</div>
+        </div>
+        {tipo === 'ENDERECO' && (
+          <div className="space-y-2">
+            <div><span className="font-medium">Endereços no escopo:</span> {totalEnderecos}</div>
+            <div className="max-h-48 overflow-y-auto border rounded">
+              {escopo.map((e) => (
+                <div key={e.id} className="flex items-center justify-between px-3 py-2 border-b last:border-b-0">
+                  <div>
+                    <div className="font-medium">{e.enderecoEspecifico?.enderecoAbreviado || `Rua ${e.coordenadas[0]?.inicio}`}</div>
+                    <div className="text-xs text-muted-foreground">{e.enderecoEspecifico?.enderecoCompleto}</div>
+                  </div>
+                  <div className="text-xs text-muted-foreground">{e.enderecoEspecifico?.acessivelAMao ? 'Acessível' : 'Não acessível'}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      {tipo === 'ENDERECO' && totalEnderecos === 0 && (
+        <div className="text-sm text-red-600">Adicione pelo menos 1 endereço ao escopo para salvar.</div>
+      )}
     </div>
   )
 }
