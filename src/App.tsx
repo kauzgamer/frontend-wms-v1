@@ -33,6 +33,8 @@ const EstoquePage = lazy(() => import("@/page/estoque/page"))
 // ⚠️ REMOVIDO: NewEstoquePage (módulo somente leitura)
 const ProfilePage = lazy(() => import("@/page/settings/profile/page"))
 const AccountPage = lazy(() => import("@/page/settings/account/page"))
+const InventarioPage = lazy(() => import("@/page/inventario/page"))
+const NovoInventarioPage = lazy(() => import("@/page/inventario/novo/page"))
 
 // Global route change overlay spinner
 function GlobalRouteLoader({ minDuration = 300 }: { minDuration?: number }) {
@@ -113,6 +115,8 @@ function App() {
           <Route path="/settings/endereco" element={<EnderecoPage />} />
           <Route path="/settings/endereco/new" element={<NewEnderecoPage />} />
           <Route path="/estoque" element={<EstoquePage />} />
+          <Route path="/inventario" element={<InventarioPage />} />
+          <Route path="/inventario/novo" element={<NovoInventarioPage />} />
           {/* ⚠️ REMOVIDO: /estoque/new (módulo somente leitura) */}
           <Route path="/settings/profile" element={<ProfilePage />} />
           <Route path="/settings/account" element={<AccountPage />} />

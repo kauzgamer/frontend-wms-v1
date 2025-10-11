@@ -57,7 +57,7 @@ const data = {
     { title: "Estoque", url: "/estoque", icon: Boxes },
     { title: "Recebimento", url: "#", icon: PackagePlus },
     { title: "Expedição", url: "#", icon: Truck },
-    { title: "Inventário", url: "#", icon: ClipboardList },
+  { title: "Inventário", url: "/inventario", icon: ClipboardList },
     { title: "Picking", url: "#", icon: Hand },
     { title: "Kit", url: "#", icon: Layers3 },
     { title: "Docs", url: "#", icon: FileText },
