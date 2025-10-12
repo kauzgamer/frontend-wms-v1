@@ -63,6 +63,9 @@ export interface CreateInventoryInput {
       situacao: string;
     };
   }>;
+  considerStockAsFirstCount?: boolean;
+  plannerCanChooseValidCount?: boolean;
+  operatorPolicy?: "LIVRE" | "NAO_SEQUENCIAL" | "RESTRITO";
 }
 
 // Resultado da criação (backend retorna um resumo)

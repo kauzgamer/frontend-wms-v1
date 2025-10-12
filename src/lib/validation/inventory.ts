@@ -48,6 +48,12 @@ export const createInventorySchema = z.object({
     .optional()
     .default("GERAL"),
   escopo: z.array(addressInScopeSchema).optional(),
+  considerStockAsFirstCount: z.boolean().optional().default(false),
+  plannerCanChooseValidCount: z.boolean().optional().default(false),
+  operatorPolicy: z
+    .enum(["LIVRE", "NAO_SEQUENCIAL", "RESTRITO"] as const)
+    .optional()
+    .default("LIVRE"),
 });
 
 export type CreateInventoryForm = z.infer<typeof createInventorySchema>;

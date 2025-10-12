@@ -40,6 +40,13 @@ export default function NovoInventarioPage() {
     "ENDERECO"
   );
   const [escopo, setEscopo] = useState<AddressInScope[]>([]);
+  const [considerStockAsFirstCount, setConsiderStockAsFirstCount] =
+    useState<boolean>(false);
+  const [plannerCanChooseValidCount, setPlannerCanChooseValidCount] =
+    useState<boolean>(false);
+  const [operatorPolicy, setOperatorPolicy] = useState<
+    "LIVRE" | "NAO_SEQUENCIAL" | "RESTRITO"
+  >("LIVRE");
   const [identificador, setIdentificador] = useState(
     Math.floor(Math.random() * 1e8)
       .toString()
@@ -56,6 +63,9 @@ export default function NovoInventarioPage() {
       descricao: descricao.trim() || "",
       tipo,
       escopo: tipo === "ENDERECO" ? escopo : undefined,
+      considerStockAsFirstCount,
+      plannerCanChooseValidCount,
+      operatorPolicy,
     };
     const parsed = createInventorySchema.safeParse(raw);
     if (!parsed.success) {
@@ -134,7 +144,16 @@ export default function NovoInventarioPage() {
         {step === 2 && (
           <SecaoEscopo tipo={tipo} escopo={escopo} setEscopo={setEscopo} />
         )}
-        {step === 3 && <SecaoCriterios />}
+        {step === 3 && (
+          <SecaoCriterios
+            considerStockAsFirstCount={considerStockAsFirstCount}
+            setConsiderStockAsFirstCount={setConsiderStockAsFirstCount}
+            plannerCanChooseValidCount={plannerCanChooseValidCount}
+            setPlannerCanChooseValidCount={setPlannerCanChooseValidCount}
+            operatorPolicy={operatorPolicy}
+            setOperatorPolicy={setOperatorPolicy}
+          />
+        )}
         {step === 4 && <SecaoIntegracao />}
         {step === 5 && (
           <SecaoResumo
@@ -142,6 +161,9 @@ export default function NovoInventarioPage() {
             identificador={identificador}
             descricao={descricao}
             escopo={escopo}
+            considerStockAsFirstCount={considerStockAsFirstCount}
+            plannerCanChooseValidCount={plannerCanChooseValidCount}
+            operatorPolicy={operatorPolicy}
           />
         )}
       </div>
@@ -602,7 +624,21 @@ function SecaoEscopo({
   );
 }
 
-function SecaoCriterios() {
+function SecaoCriterios({
+  considerStockAsFirstCount,
+  setConsiderStockAsFirstCount,
+  plannerCanChooseValidCount,
+  setPlannerCanChooseValidCount,
+  operatorPolicy,
+  setOperatorPolicy,
+}: {
+  considerStockAsFirstCount: boolean;
+  setConsiderStockAsFirstCount: (v: boolean) => void;
+  plannerCanChooseValidCount: boolean;
+  setPlannerCanChooseValidCount: (v: boolean) => void;
+  operatorPolicy: "LIVRE" | "NAO_SEQUENCIAL" | "RESTRITO";
+  setOperatorPolicy: (v: "LIVRE" | "NAO_SEQUENCIAL" | "RESTRITO") => void;
+}) {
   return (
     <div className="space-y-6">
       <h3 className="text-sm font-semibold text-cyan-600">
@@ -614,10 +650,22 @@ function SecaoCriterios() {
             Considerar estoque como primeira contagem
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <input type="radio" name="primeira" /> Sim
+            <input
+              type="radio"
+              name="primeira"
+              checked={considerStockAsFirstCount}
+              onChange={() => setConsiderStockAsFirstCount(true)}
+            />
+            Sim
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="radio" name="primeira" defaultChecked /> Não
+            <input
+              type="radio"
+              name="primeira"
+              checked={!considerStockAsFirstCount}
+              onChange={() => setConsiderStockAsFirstCount(false)}
+            />
+            Não
           </label>
         </div>
         <div className="space-y-2">
@@ -625,22 +673,52 @@ function SecaoCriterios() {
             Permite ao planejador escolher a contagem válida
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <input type="radio" name="validacao" /> Sim
+            <input
+              type="radio"
+              name="validacao"
+              checked={plannerCanChooseValidCount}
+              onChange={() => setPlannerCanChooseValidCount(true)}
+            />
+            Sim
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="radio" name="validacao" defaultChecked /> Não
+            <input
+              type="radio"
+              name="validacao"
+              checked={!plannerCanChooseValidCount}
+              onChange={() => setPlannerCanChooseValidCount(false)}
+            />
+            Não
           </label>
         </div>
         <div className="space-y-2">
           <div className="text-sm">Atribuir operador</div>
           <label className="flex items-center gap-2 text-sm">
-            <input type="radio" name="operador" defaultChecked /> Livre
+            <input
+              type="radio"
+              name="operador"
+              checked={operatorPolicy === "LIVRE"}
+              onChange={() => setOperatorPolicy("LIVRE")}
+            />
+            Livre
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="radio" name="operador" /> Não sequencial
+            <input
+              type="radio"
+              name="operador"
+              checked={operatorPolicy === "NAO_SEQUENCIAL"}
+              onChange={() => setOperatorPolicy("NAO_SEQUENCIAL")}
+            />
+            Não sequencial
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="radio" name="operador" /> Restrito
+            <input
+              type="radio"
+              name="operador"
+              checked={operatorPolicy === "RESTRITO"}
+              onChange={() => setOperatorPolicy("RESTRITO")}
+            />
+            Restrito
           </label>
         </div>
       </div>
@@ -664,11 +742,17 @@ function SecaoResumo({
   identificador,
   descricao,
   escopo,
+  considerStockAsFirstCount,
+  plannerCanChooseValidCount,
+  operatorPolicy,
 }: {
   tipo: "ENDERECO" | "PRODUTO" | "GERAL";
   identificador: string;
   descricao: string;
   escopo: AddressInScope[];
+  considerStockAsFirstCount: boolean;
+  plannerCanChooseValidCount: boolean;
+  operatorPolicy: "LIVRE" | "NAO_SEQUENCIAL" | "RESTRITO";
 }) {
   const totalEnderecos = escopo.length;
   return (
@@ -685,6 +769,18 @@ function SecaoResumo({
           </div>
           <div>
             <span className="font-medium">Tipo:</span> {tipo}
+          </div>
+          <div>
+            <span className="font-medium">Estoque como 1ª contagem:</span>{" "}
+            {considerStockAsFirstCount ? "Sim" : "Não"}
+          </div>
+          <div>
+            <span className="font-medium">Planejador escolhe válida:</span>{" "}
+            {plannerCanChooseValidCount ? "Sim" : "Não"}
+          </div>
+          <div>
+            <span className="font-medium">Política de operador:</span>{" "}
+            {operatorPolicy}
           </div>
         </div>
         {tipo === "ENDERECO" && (
