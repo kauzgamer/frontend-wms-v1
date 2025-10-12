@@ -39,9 +39,7 @@ export async function getInventory(id: string): Promise<CreateInventoryResult> {
   return apiFetch<CreateInventoryResult>(`/inventory/${id}`);
 }
 
-export async function applyInventoryAdjustments(
-  id: string
-): Promise<{
+export async function applyInventoryAdjustments(id: string): Promise<{
   ok: boolean;
   adjusted: number;
   skipped: number;
@@ -53,6 +51,22 @@ export async function applyInventoryAdjustments(
     skipped: number;
     issues: string[];
   }>(`/inventory/${id}/apply-adjustments`, {
+    method: "POST",
+  });
+}
+
+export async function previewInventoryAdjustments(id: string): Promise<{
+  ok: boolean;
+  adjusted: number;
+  skipped: number;
+  issues: string[];
+}> {
+  return apiFetch<{
+    ok: boolean;
+    adjusted: number;
+    skipped: number;
+    issues: string[];
+  }>(`/inventory/${id}/apply-adjustments?preview=1`, {
     method: "POST",
   });
 }

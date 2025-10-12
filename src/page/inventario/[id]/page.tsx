@@ -2,6 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import {
   useInventory,
   useApplyInventoryAdjustments,
+  usePreviewInventoryAdjustments,
 } from "@/lib/hooks/use-inventory";
 import { Button } from "@/components/ui/button";
 
@@ -9,6 +10,7 @@ export default function InventarioDetalhePage() {
   const { id } = useParams<{ id: string }>();
   const { data, isLoading, error } = useInventory(id);
   const applyAdj = useApplyInventoryAdjustments();
+  const previewAdj = usePreviewInventoryAdjustments();
 
   if (isLoading) return <div className="p-6">Carregando…</div>;
   if (error)
@@ -26,23 +28,55 @@ export default function InventarioDetalhePage() {
             <Link to="/inventario">Voltar</Link>
           </Button>
           {id ? (
-            <Button
-              onClick={async () => {
-                try {
-                  const res = await applyAdj.mutateAsync(id);
-                  alert(
-                    `Ajuste aplicado: ${res.adjusted} ajustados, ${res.skipped} ignorados.`
-                  );
-                } catch {
-                  alert("Falha ao aplicar ajustes");
-                }
-              }}
-              disabled={applyAdj.isPending}
-            >
-              {applyAdj.isPending
-                ? "Aplicando..."
-                : "Aplicar ajustes no estoque"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                onClick={async () => {
+                  if (!id) return;
+                  try {
+                    const res = await previewAdj.mutateAsync(id);
+                    const msg = `Pré-visualização:\n- Ajustes: ${
+                      res.adjusted
+                    }\n- Ignorados: ${res.skipped}\n- Problemas: ${
+                      res.issues?.length || 0
+                    }`;
+                    const proceed = confirm(
+                      `${msg}\n\nDeseja aplicar os ajustes agora?`
+                    );
+                    if (proceed) {
+                      const applied = await applyAdj.mutateAsync(id);
+                      alert(
+                        `Ajuste aplicado: ${applied.adjusted} ajustados, ${applied.skipped} ignorados.`
+                      );
+                    }
+                  } catch {
+                    alert("Falha ao pré-visualizar ajustes");
+                  }
+                }}
+                disabled={previewAdj.isPending || applyAdj.isPending}
+              >
+                {previewAdj.isPending
+                  ? "Pré-visualizando..."
+                  : "Pré-visualizar ajustes"}
+              </Button>
+              <Button
+                onClick={async () => {
+                  try {
+                    const res = await applyAdj.mutateAsync(id!);
+                    alert(
+                      `Ajuste aplicado: ${res.adjusted} ajustados, ${res.skipped} ignorados.`
+                    );
+                  } catch {
+                    alert("Falha ao aplicar ajustes");
+                  }
+                }}
+                disabled={applyAdj.isPending}
+              >
+                {applyAdj.isPending
+                  ? "Aplicando..."
+                  : "Aplicar ajustes no estoque"}
+              </Button>
+            </div>
           ) : null}
         </div>
       </div>

@@ -5,6 +5,7 @@ import {
   listInventories,
   getInventory,
   applyInventoryAdjustments,
+  previewInventoryAdjustments,
 } from "../api/inventory";
 import type {
   ListInventoriesParams,
@@ -64,5 +65,15 @@ export function useApplyInventoryAdjustments() {
       qc.invalidateQueries({ queryKey: ["inventory", id] });
       qc.invalidateQueries({ queryKey: ["inventory"] });
     },
+  });
+}
+
+export function usePreviewInventoryAdjustments() {
+  return useMutation<
+    { ok: boolean; adjusted: number; skipped: number; issues: string[] },
+    Error,
+    string
+  >({
+    mutationFn: (id) => previewInventoryAdjustments(id),
   });
 }
