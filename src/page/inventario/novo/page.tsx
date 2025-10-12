@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useCreateInventory } from "@/lib/hooks/use-inventory";
 import { createInventorySchema } from "@/lib/validation/inventory";
@@ -40,16 +40,20 @@ export default function NovoInventarioPage() {
     "ENDERECO"
   );
   const [escopo, setEscopo] = useState<AddressInScope[]>([]);
+  const [identificador, setIdentificador] = useState(
+    Math.floor(Math.random() * 1e8)
+      .toString()
+      .padStart(8, "0")
+  );
+  const [descricao, setDescricao] = useState("");
   const createMutation = useCreateInventory();
   const toast = useToast();
   const navigate = useNavigate();
-  const identificadorRef = useRef<HTMLInputElement>(null);
-  const descricaoRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit() {
     const raw = {
-      identificador: identificadorRef.current?.value?.trim() || undefined,
-      descricao: descricaoRef.current?.value?.trim() || "",
+      identificador: identificador.trim() || undefined,
+      descricao: descricao.trim() || "",
       tipo,
       escopo: tipo === "ENDERECO" ? escopo : undefined,
     };
@@ -119,8 +123,10 @@ export default function NovoInventarioPage() {
       <div className="border rounded-md p-4 bg-white">
         {step === 1 && (
           <SecaoInicio
-            identificadorRef={identificadorRef}
-            descricaoRef={descricaoRef}
+            identificador={identificador}
+            setIdentificador={setIdentificador}
+            descricao={descricao}
+            setDescricao={setDescricao}
             tipo={tipo}
             setTipo={setTipo}
           />
@@ -133,8 +139,8 @@ export default function NovoInventarioPage() {
         {step === 5 && (
           <SecaoResumo
             tipo={tipo}
-            identificador={identificadorRef.current?.value?.trim() || ""}
-            descricao={descricaoRef.current?.value?.trim() || ""}
+            identificador={identificador}
+            descricao={descricao}
             escopo={escopo}
           />
         )}
@@ -170,13 +176,17 @@ function Stepper({ step }: { step: number }) {
 }
 
 function SecaoInicio({
-  identificadorRef,
-  descricaoRef,
+  identificador,
+  setIdentificador,
+  descricao,
+  setDescricao,
   tipo,
   setTipo,
 }: {
-  identificadorRef: React.RefObject<HTMLInputElement | null>;
-  descricaoRef: React.RefObject<HTMLInputElement | null>;
+  identificador: string;
+  setIdentificador: (v: string) => void;
+  descricao: string;
+  setDescricao: (v: string) => void;
   tipo: "ENDERECO" | "PRODUTO" | "GERAL";
   setTipo: (t: "ENDERECO" | "PRODUTO" | "GERAL") => void;
 }) {
@@ -222,21 +232,19 @@ function SecaoInicio({
           <div>
             <label className="text-sm mb-2 block">Identificador</label>
             <input
-              ref={identificadorRef}
+              value={identificador}
+              onChange={(e) => setIdentificador(e.target.value)}
               className="w-full border rounded px-3 py-2 text-sm bg-white"
               placeholder="Gerado automaticamente"
-              defaultValue={Math.floor(Math.random() * 1e8)
-                .toString()
-                .padStart(8, "0")}
             />
           </div>
           <div>
             <label className="text-sm mb-2 block">Descrição</label>
             <input
-              ref={descricaoRef}
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
               className="w-full border rounded px-3 py-2 text-sm bg-white"
               placeholder="Descrição"
-              defaultValue=""
             />
           </div>
         </div>
