@@ -70,3 +70,37 @@ export async function previewInventoryAdjustments(id: string): Promise<{
     method: "POST",
   });
 }
+
+export interface AdjustmentLogItem {
+  id: string;
+  inventoryId: string;
+  inventoryAddressId: string | null;
+  addressId: string | null;
+  action: string;
+  details?: unknown;
+  issues: string[];
+  preview: boolean;
+  applied: boolean;
+  createdAt: string;
+}
+
+export async function listAdjustmentLogs(
+  id: string,
+  params?: {
+    page?: number;
+    limit?: number;
+    applied?: "true" | "false";
+    preview?: "true" | "false";
+  }
+): Promise<{
+  data: AdjustmentLogItem[];
+  meta: { page: number; limit: number; total: number };
+}> {
+  const sp = new URLSearchParams();
+  if (params?.page) sp.set("page", String(params.page));
+  if (params?.limit) sp.set("limit", String(params.limit));
+  if (params?.applied) sp.set("applied", params.applied);
+  if (params?.preview) sp.set("preview", params.preview);
+  const qs = sp.toString();
+  return apiFetch(`/inventory/${id}/adjustment-logs${qs ? `?${qs}` : ""}`);
+}

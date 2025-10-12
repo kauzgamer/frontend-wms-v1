@@ -28,6 +28,11 @@ export default function InventarioDetalhePage() {
             <Link to="/inventario">Voltar</Link>
           </Button>
           {id ? (
+            <Button variant="outline" asChild>
+              <Link to={`/inventario/${id}/ajustes`}>Histórico de ajustes</Link>
+            </Button>
+          ) : null}
+          {id ? (
             <div className="flex gap-2">
               <Button
                 variant="secondary"
