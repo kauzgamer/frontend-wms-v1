@@ -107,6 +107,7 @@ export default function NovoInventarioPage() {
                   kind: "success",
                   message: "Inventário criado com sucesso",
                 });
+                // Após criar, enviar para a página de Inventário (histórico)
                 navigate("/inventario");
               } catch (e: unknown) {
                 const message =
