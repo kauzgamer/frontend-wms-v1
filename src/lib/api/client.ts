@@ -7,7 +7,12 @@ export interface ApiClientOptions {
 
 // Get API base URL - USANDO APENAS LOCALHOST PARA TESTES
 const getApiBaseUrl = (): string => {
-  // TESTE LOCAL: sempre usar localhost:3000
+  // Produção: usa backend do Render
+  if (import.meta.env.PROD) {
+    return 'https://backend-wms-fdsc.onrender.com/api'
+  }
+  
+  // Desenvolvimento: usa localhost
   return 'http://localhost:3000/api'
 }
 
