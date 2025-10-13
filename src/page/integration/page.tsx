@@ -24,10 +24,20 @@ export function IntegrationPage() {
   const { data: all = [], isFetching, isLoading, isError, error, refetch, dataUpdatedAt } = useQuery({
     queryKey: ['integration','odbc-logs'],
     queryFn: async () => {
-      const logs = await apiFetch<IntegrationLog[]>('/odbc-integration/logs');
-      return logs;
+      try {
+        const logs = await apiFetch<IntegrationLog[]>('/odbc-integration/logs');
+        return logs;
+      } catch (err: any) {
+        // Se o endpoint não existe (404), retorna array vazio
+        if (err.message?.includes('404')) {
+          console.warn('Endpoint /odbc-integration/logs não disponível ainda');
+          return [];
+        }
+        throw err;
+      }
     },
     staleTime: 30_000,
+    retry: false, // Não tentar novamente se der 404
   })
 
   const [filterKey, setFilterKey] = useState("")

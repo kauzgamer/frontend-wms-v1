@@ -59,11 +59,14 @@ export function ErpIntegration() {
         message: "Conexão ODBC estabelecida com sucesso!",
         kind: "success",
       });
-    } catch (error) {
+    } catch (error: any) {
       setTestResult(false);
+      const isNotDeployed = error?.message?.includes('404') || error?.message?.includes('Cannot POST');
       toast.show({
-        message: error instanceof Error ? error.message : "Não foi possível conectar ao servidor.",
-        kind: "error",
+        message: isNotDeployed 
+          ? "⚠️ Módulo ODBC ainda não foi deployado em produção. Aguarde alguns minutos e tente novamente."
+          : (error instanceof Error ? error.message : "Não foi possível conectar ao servidor."),
+        kind: isNotDeployed ? "info" : "error",
       });
     } finally {
       setIsTesting(false);
@@ -89,10 +92,13 @@ export function ErpIntegration() {
         message: `${result.synced} produtos sincronizados com sucesso!`,
         kind: "success",
       });
-    } catch (error) {
+    } catch (error: any) {
+      const isNotDeployed = error?.message?.includes('404') || error?.message?.includes('Cannot POST');
       toast.show({
-        message: error instanceof Error ? error.message : "Não foi possível conectar ao servidor.",
-        kind: "error",
+        message: isNotDeployed 
+          ? "⚠️ Módulo ODBC ainda não foi deployado em produção. Aguarde alguns minutos e tente novamente."
+          : (error instanceof Error ? error.message : "Não foi possível conectar ao servidor."),
+        kind: isNotDeployed ? "info" : "error",
       });
     } finally {
       setIsSyncing(false);
