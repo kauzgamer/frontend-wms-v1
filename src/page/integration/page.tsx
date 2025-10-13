@@ -5,14 +5,28 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { useMemo, useState } from "react"
 import { useQuery } from '@tanstack/react-query'
-import { fetchIntegrationTransactions } from '@/lib/api/integration'
-import type { IntegrationTransaction } from '@/lib/api/integration'
+import { apiFetch } from '@/lib/api/client'
+
+interface IntegrationLog {
+  id: string
+  date: string
+  document: string
+  key: string
+  process: string
+  status: 'success' | 'failed' | 'quarantine'
+  details?: string
+  errorMessage?: string
+  productsCount?: number
+}
 
 export function IntegrationPage() {
-  // Query remote (mock) data
+  // Query logs de integração ODBC
   const { data: all = [], isFetching, isLoading, isError, error, refetch, dataUpdatedAt } = useQuery({
-    queryKey: ['integration','transactions'],
-    queryFn: () => fetchIntegrationTransactions(),
+    queryKey: ['integration','odbc-logs'],
+    queryFn: async () => {
+      const logs = await apiFetch<IntegrationLog[]>('/odbc-integration/logs');
+      return logs;
+    },
     staleTime: 30_000,
   })
 
@@ -129,16 +143,23 @@ export function IntegrationPage() {
                     <td colSpan={5} className="py-8 text-center text-muted-foreground text-sm">Carregando...</td>
                   </tr>
                 ) : (
-                  filtered.slice(0, visible).map((row: IntegrationTransaction) => (
-                    <tr key={row.id} className="border-t">
-                      <td className="py-2 px-3 whitespace-nowrap">{new Date(row.date).toLocaleDateString()}</td>
+                  filtered.slice(0, visible).map((row: IntegrationLog) => (
+                    <tr key={row.id} className="border-t hover:bg-muted/30" title={row.details || row.errorMessage}>
+                      <td className="py-2 px-3 whitespace-nowrap">{new Date(row.date).toLocaleDateString('pt-BR')}</td>
                       <td className="py-2 px-3">{row.document}</td>
                       <td className="py-2 px-3 font-mono text-xs">{row.key}</td>
-                      <td className="py-2 px-3">{row.process}</td>
                       <td className="py-2 px-3">
-                        {row.status === 'success' && <span className="text-cyan-600">Sucesso</span>}
-                        {row.status === 'failed' && <span className="text-amber-600">Falha</span>}
-                        {row.status === 'quarantine' && <span className="text-red-600">Quarentena</span>}
+                        <div className="flex flex-col gap-1">
+                          <span>{row.process}</span>
+                          {row.productsCount !== undefined && (
+                            <span className="text-xs text-muted-foreground">{row.productsCount} produtos</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2 px-3">
+                        {row.status === 'success' && <span className="inline-flex items-center gap-1 text-green-600">✓ Sucesso</span>}
+                        {row.status === 'failed' && <span className="inline-flex items-center gap-1 text-red-600">✗ Falha</span>}
+                        {row.status === 'quarantine' && <span className="inline-flex items-center gap-1 text-amber-600">⚠ Parcial</span>}
                       </td>
                     </tr>
                   ))

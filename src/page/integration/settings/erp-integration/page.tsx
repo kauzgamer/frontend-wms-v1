@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, CheckCircle, AlertCircle, Database, RefreshCw } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { Loader2, CheckCircle, AlertCircle, Database, RefreshCw, HomeIcon, ChevronLeft } from 'lucide-react';
+import { useToast } from '@/components/ui/toast-context';
+import { apiFetch } from '@/lib/api/client';
 
 interface OdbcConnection {
   dsn: string;
@@ -23,7 +25,8 @@ interface SyncResult {
 }
 
 export function ErpIntegration() {
-  const { toast } = useToast();
+  const navigate = useNavigate();
+  const toast = useToast();
   const [connection, setConnection] = useState<OdbcConnection>({
     dsn: 'sm-ems2cad',
     uid: 'ODBC',
@@ -46,36 +49,21 @@ export function ErpIntegration() {
     setTestResult(null);
 
     try {
-      const response = await fetch('http://localhost:3000/odbc-integration/test-connection', {
+      await apiFetch<boolean>('/odbc-integration/test-connection', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
         body: JSON.stringify(connection),
       });
 
-      if (response.ok) {
-        setTestResult(true);
-        toast({
-          title: "Conexão bem-sucedida",
-          description: "A conexão ODBC foi estabelecida com sucesso.",
-        });
-      } else {
-        const error = await response.text();
-        setTestResult(false);
-        toast({
-          title: "Erro na conexão",
-          description: `Erro: ${error}`,
-          variant: "destructive",
-        });
-      }
+      setTestResult(true);
+      toast.show({
+        message: "Conexão ODBC estabelecida com sucesso!",
+        kind: "success",
+      });
     } catch (error) {
       setTestResult(false);
-      toast({
-        title: "Erro na conexão",
-        description: "Não foi possível conectar ao servidor.",
-        variant: "destructive",
+      toast.show({
+        message: error instanceof Error ? error.message : "Não foi possível conectar ao servidor.",
+        kind: "error",
       });
     } finally {
       setIsTesting(false);
@@ -87,12 +75,8 @@ export function ErpIntegration() {
     setSyncResult(null);
 
     try {
-      const response = await fetch('http://localhost:3000/odbc-integration/sync-products', {
+      const result = await apiFetch<SyncResult>('/odbc-integration/sync-products', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
         body: JSON.stringify({
           connectionId: 'temp-connection', // Por enquanto usando ID temporário
           limit: 100,
@@ -100,26 +84,15 @@ export function ErpIntegration() {
         }),
       });
 
-      if (response.ok) {
-        const result: SyncResult = await response.json();
-        setSyncResult(result);
-        toast({
-          title: "Sincronização concluída",
-          description: `${result.synced} produtos sincronizados com sucesso.`,
-        });
-      } else {
-        const error = await response.text();
-        toast({
-          title: "Erro na sincronização",
-          description: `Erro: ${error}`,
-          variant: "destructive",
-        });
-      }
+      setSyncResult(result);
+      toast.show({
+        message: `${result.synced} produtos sincronizados com sucesso!`,
+        kind: "success",
+      });
     } catch (error) {
-      toast({
-        title: "Erro na sincronização",
-        description: "Não foi possível conectar ao servidor.",
-        variant: "destructive",
+      toast.show({
+        message: error instanceof Error ? error.message : "Não foi possível conectar ao servidor.",
+        kind: "error",
       });
     } finally {
       setIsSyncing(false);
@@ -127,11 +100,48 @@ export function ErpIntegration() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Database className="h-6 w-6" />
-        <h2 className="text-lg font-semibold">Integração ERP via ODBC</h2>
+    <div className="flex flex-1 flex-col gap-6 p-6 pt-4">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <Breadcrumb>
+            <BreadcrumbList className="bg-background rounded-md border px-3 py-2 shadow-xs">
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/">
+                    <HomeIcon size={16} aria-hidden="true" />
+                    <span className="sr-only">Home</span>
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/integration">Integração</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/integration/settings">Configurações</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Integração ERP</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+          <h1 className="mt-4 text-2xl font-semibold leading-tight flex items-center gap-2">
+            <Database className="h-6 w-6" />
+            Integração ERP via ODBC
+          </h1>
+        </div>
+        <Button variant="outline" onClick={() => navigate('/integration/settings')} className="shrink-0">
+          <ChevronLeft className="size-4" /> Voltar
+        </Button>
       </div>
+
+      <div className="space-y-6">
 
       <Card>
         <CardHeader>
@@ -232,12 +242,12 @@ export function ErpIntegration() {
           </div>
 
           {testResult === false && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
+            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+              <p className="text-sm text-red-800 flex-1">
                 Falha na conexão ODBC. Verifique os parâmetros de conexão.
-              </AlertDescription>
-            </Alert>
+              </p>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -309,6 +319,7 @@ export function ErpIntegration() {
             <li><code>it-codigo</code> → SKU / Código externo</li>
             <li><code>desc-item</code> → Nome do produto / Descrição mobile</li>
             <li><code>un</code> → Unidade de medida</li>
+            <li><code>fm-cod-com</code> → Categoria do produto</li>
             <li><code>peso-bruto</code> → Peso em kg</li>
             <li><code>comprim</code> → Comprimento</li>
             <li><code>altura</code> → Altura</li>
@@ -316,6 +327,9 @@ export function ErpIntegration() {
           </ul>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
+
+export default ErpIntegration;

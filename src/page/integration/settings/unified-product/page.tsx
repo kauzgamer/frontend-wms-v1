@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Package, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { Loader2, Package, RefreshCw, CheckCircle, HomeIcon, ChevronLeft } from 'lucide-react';
+import { useToast } from '@/components/ui/toast-context';
+import { apiFetch } from '@/lib/api/client';
 
 interface SyncResult {
   synced: number;
@@ -13,7 +15,8 @@ interface SyncResult {
 }
 
 export function UnifiedProduct() {
-  const { toast } = useToast();
+  const navigate = useNavigate();
+  const toast = useToast();
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
@@ -23,12 +26,8 @@ export function UnifiedProduct() {
     setSyncResult(null);
 
     try {
-      const response = await fetch('http://localhost:3000/odbc-integration/sync-products', {
+      const result = await apiFetch<SyncResult>('/odbc-integration/sync-products', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
         body: JSON.stringify({
           connectionId: 'temp-connection',
           limit: 100,
@@ -36,28 +35,17 @@ export function UnifiedProduct() {
         }),
       });
 
-      if (response.ok) {
-        const result: SyncResult = await response.json();
-        setSyncResult(result);
-        setLastSync(new Date());
+      setSyncResult(result);
+      setLastSync(new Date());
 
-        toast({
-          title: "Sincronização concluída",
-          description: `${result.synced} produtos sincronizados com sucesso.`,
-        });
-      } else {
-        const error = await response.text();
-        toast({
-          title: "Erro na sincronização",
-          description: `Erro: ${error}`,
-          variant: "destructive",
-        });
-      }
+      toast.show({
+        message: `${result.synced} produtos sincronizados com sucesso!`,
+        kind: "success",
+      });
     } catch (error) {
-      toast({
-        title: "Erro na sincronização",
-        description: "Não foi possível conectar ao servidor.",
-        variant: "destructive",
+      toast.show({
+        message: error instanceof Error ? error.message : "Não foi possível conectar ao servidor.",
+        kind: "error",
       });
     } finally {
       setIsSyncing(false);
@@ -65,11 +53,48 @@ export function UnifiedProduct() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Package className="h-6 w-6" />
-        <h2 className="text-lg font-semibold">Produto Unificado</h2>
+    <div className="flex flex-1 flex-col gap-6 p-6 pt-4">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <Breadcrumb>
+            <BreadcrumbList className="bg-background rounded-md border px-3 py-2 shadow-xs">
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/">
+                    <HomeIcon size={16} aria-hidden="true" />
+                    <span className="sr-only">Home</span>
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/integration">Integração</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/integration/settings">Configurações</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Produto Unificado</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+          <h1 className="mt-4 text-2xl font-semibold leading-tight flex items-center gap-2">
+            <Package className="h-6 w-6" />
+            Produto Unificado
+          </h1>
+        </div>
+        <Button variant="outline" onClick={() => navigate('/integration/settings')} className="shrink-0">
+          <ChevronLeft className="size-4" /> Voltar
+        </Button>
       </div>
+
+      <div className="space-y-6">
 
       <Card>
         <CardHeader>
@@ -105,21 +130,19 @@ export function UnifiedProduct() {
           </div>
 
           {syncResult && (
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>
-                <div className="space-y-2">
-                  <p>
-                    <strong>{syncResult.synced} produtos</strong> sincronizados com sucesso
+            <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+              <div className="space-y-2 flex-1">
+                <p className="text-sm text-green-800">
+                  <strong>{syncResult.synced} produtos</strong> sincronizados com sucesso
+                </p>
+                {syncResult.errors.length > 0 && (
+                  <p className="text-sm text-red-600">
+                    <strong>{syncResult.errors.length} erros</strong> encontrados durante a sincronização
                   </p>
-                  {syncResult.errors.length > 0 && (
-                    <p className="text-red-600">
-                      <strong>{syncResult.errors.length} erros</strong> encontrados durante a sincronização
-                    </p>
-                  )}
-                </div>
-              </AlertDescription>
-            </Alert>
+                )}
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -184,6 +207,9 @@ export function UnifiedProduct() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
+
+export default UnifiedProduct;

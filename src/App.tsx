@@ -15,8 +15,14 @@ const IntegrationPage = lazy(() => import("@/page/integration/page"));
 const IntegrationSettingsPage = lazy(
   () => import("@/page/integration/settings/page")
 );
-const OrganizacaoIntegrationPage = lazy(
+const OrganizacaoPage = lazy(
   () => import("@/page/integration/settings/organizacao/page")
+);
+const ErpIntegrationPage = lazy(
+  () => import("@/page/integration/settings/erp-integration/page")
+);
+const UnifiedProductPage = lazy(
+  () => import("@/page/integration/settings/unified-product/page")
 );
 const LoginPage = lazy(() => import("@/page/login/page"));
 const ProductsPage = lazy(() => import("@/page/settings/products/page"));
@@ -209,7 +215,15 @@ function App() {
           />
           <Route
             path="/integration/settings/organizacao"
-            element={<OrganizacaoIntegrationPage />}
+            element={<OrganizacaoPage />}
+          />
+          <Route
+            path="/integration/settings/erp-integration"
+            element={<ErpIntegrationPage />}
+          />
+          <Route
+            path="/integration/settings/unified-product"
+            element={<UnifiedProductPage />}
           />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
