@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, TrendingUp, TrendingDown, XCircle, MapPin } from "lucide-react";
+import { TrendingUp, TrendingDown, MapPin } from "lucide-react";
 import type { InventoryDivergence } from "@/lib/types/inventory-advanced";
 
 interface Props {
@@ -181,14 +181,14 @@ export function InventoryDivergencesTab({ inventoryId }: Props) {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={div.divergenceType === 'SOBRA' ? 'default' : 'destructive'}>
+                        <Badge variant={div.divergenceType === 'SOBRA' ? 'default' : 'warning'}>
                           {div.divergenceType}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge variant={
-                          div.severity === 'CRITICA' ? 'destructive' :
-                          div.severity === 'ALTA' ? 'destructive' :
+                          div.severity === 'CRITICA' ? 'warning' :
+                          div.severity === 'ALTA' ? 'warning' :
                           div.severity === 'MEDIA' ? 'default' :
                           'secondary'
                         }>
@@ -198,7 +198,7 @@ export function InventoryDivergencesTab({ inventoryId }: Props) {
                       <TableCell>
                         <Badge variant={
                           div.status === 'APROVADA' ? 'default' :
-                          div.status === 'REJEITADA' ? 'destructive' :
+                          div.status === 'REJEITADA' ? 'warning' :
                           'secondary'
                         }>
                           {div.status.replace(/_/g, ' ')}
@@ -331,7 +331,7 @@ function ReviewDivergenceDialog({ divergence, open, onClose, onSubmit }: ReviewD
             </div>
             <div>
               <div className="text-xs text-muted-foreground">Severidade</div>
-              <Badge variant={divergence.severity === 'CRITICA' ? 'destructive' : 'default'}>
+              <Badge variant={divergence.severity === 'CRITICA' ? 'warning' : 'default'}>
                 {divergence.severity}
               </Badge>
             </div>

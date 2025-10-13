@@ -26,7 +26,7 @@ export function InventoryHistoryTab({ inventoryId }: Props) {
   const getActionBadgeVariant = (action: string) => {
     if (action.includes('CREATED')) return 'default';
     if (action.includes('APPROVED') || action.includes('FINALIZED')) return 'default';
-    if (action.includes('REJECTED') || action.includes('CANCELLED')) return 'destructive';
+    if (action.includes('REJECTED') || action.includes('CANCELLED')) return 'warning';
     if (action.includes('ANALYZED') || action.includes('REVIEWED')) return 'secondary';
     return 'outline';
   };
