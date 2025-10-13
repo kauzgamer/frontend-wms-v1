@@ -70,3 +70,39 @@ export interface CreateInventoryInput {
 
 // Resultado da criação (backend retorna um resumo)
 export type CreateInventoryResult = InventorySummary;
+
+// Inventory Address
+export interface InventoryAddressDto {
+  id: string;
+  addressId: string;
+  depositId: string;
+  street?: string | null;
+  shortLabel?: string | null;
+  fullLabel?: string | null;
+  picking?: boolean | null;
+  function?: string | null;
+  status?: string | null;
+  counts?: number;
+  nextStage?: string;
+  countsBreakdown?: Array<{
+    index: number;
+    countedAt: string | null;
+    countedById: string | null;
+    countedByName?: string | null;
+    origin: 'ESTOQUE' | 'MANUAL';
+    isEmpty: boolean;
+    productCode?: string | null;
+    barcode?: string | null;
+    quantity?: number | null;
+  }>;
+}
+
+export interface InventoryAddressListResponse {
+  data: InventoryAddressDto[];
+  meta: { page: number; limit: number; total: number };
+}
+
+export interface ListInventoryAddressesQuery {
+  page?: number;
+  limit?: number;
+}

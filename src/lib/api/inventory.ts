@@ -5,6 +5,8 @@ import type {
   ListInventoriesResponse,
   CreateInventoryInput,
   CreateInventoryResult,
+  InventoryAddressListResponse,
+  ListInventoryAddressesQuery,
 } from "../types/inventory";
 
 export async function getInventoryDashboard(): Promise<InventoryDashboard> {
@@ -103,4 +105,17 @@ export async function listAdjustmentLogs(
   if (params?.preview) sp.set("preview", params.preview);
   const qs = sp.toString();
   return apiFetch(`/inventory/${id}/adjustment-logs${qs ? `?${qs}` : ""}`);
+}
+
+export async function listInventoryAddresses(
+  inventoryId: string,
+  query?: ListInventoryAddressesQuery
+): Promise<InventoryAddressListResponse> {
+  const params = new URLSearchParams();
+  if (query?.page) params.set("page", String(query.page));
+  if (query?.limit) params.set("limit", String(query.limit));
+  const qs = params.toString();
+  return apiFetch<InventoryAddressListResponse>(
+    `/inventory/${inventoryId}/addresses${qs ? `?${qs}` : ""}`
+  );
 }

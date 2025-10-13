@@ -6,6 +6,7 @@ import {
   getInventory,
   applyInventoryAdjustments,
   previewInventoryAdjustments,
+  listInventoryAddresses,
 } from "../api/inventory";
 import type {
   ListInventoriesParams,
@@ -13,6 +14,8 @@ import type {
   InventoryDashboard,
   CreateInventoryInput,
   CreateInventoryResult,
+  InventoryAddressListResponse,
+  ListInventoryAddressesQuery,
 } from "../types/inventory";
 
 export function useInventoryDashboard() {
@@ -75,5 +78,18 @@ export function usePreviewInventoryAdjustments() {
     string
   >({
     mutationFn: (id) => previewInventoryAdjustments(id),
+  });
+}
+
+export function useInventoryAddresses(
+  inventoryId: string,
+  query?: ListInventoryAddressesQuery
+) {
+  return useQuery<InventoryAddressListResponse>({
+    queryKey: ["inventory", inventoryId, "addresses", query],
+    queryFn: () => listInventoryAddresses(inventoryId, query),
+    enabled: !!inventoryId,
+    staleTime: 15_000,
+    placeholderData: (prev) => prev,
   });
 }
