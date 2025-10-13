@@ -12,9 +12,9 @@ interface ConfigItem {
 
 const configItems: ConfigItem[] = [
   { id: 'org', title: 'Organização', path: '/integration/settings/organizacao' },
-  { id: 'unified-product', title: 'Produto unificado' },
+  { id: 'unified-product', title: 'Produto unificado', path: '/integration/settings/organizacao/unified-product' },
   { id: 'stock-type', title: 'Tipo de Estoque' },
-  { id: 'erp', title: 'Integração ERP' },
+  { id: 'erp', title: 'Integração ERP', path: '/integration/settings/organizacao/erp-integration' },
   { id: 'stock-attributes', title: 'Características de estoque' },
   { id: 'activations', title: 'Ativações' },
   { id: 'monitoring', title: 'Monitoramento ativo' },

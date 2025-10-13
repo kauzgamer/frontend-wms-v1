@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { UnifiedProduct } from './unified-product';
 import { ErpIntegration } from './erp-integration';
 
-export function OrganizacaoIntegrationPage() {
+export function OrganizationSettings() {
   return (
     <Routes>
       <Route index element={<UnifiedProduct />} />
@@ -11,5 +11,3 @@ export function OrganizacaoIntegrationPage() {
     </Routes>
   );
 }
-
-export default OrganizacaoIntegrationPage;
