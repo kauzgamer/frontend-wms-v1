@@ -12,6 +12,20 @@ export default defineConfig({
       "@": path.resolve(fileURLToPath(new URL(".", import.meta.url)), "./src"),
     },
   },
+  // Build configuration for production
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+        },
+      },
+    },
+  },
+  // Development server configuration
   server: {
     proxy: {
       "/api": {
@@ -21,4 +35,6 @@ export default defineConfig({
       },
     },
   },
+  // Environment variables prefix
+  envPrefix: 'VITE_',
 });

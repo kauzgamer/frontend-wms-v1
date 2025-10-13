@@ -6,6 +6,7 @@ import {
   type User,
   type AuthContextType,
 } from "./auth-context-base";
+import { apiFetch } from "./api/client";
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -28,69 +29,50 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    
-    if (!response.ok) {
-      // Extrair mensagens de erro detalhadas do backend
-      let errorMessage = "Falha no login";
-      
-      try {
-        const errData = await response.json();
-        
-        // Tratamento de erros de validação Zod do backend
-        if (Array.isArray(errData?.message)) {
-          // Erros de validação Zod vêm como array
-          errorMessage = errData.message.join(" • ");
-        } else if (typeof errData?.message === "string") {
-          // Erros simples (credenciais inválidas, conta bloqueada, etc)
-          errorMessage = errData.message;
-        } else if (errData?.error) {
-          errorMessage = errData.error;
-        }
-        
-        // Mensagens específicas por status HTTP
-        if (response.status === 401) {
-          if (!errorMessage || errorMessage === "Falha no login") {
-            errorMessage = "Email ou senha incorretos";
-          }
-        } else if (response.status === 403) {
-          if (!errorMessage || errorMessage === "Falha no login") {
-            errorMessage = "Conta bloqueada. Tente novamente mais tarde.";
-          }
-        } else if (response.status === 400) {
-          if (!errorMessage || errorMessage === "Falha no login") {
-            errorMessage = "Dados inválidos. Verifique os campos e tente novamente.";
-          }
-        }
-      } catch (parseError) {
-        // Se não conseguir parsear o JSON, usa mensagem genérica
-        console.error("Erro ao parsear resposta do servidor:", parseError);
+    try {
+      const data = await apiFetch<{
+        access_token: string;
+        user: {
+          email: string;
+          name: string;
+          provider: string;
+          providerId: string;
+          picture?: string;
+        };
+      }>("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+
+      const loginResponseSchema = z.object({
+        access_token: z.string().min(10),
+        user: z.object({
+          email: z.string().email(),
+          name: z.string().min(1),
+          provider: z.string(),
+          providerId: z.string(),
+          picture: z.string().url().optional().or(z.literal("").optional()),
+        }),
+      });
+
+      const parsed = loginResponseSchema.safeParse(data);
+      if (!parsed.success) throw new Error("Invalid response format");
+
+      const { access_token, user: userData } = parsed.data;
+      setToken(access_token);
+      setUser(userData);
+      localStorage.setItem("auth_token", access_token);
+      localStorage.setItem("auth_user", JSON.stringify(userData));
+    } catch (error) {
+      // Tratamento melhorado de erros usando o cliente API
+      if (error instanceof Error) {
+        // O cliente API já trata erros HTTP e retorna mensagens adequadas
+        throw error;
       }
-      
-      throw new Error(errorMessage);
+
+      // Fallback para erro genérico
+      throw new Error("Falha no login. Verifique suas credenciais e tente novamente.");
     }
-    const data = await response.json();
-    const loginResponseSchema = z.object({
-      access_token: z.string().min(10),
-      user: z.object({
-        email: z.string().email(),
-        name: z.string().min(1),
-        provider: z.string(),
-        providerId: z.string(),
-        picture: z.string().url().optional().or(z.literal("").optional()),
-      }),
-    });
-    const parsed = loginResponseSchema.safeParse(data);
-    if (!parsed.success) throw new Error("Invalid response format");
-    const { access_token, user: userData } = parsed.data;
-    setToken(access_token);
-    setUser(userData);
-    localStorage.setItem("auth_token", access_token);
-    localStorage.setItem("auth_user", JSON.stringify(userData));
   };
 
   const logout = () => {
