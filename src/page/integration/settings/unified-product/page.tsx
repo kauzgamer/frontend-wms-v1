@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { Loader2, Package, Database, Layers, Box, CheckCircle2, HomeIcon, ChevronLeft, AlertCircle } from 'lucide-react';
+import { Loader2, Package, Database, CheckCircle2, HomeIcon, ChevronLeft, AlertCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/toast-context';
 import { apiFetch } from '@/lib/api/client';
 

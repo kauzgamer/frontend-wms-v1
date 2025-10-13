@@ -23,9 +23,6 @@ const getCachedApiBaseUrl = (): string => {
 
 const DEFAULT_BASE = getCachedApiBaseUrl()
 
-// Fallback API URLs desabilitados para teste local
-const FALLBACK_BASE_URLS: string[] = []
-
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
