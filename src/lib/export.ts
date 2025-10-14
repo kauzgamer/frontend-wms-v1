@@ -9,21 +9,26 @@ export type ExportColumn<
   format?: (value: unknown, row: T) => unknown;
 };
 
-// Tipos leves para evitar dependência direta de tipos das libs
-interface XLSXLike {
-  utils: {
-    json_to_sheet: (data: unknown[]) => unknown;
-    book_new: () => unknown;
-    book_append_sheet: (wb: unknown, ws: unknown, name: string) => void;
+// Interfaces mínimas das libs que usaremos (exceljs, pdfmake)
+interface ExcelJSLike {
+  Workbook: new () => {
+    addWorksheet: (name: string) => ExcelWorksheetLike;
+    xlsx: { writeBuffer: () => Promise<ArrayBuffer> };
   };
-  writeFile: (wb: unknown, filename: string) => void;
 }
 
-interface JsPdfModuleLike {
-  jsPDF: new (opts?: unknown) => unknown;
+interface ExcelWorksheetLike {
+  addRow: (values: unknown[]) => void;
+  getRow: (idx: number) => { font?: Record<string, unknown> };
+  columns?: Array<{ header?: string; key?: string; width?: number }>;
 }
 
-type AutoTableFn = (doc: unknown, opts: Record<string, unknown>) => void;
+interface PdfMakeLike {
+  createPdf: (docDefinition: Record<string, unknown>) => {
+    download: (filename: string) => void;
+  };
+  vfs?: unknown;
+}
 
 async function importOptional(name: string): Promise<unknown | null> {
   try {
@@ -39,12 +44,14 @@ async function importOptional(name: string): Promise<unknown | null> {
 
 export async function canExport(): Promise<{ xlsx: boolean; pdf: boolean }> {
   const [xlsxOk, pdfOk] = await Promise.all([
-    importOptional("xlsx")
+    importOptional("exceljs")
       .then(Boolean)
       .catch(() => false),
-    Promise.all([importOptional("jspdf"), importOptional("jspdf-autotable")])
-      .then(([a, b]) => Boolean(a && b))
-      .catch(() => false),
+    (async () => {
+      const a = await importOptional("pdfmake");
+      const b = await importOptional("pdfmake/build/pdfmake");
+      return Boolean(a || b);
+    })(),
   ]);
   return { xlsx: !!xlsxOk, pdf: !!pdfOk };
 }
@@ -52,37 +59,70 @@ export async function canExport(): Promise<{ xlsx: boolean; pdf: boolean }> {
 export async function exportToXLSX<
   T extends Record<string, unknown> = Record<string, unknown>
 >(filename: string, columns: ExportColumn<T>[], rows: T[]): Promise<void> {
-  const xlsxMod = (await importOptional("xlsx")) as XLSXLike | null;
-  if (!xlsxMod) throw new Error("xlsx não disponível");
+  const excelMod = (await importOptional("exceljs")) as ExcelJSLike | null;
+  if (!excelMod) throw new Error("exceljs não disponível");
 
-  const data = rows.map((r) => {
-    const obj: Record<string, unknown> = {};
-    for (const col of columns) {
-      const raw = (r as Record<string, unknown>)[col.key];
-      obj[col.header] = col.format ? col.format(raw, r) : raw;
-    }
-    return obj;
+  const wb = new excelMod.Workbook();
+  const ws = wb.addWorksheet("Dados") as ExcelWorksheetLike;
+  // Cabeçalhos
+  ws.columns = columns.map((c) => ({
+    header: c.header,
+    key: c.key,
+    width: c.width,
+  }));
+  // Linhas
+  for (const r of rows) {
+    const values = columns.map((c) =>
+      c.format
+        ? c.format((r as Record<string, unknown>)[c.key], r)
+        : (r as Record<string, unknown>)[c.key]
+    );
+    ws.addRow(values);
+  }
+  // Estilo simples no header (opcional)
+  const headerRow = ws.getRow(1);
+  headerRow.font = { bold: true } as Record<string, unknown>;
+
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
-  const ws = xlsxMod.utils.json_to_sheet(data);
-  const wb = xlsxMod.utils.book_new();
-  xlsxMod.utils.book_append_sheet(wb, ws, "Dados");
-  xlsxMod.writeFile(wb, `${filename}.xlsx`);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${filename}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 export async function exportToPDF<
   T extends Record<string, unknown> = Record<string, unknown>
 >(filename: string, columns: ExportColumn<T>[], rows: T[]): Promise<void> {
-  const jsPDFMod = (await importOptional("jspdf")) as JsPdfModuleLike | null;
-  const autoTableMod = (await importOptional("jspdf-autotable")) as
-    | { default?: AutoTableFn }
-    | AutoTableFn
-    | null;
-  if (!jsPDFMod || !autoTableMod)
-    throw new Error("jspdf/jspdf-autotable não disponível");
+  let pdfmake = (await importOptional(
+    "pdfmake/build/pdfmake"
+  )) as PdfMakeLike | null;
+  if (!pdfmake) {
+    pdfmake = (await importOptional("pdfmake")) as PdfMakeLike | null;
+  }
+  if (!pdfmake) throw new Error("pdfmake não disponível");
 
-  const JsPDF = jsPDFMod.jsPDF;
-  const doc = new JsPDF({ orientation: "landscape" });
-  const head = [columns.map((c) => c.header)];
+  // Tenta carregar vfs_fonts quando disponível
+  const vfsMod = (await importOptional("pdfmake/build/vfs_fonts")) as {
+    vfs?: unknown;
+    default?: { vfs?: unknown };
+  } | null;
+  const vfs = vfsMod?.vfs ?? vfsMod?.default?.vfs;
+  if (vfs && "vfs" in pdfmake) {
+    // atribuição em runtime suportada por pdfmake
+    (pdfmake as unknown as { vfs: unknown }).vfs = vfs;
+  }
+
+  const headers = columns.map((c) => ({
+    text: c.header,
+    style: "tableHeader",
+  }));
   const body = rows.map((r) =>
     columns.map((c) =>
       c.format
@@ -91,19 +131,22 @@ export async function exportToPDF<
     )
   );
 
-  const run: AutoTableFn =
-    typeof autoTableMod === "function"
-      ? (autoTableMod as AutoTableFn)
-      : (autoTableMod.default as AutoTableFn);
-  run(doc, {
-    head,
-    body,
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [12, 154, 190] },
-    bodyStyles: { cellPadding: 2 },
-    theme: "striped",
-    tableWidth: "wrap",
-  });
-  // @ts-expect-error jsPDF instance tem save() em runtime
-  doc.save(`${filename}.pdf`);
+  const docDefinition = {
+    pageOrientation: "landscape",
+    content: [
+      {
+        table: {
+          headerRows: 1,
+          widths: columns.map((c) => (c.width ? c.width : "auto")),
+          body: [headers, ...body],
+        },
+        layout: "lightHorizontalLines",
+      },
+    ],
+    styles: {
+      tableHeader: { bold: true, color: "#ffffff", fillColor: "#0c9abe" },
+    },
+  } as Record<string, unknown>;
+
+  pdfmake.createPdf(docDefinition).download(`${filename}.pdf`);
 }

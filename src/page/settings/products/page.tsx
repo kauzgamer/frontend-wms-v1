@@ -30,9 +30,11 @@ import {
   canExport,
   type ExportColumn,
 } from "@/lib/export";
+import { useToast } from "@/components/ui/toast-context";
 
 export default function ProductsPage() {
   const navigate = useNavigate();
+  const { show: showToast } = useToast();
   const {
     data: products,
     isLoading,
@@ -121,11 +123,11 @@ export default function ProductsPage() {
         cols,
         filteredProducts as unknown as Record<string, unknown>[]
       );
+      showToast({ kind: "success", message: "Exportação XLSX concluída." });
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "Falha ao exportar para XLSX";
-      // Mantemos simples para evitar dependência de toast aqui
-      window.alert(msg);
+      showToast({ kind: "error", message: msg });
     }
   }
 
@@ -137,10 +139,11 @@ export default function ProductsPage() {
         cols,
         filteredProducts as unknown as Record<string, unknown>[]
       );
+      showToast({ kind: "success", message: "Exportação PDF concluída." });
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "Falha ao exportar para PDF";
-      window.alert(msg);
+      showToast({ kind: "error", message: msg });
     }
   }
 
