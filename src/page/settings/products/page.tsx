@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
@@ -12,24 +12,24 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+// dropdowns já encapsulados nos componentes reutilizáveis
 import { Badge } from "@/components/ui/badge";
 import {
   Plus,
   Search as SearchIcon,
   SlidersHorizontal,
-  MoreVertical,
-  Eye,
-  Pencil,
   Maximize2,
   RefreshCw,
 } from "lucide-react";
 import { useProducts } from "@/lib/hooks/use-products";
+import { DataTableHeader } from "@/components/ui/data-table-header";
+import { RowActionsCell } from "@/components/ui/row-actions-cell";
+import {
+  exportToXLSX,
+  exportToPDF,
+  canExport,
+  type ExportColumn,
+} from "@/lib/export";
 
 export default function ProductsPage() {
   const navigate = useNavigate();
@@ -55,6 +55,12 @@ export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  // Filtros opcionais (se backend tiver campos)
+  const [filterStatus, setFilterStatus] = useState<"ALL" | "ATIVO" | "INATIVO">(
+    "ALL"
+  );
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
+
   // Colunas visíveis
   const defaultVisibleCols: Record<string, boolean> = {
     id: true,
@@ -70,11 +76,127 @@ export default function ProductsPage() {
   const [draftVisibleCols, setDraftVisibleCols] =
     useState<Record<string, boolean>>(defaultVisibleCols);
   const [openColumns, setOpenColumns] = useState(false);
+  const [canXLS, setCanXLS] = useState(false);
+  const [canPDF, setCanPDF] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    canExport()
+      .then(({ xlsx, pdf }) => {
+        if (!mounted) return;
+        setCanXLS(!!xlsx);
+        setCanPDF(!!pdf);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setCanXLS(false);
+        setCanPDF(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+  const showExportButtons = canXLS || canPDF;
+
+  function getExportColumns(): ExportColumn[] {
+    const cols: { key: string; header: string }[] = [];
+    if (visibleCols.id) cols.push({ key: "id", header: "ID" });
+    if (visibleCols.sku) cols.push({ key: "sku", header: "SKU" });
+    if (visibleCols.name) cols.push({ key: "name", header: "Nome" });
+    if (visibleCols.unit) cols.push({ key: "unit", header: "Unidade" });
+    if (visibleCols.unitOfMeasure)
+      cols.push({ key: "unitOfMeasure", header: "Unidade de medida" });
+    if (visibleCols.createdAt)
+      cols.push({ key: "createdAt", header: "Criado" });
+    if (visibleCols.updatedAt)
+      cols.push({ key: "updatedAt", header: "Atualizado" });
+    return cols as ExportColumn[];
+  }
+
+  async function handleExportXLS() {
+    try {
+      const cols = getExportColumns();
+      await exportToXLSX(
+        "produtos",
+        cols,
+        filteredProducts as unknown as Record<string, unknown>[]
+      );
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Falha ao exportar para XLSX";
+      // Mantemos simples para evitar dependência de toast aqui
+      window.alert(msg);
+    }
+  }
+
+  async function handleExportPDF() {
+    try {
+      const cols = getExportColumns();
+      await exportToPDF(
+        "produtos",
+        cols,
+        filteredProducts as unknown as Record<string, unknown>[]
+      );
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Falha ao exportar para PDF";
+      window.alert(msg);
+    }
+  }
 
   // Derivados
+  const hasStatus = useMemo(
+    () =>
+      (products ?? []).some((p) =>
+        Object.prototype.hasOwnProperty.call(
+          p as unknown as Record<string, unknown>,
+          "status"
+        )
+      ),
+    [products]
+  );
+  const hasCategory = useMemo(
+    () =>
+      (products ?? []).some((p) => {
+        const r = p as unknown as Record<string, unknown>;
+        return r.category || r.categoryName || r.categoryId;
+      }),
+    [products]
+  );
+
+  const categoryOptions = useMemo(() => {
+    if (!products) return [] as string[];
+    const names = new Set<string>();
+    for (const p of products) {
+      const r = p as unknown as Record<string, unknown>;
+      const name =
+        (r.categoryName as string) ||
+        ((r.category as Record<string, unknown> | undefined)?.[
+          "name"
+        ] as string) ||
+        (r.categoryId as string);
+      if (name) names.add(String(name));
+    }
+    return Array.from(names).sort();
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
     const list = products ?? [];
     return list.filter((p) => {
+      const r = p as unknown as Record<string, unknown>;
+      // filtros opcionais
+      if (hasStatus && filterStatus !== "ALL") {
+        if ((r["status"] as string | undefined) !== filterStatus) return false;
+      }
+      if (hasCategory && filterCategory) {
+        const catName =
+          (r["categoryName"] as string) ||
+          ((r["category"] as Record<string, unknown> | undefined)?.[
+            "name"
+          ] as string) ||
+          (r["categoryId"] as string);
+        if (String(catName) !== String(filterCategory)) return false;
+      }
       // pesquisa avançada
       if (advName && !p.name?.toLowerCase().includes(advName.toLowerCase()))
         return false;
@@ -100,7 +222,18 @@ export default function ProductsPage() {
       }
       return true;
     });
-  }, [products, searchTerm, advName, advSku, advUnit, advUom]);
+  }, [
+    products,
+    searchTerm,
+    advName,
+    advSku,
+    advUnit,
+    advUom,
+    hasStatus,
+    filterStatus,
+    hasCategory,
+    filterCategory,
+  ]);
 
   const paginated = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
@@ -191,8 +324,46 @@ export default function ProductsPage() {
             </Link>
           </Button>
 
-          {/* Chips de filtro (não há status em produtos, então omitimos) */}
-          <div className="text-[11px] flex items-center gap-2" />
+          {/* Chips de filtro opcionais */}
+          <div className="text-[11px] flex items-center gap-2">
+            {hasStatus && filterStatus !== "ALL" && (
+              <span className="inline-flex items-center gap-2 rounded-md border px-2 py-1 bg-white leading-none">
+                <span className="font-medium" style={{ color: "#555" }}>
+                  Status:
+                </span>
+                <span className="text-[#0c9abe] font-semibold">
+                  {filterStatus}
+                </span>
+                <button
+                  className="text-muted-foreground hover:text-foreground text-xs leading-none"
+                  aria-label="Limpar filtro de status"
+                  onClick={() => setFilterStatus("ALL")}
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {hasCategory && filterCategory && (
+              <span className="inline-flex items-center gap-2 rounded-md border px-2 py-1 bg-white leading-none">
+                <span className="font-medium" style={{ color: "#555" }}>
+                  Categoria:
+                </span>
+                <span
+                  className="text-[#0c9abe] font-semibold truncate max-w-[180px]"
+                  title={filterCategory || undefined}
+                >
+                  {filterCategory}
+                </span>
+                <button
+                  className="text-muted-foreground hover:text-foreground text-xs leading-none"
+                  aria-label="Limpar filtro de categoria"
+                  onClick={() => setFilterCategory(null)}
+                >
+                  ×
+                </button>
+              </span>
+            )}
+          </div>
 
           {/* Toolbar direita */}
           <div className="ml-auto flex items-center gap-3 flex-shrink-0">
@@ -206,12 +377,29 @@ export default function ProductsPage() {
             >
               <SlidersHorizontal className="size-4" />
             </button>
-            <button className="text-[#0c9abe] hover:opacity-80 transition text-sm inline-flex items-center gap-1 flex-shrink-0">
-              <span className="text-xs font-semibold">XLS</span>
-            </button>
-            <button className="text-[#0c9abe] hover:opacity-80 transition text-sm inline-flex items-center gap-1 flex-shrink-0">
-              <span className="text-xs font-semibold">PDF</span>
-            </button>
+            {/* Botões de exportação (ocultos por enquanto) */}
+            {showExportButtons && (
+              <>
+                {canXLS && (
+                  <button
+                    className="text-[#0c9abe] hover:opacity-80 transition text-sm inline-flex items-center gap-1 flex-shrink-0"
+                    onClick={handleExportXLS}
+                    aria-label="Exportar XLS"
+                  >
+                    <span className="text-xs font-semibold">XLS</span>
+                  </button>
+                )}
+                {canPDF && (
+                  <button
+                    className="text-[#0c9abe] hover:opacity-80 transition text-sm inline-flex items-center gap-1 flex-shrink-0"
+                    onClick={handleExportPDF}
+                    aria-label="Exportar PDF"
+                  >
+                    <span className="text-xs font-semibold">PDF</span>
+                  </button>
+                )}
+              </>
+            )}
             <div className="relative w-44 flex-shrink-0">
               <SearchIcon className="size-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -292,6 +480,54 @@ export default function ProductsPage() {
                     onChange={(e) => setAdvUom(e.target.value)}
                   />
                 </div>
+                {hasStatus && (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold">Status</label>
+                    <div className="flex items-center gap-3 text-xs">
+                      {(["ATIVO", "INATIVO"] as const).map((s) => (
+                        <label
+                          key={s}
+                          className="inline-flex items-center gap-2"
+                        >
+                          <input
+                            type="radio"
+                            name="prod-status"
+                            checked={filterStatus === s}
+                            onChange={() => setFilterStatus(s)}
+                          />{" "}
+                          {s}
+                        </label>
+                      ))}
+                      <button
+                        className="text-xs text-gray-500 hover:underline"
+                        onClick={() => setFilterStatus("ALL")}
+                      >
+                        Limpar
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {hasCategory && (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-semibold">Categoria</label>
+                    <div className="relative">
+                      <select
+                        className="w-full border rounded px-3 py-2 text-sm bg-white"
+                        value={filterCategory ?? ""}
+                        onChange={(e) =>
+                          setFilterCategory(e.target.value || null)
+                        }
+                      >
+                        <option value="">— Todas —</option>
+                        {categoryOptions.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="px-6 py-4 border-t flex items-center justify-end gap-3 bg-gray-50">
                 <Button
@@ -413,209 +649,76 @@ export default function ProductsPage() {
                     {/* coluna de ações fixa */}
                     <th className="w-10 border-r sticky left-0 z-20 bg-white" />
                     {visibleCols.id && (
-                      <th
-                        className="p-3 font-medium text-xs whitespace-nowrap"
-                        style={{ width: "220px" }}
-                      >
-                        <div className="relative flex items-center justify-between">
-                          <span className="text-cyan-700">ID</span>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1">
-                                <MoreVertical className="size-4" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setVisibleCols((prev) => ({
-                                    ...prev,
-                                    id: false,
-                                  }))
-                                }
-                              >
-                                Ocultar coluna
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </th>
+                      <DataTableHeader
+                        title="ID"
+                        width={220}
+                        onHide={() =>
+                          setVisibleCols((prev) => ({ ...prev, id: false }))
+                        }
+                      />
                     )}
                     {visibleCols.sku && (
-                      <th
-                        className="p-3 font-medium text-xs whitespace-nowrap"
-                        style={{ width: "160px" }}
-                      >
-                        <div className="relative flex items-center justify-between">
-                          <span className="text-cyan-700">SKU</span>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1">
-                                <MoreVertical className="size-4" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setVisibleCols((prev) => ({
-                                    ...prev,
-                                    sku: false,
-                                  }))
-                                }
-                              >
-                                Ocultar coluna
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </th>
+                      <DataTableHeader
+                        title="SKU"
+                        width={160}
+                        onHide={() =>
+                          setVisibleCols((prev) => ({ ...prev, sku: false }))
+                        }
+                      />
                     )}
                     {visibleCols.name && (
-                      <th
-                        className="p-3 font-medium text-xs"
-                        style={{ width: "280px" }}
-                      >
-                        <div className="relative flex items-center justify-between gap-2">
-                          <span className="text-cyan-700 truncate">Nome</span>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1 flex-shrink-0">
-                                <MoreVertical className="size-4" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setVisibleCols((prev) => ({
-                                    ...prev,
-                                    name: false,
-                                  }))
-                                }
-                              >
-                                Ocultar coluna
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </th>
+                      <DataTableHeader
+                        title="Nome"
+                        width={280}
+                        onHide={() =>
+                          setVisibleCols((prev) => ({ ...prev, name: false }))
+                        }
+                      />
                     )}
                     {visibleCols.unit && (
-                      <th
-                        className="p-3 font-medium text-xs whitespace-nowrap"
-                        style={{ width: "120px" }}
-                      >
-                        <div className="relative flex items-center justify-between gap-2">
-                          <span className="text-cyan-700">Unidade</span>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1 flex-shrink-0">
-                                <MoreVertical className="size-4" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setVisibleCols((prev) => ({
-                                    ...prev,
-                                    unit: false,
-                                  }))
-                                }
-                              >
-                                Ocultar coluna
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </th>
+                      <DataTableHeader
+                        title="Unidade"
+                        width={120}
+                        onHide={() =>
+                          setVisibleCols((prev) => ({ ...prev, unit: false }))
+                        }
+                      />
                     )}
                     {visibleCols.unitOfMeasure && (
-                      <th
-                        className="p-3 font-medium text-xs whitespace-nowrap"
-                        style={{ width: "160px" }}
-                      >
-                        <div className="relative flex items-center justify-between gap-2">
-                          <span className="text-cyan-700">
-                            Unidade de medida
-                          </span>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1 flex-shrink-0">
-                                <MoreVertical className="size-4" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setVisibleCols((prev) => ({
-                                    ...prev,
-                                    unitOfMeasure: false,
-                                  }))
-                                }
-                              >
-                                Ocultar coluna
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </th>
+                      <DataTableHeader
+                        title="Unidade de medida"
+                        width={160}
+                        onHide={() =>
+                          setVisibleCols((prev) => ({
+                            ...prev,
+                            unitOfMeasure: false,
+                          }))
+                        }
+                      />
                     )}
                     {visibleCols.createdAt && (
-                      <th
-                        className="p-3 font-medium text-xs whitespace-nowrap"
-                        style={{ width: "140px" }}
-                      >
-                        <div className="relative flex items-center justify-between gap-2">
-                          <span className="text-cyan-700">Criado</span>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1 flex-shrink-0">
-                                <MoreVertical className="size-4" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setVisibleCols((prev) => ({
-                                    ...prev,
-                                    createdAt: false,
-                                  }))
-                                }
-                              >
-                                Ocultar coluna
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </th>
+                      <DataTableHeader
+                        title="Criado"
+                        width={140}
+                        onHide={() =>
+                          setVisibleCols((prev) => ({
+                            ...prev,
+                            createdAt: false,
+                          }))
+                        }
+                      />
                     )}
                     {visibleCols.updatedAt && (
-                      <th
-                        className="p-3 font-medium text-xs whitespace-nowrap"
-                        style={{ width: "160px" }}
-                      >
-                        <div className="relative flex items-center justify-between gap-2">
-                          <span className="text-cyan-700">Atualizado</span>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="text-cyan-700 hover:bg-cyan-50 rounded p-1 flex-shrink-0">
-                                <MoreVertical className="size-4" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setVisibleCols((prev) => ({
-                                    ...prev,
-                                    updatedAt: false,
-                                  }))
-                                }
-                              >
-                                Ocultar coluna
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </th>
+                      <DataTableHeader
+                        title="Atualizado"
+                        width={160}
+                        onHide={() =>
+                          setVisibleCols((prev) => ({
+                            ...prev,
+                            updatedAt: false,
+                          }))
+                        }
+                      />
                     )}
                   </tr>
                 </thead>
@@ -626,39 +729,13 @@ export default function ProductsPage() {
                       className="border-t hover:bg-muted/30 cursor-pointer transition-colors divide-x divide-gray-200"
                       onClick={() => navigate(`/settings/products/${p.id}`)}
                     >
-                      <td className="px-2 text-center align-middle border-r sticky left-0 z-10 bg-white hover:bg-muted/30">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              className="px-2.5 py-1.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-[#0c9abe] text-[#0c9abe] hover:bg-[#e3f5f9] font-bold text-lg leading-none"
-                              style={{ letterSpacing: "2px" }}
-                              onClick={(e) => e.stopPropagation()}
-                              aria-label="Ações do produto"
-                            >
-                              ...
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="start"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <DropdownMenuItem
-                              onClick={() =>
-                                navigate(`/settings/products/${p.id}`)
-                              }
-                            >
-                              <Eye className="size-4" /> Visualizar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                navigate(`/settings/products/${p.id}?edit=1`)
-                              }
-                            >
-                              <Pencil className="size-4" /> Editar
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
+                      <RowActionsCell
+                        onView={() => navigate(`/settings/products/${p.id}`)}
+                        onEdit={() =>
+                          navigate(`/settings/products/${p.id}?edit=1`)
+                        }
+                        ariaLabel="Ações do produto"
+                      />
                       {visibleCols.id && (
                         <td className="p-3 whitespace-nowrap font-mono text-xs">
                           {p.id}
