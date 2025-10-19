@@ -63,6 +63,8 @@ const InventarioDetalhePage = lazy(() => import("@/page/inventario/[id]/page"));
 const InventarioAjustesPage = lazy(
   () => import("@/page/inventario/[id]/ajustes")
 );
+const PickingPage = lazy(() => import("@/page/picking/page"));
+const NovoPickingPage = lazy(() => import("@/page/picking/novo/page"));
 
 // Global route change overlay spinner
 function GlobalRouteLoader({ minDuration = 300 }: { minDuration?: number }) {
@@ -225,6 +227,8 @@ function App() {
             path="/integration/settings/unified-product"
             element={<UnifiedProductPage />}
           />
+          <Route path="/picking" element={<PickingPage />} />
+          <Route path="/picking/novo" element={<NovoPickingPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
