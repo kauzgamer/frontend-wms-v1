@@ -12,11 +12,15 @@ import {
 } from "@/components/ui/breadcrumb";
 import { HomeIcon } from "lucide-react";
 import { useToast } from "@/components/ui/toast-context";
+import { useDeposits } from "@/lib/hooks/use-organization";
+import { usePhysicalStructures } from "@/lib/hooks/use-physical-structures";
 
 export default function NewAddressGroupPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const { mutateAsync, isPending } = useCreateAddressGroup();
+  const { data: depositos, isLoading: depLoading } = useDeposits();
+  const { data: estruturas, isLoading: estLoading } = usePhysicalStructures();
 
   const [form, setForm] = useState({
     name: "",
@@ -124,22 +128,36 @@ export default function NewAddressGroupPage() {
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#334b52]">Depósito (ID)</label>
-              <input
+              <label className="text-sm font-medium text-[#334b52]">Depósito</label>
+              <select
                 value={form.depositId}
                 onChange={(e) => setForm({ ...form, depositId: e.target.value })}
-                placeholder="UUID do depósito"
                 className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
-              />
+              >
+                <option value="">{depLoading ? "Carregando..." : "Selecione o depósito"}</option>
+                {depositos?.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.nome}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#334b52]">Estrutura Física (slug)</label>
-              <input
+              <label className="text-sm font-medium text-[#334b52]">Estrutura Física</label>
+              <select
                 value={form.physicalStructureSlug}
                 onChange={(e) => setForm({ ...form, physicalStructureSlug: e.target.value })}
-                placeholder="Ex: rua-a-bays"
                 className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
-              />
+              >
+                <option value="">{estLoading ? "Carregando..." : "Selecione a estrutura"}</option>
+                {estruturas
+                  ?.filter((s) => s.situacao === "ATIVO")
+                  .map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.titulo}
+                    </option>
+                  ))}
+              </select>
             </div>
           </div>
         </section>
