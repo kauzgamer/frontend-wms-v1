@@ -96,9 +96,30 @@ export default function NewAddressGroupPage() {
         next.palletFrom = 1;
         next.palletTo = 1;
       }
+      // Se a estrutura tiver coordDefaults, preencher como defaults
+      const d = estruturaSelecionada?.coordDefaults;
+      if (d) {
+        if (d.R) {
+          if (typeof d.R.from === 'string') next.streetFrom = String(d.R.from);
+          if (typeof d.R.to === 'string') next.streetTo = String(d.R.to);
+          if (d.R.prefix) next.streetPrefix = d.R.prefix;
+        }
+        if (d.C) {
+          if (typeof d.C.from === 'number') next.columnFrom = d.C.from;
+          if (typeof d.C.to === 'number') next.columnTo = d.C.to;
+        }
+        if (d.N) {
+          if (typeof d.N.from === 'number') next.levelFrom = d.N.from;
+          if (typeof d.N.to === 'number') next.levelTo = d.N.to;
+        }
+        if (d.P) {
+          if (typeof d.P.from === 'number') next.palletFrom = d.P.from;
+          if (typeof d.P.to === 'number') next.palletTo = d.P.to;
+        }
+      }
       return next;
     });
-  }, [form.physicalStructureSlug, coordR?.ativo, coordC?.ativo, coordN?.ativo, coordP?.ativo, labelR]);
+  }, [form.physicalStructureSlug, coordR?.ativo, coordC?.ativo, coordN?.ativo, coordP?.ativo, labelR, estruturaSelecionada?.coordDefaults]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

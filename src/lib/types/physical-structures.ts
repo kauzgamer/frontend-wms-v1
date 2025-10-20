@@ -33,6 +33,7 @@ export interface PhysicalStructureDetail {
   descricao: string;
   colunaDefineLadoRua: boolean;
   coords: Record<CoordKey, CoordConfig>;
+  coordDefaults?: Record<string, { from: string | number; to: string | number; prefix?: string }>;
   createdAt?: string;
   updatedAt?: string;
 }
