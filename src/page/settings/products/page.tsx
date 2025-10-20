@@ -404,12 +404,18 @@ export default function ProductsPage() {
               </>
             )}
             <div className="relative w-44 flex-shrink-0">
+              <label htmlFor="products-search" className="sr-only">
+                Pesquisar
+              </label>
               <SearchIcon className="size-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
+                id="products-search"
+                name="search"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-7 pr-3 h-9 rounded-md border bg-white text-sm w-full focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe] placeholder:text-muted-foreground"
                 placeholder="Pesquisar"
+                autoComplete="off"
               />
             </div>
             <button
@@ -450,34 +456,48 @@ export default function ProductsPage() {
               </div>
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold">Nome</label>
+                  <label className="text-sm font-semibold" htmlFor="adv-name">
+                    Nome
+                  </label>
                   <Input
+                    id="adv-name"
+                    name="name"
                     placeholder="Informe o nome"
                     value={advName}
                     onChange={(e) => setAdvName(e.target.value)}
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold">SKU</label>
+                  <label className="text-sm font-semibold" htmlFor="adv-sku">
+                    SKU
+                  </label>
                   <Input
+                    id="adv-sku"
+                    name="sku"
                     placeholder="Informe o SKU"
                     value={advSku}
                     onChange={(e) => setAdvSku(e.target.value)}
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold">Unidade</label>
+                  <label className="text-sm font-semibold" htmlFor="adv-unit">
+                    Unidade
+                  </label>
                   <Input
+                    id="adv-unit"
+                    name="unit"
                     placeholder="Ex: UN, CX"
                     value={advUnit}
                     onChange={(e) => setAdvUnit(e.target.value)}
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold">
+                  <label className="text-sm font-semibold" htmlFor="adv-uom">
                     Unidade de medida
                   </label>
                   <Input
+                    id="adv-uom"
+                    name="unitOfMeasure"
                     placeholder="Ex: kg, cm"
                     value={advUom}
                     onChange={(e) => setAdvUom(e.target.value)}
@@ -512,9 +532,16 @@ export default function ProductsPage() {
                 )}
                 {hasCategory && (
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold">Categoria</label>
+                    <label
+                      className="text-sm font-semibold"
+                      htmlFor="adv-category"
+                    >
+                      Categoria
+                    </label>
                     <div className="relative">
                       <select
+                        id="adv-category"
+                        name="category"
                         className="w-full border rounded px-3 py-2 text-sm bg-white"
                         value={filterCategory ?? ""}
                         onChange={(e) =>
@@ -804,8 +831,15 @@ export default function ProductsPage() {
                     </Button>
                   )}
                   <div className="flex items-center gap-2">
-                    <span className="uppercase font-medium">EXIBIR</span>
+                    <label
+                      htmlFor="page-size"
+                      className="uppercase font-medium"
+                    >
+                      EXIBIR
+                    </label>
                     <select
+                      id="page-size"
+                      name="pageSize"
                       className="border border-gray-300 rounded px-3 py-1.5 text-xs font-medium bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                       value={pageSize}
                       onChange={(e) => {

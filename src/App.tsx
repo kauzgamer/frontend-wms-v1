@@ -65,6 +65,9 @@ const InventarioAjustesPage = lazy(
 );
 const PickingPage = lazy(() => import("@/page/picking/page"));
 const NovoPickingPage = lazy(() => import("@/page/picking/novo/page"));
+const DefinirEnderecosPage = lazy(
+  () => import("@/page/picking/definir-enderecos/[id]/page")
+);
 
 // Global route change overlay spinner
 function GlobalRouteLoader({ minDuration = 300 }: { minDuration?: number }) {
@@ -229,6 +232,10 @@ function App() {
           />
           <Route path="/picking" element={<PickingPage />} />
           <Route path="/picking/novo" element={<NovoPickingPage />} />
+          <Route
+            path="/picking/definir-enderecos/:id"
+            element={<DefinirEnderecosPage />}
+          />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>

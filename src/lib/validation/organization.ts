@@ -13,9 +13,11 @@ export const upsertOrganizationSchema = z.object({
   cnpj: z
     .string()
     .length(14, "CNPJ deve ter 14 dígitos")
-    .regex(/^\d+$/, "CNPJ deve conter apenas números"),
+    .regex(/^\d+$/, "CNPJ deve conter apenas números")
+    .optional(),
   ativo: z.boolean().optional().default(true),
   timezone: z.string().optional(),
+  createPrincipalDeposit: z.boolean().optional(),
 });
 
 // Schema legado (manter compatibilidade)
