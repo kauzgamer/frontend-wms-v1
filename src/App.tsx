@@ -83,6 +83,7 @@ const MapeamentoEnderecoPage = lazy(
 const NovoMapeamentoEnderecoPage = lazy(
   () => import("@/page/settings/mapeamento-endereco/new/page")
 );
+const TipoEstoquePage = lazy(() => import("@/page/settings/tipo-estoque/page"));
 
 // Global route change overlay spinner
 function GlobalRouteLoader({ minDuration = 300 }: { minDuration?: number }) {
@@ -245,6 +246,7 @@ function App() {
             path="/settings/mapeamento-endereco/novo"
             element={<NovoMapeamentoEnderecoPage />}
           />
+          <Route path="/settings/tipo-estoque" element={<TipoEstoquePage />} />
           <Route path="/integration" element={<IntegrationPage />} />
           <Route
             path="/integration/settings"

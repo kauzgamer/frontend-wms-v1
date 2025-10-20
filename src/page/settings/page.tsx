@@ -94,7 +94,7 @@ export function SettingsPage() {
             <div className="space-y-0 text-[15px] leading-snug">
               <Link to="/settings/grupo-endereco" className="block text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Grupo de Endereço</Link>
               <Link to="/settings/mapeamento-endereco" className="block text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Mapeamento de endereços</Link>
-              <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Tipo de estoque</button>
+              <Link to="/settings/tipo-estoque" className="block text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Tipo de estoque</Link>
             </div>
           </div>
         </div>
