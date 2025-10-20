@@ -7,9 +7,18 @@ import type {
   AddressPreview,
 } from "../types/addresses";
 
-export function listAddresses(depositoId?: string) {
-  const params = depositoId ? `?depositoId=${depositoId}` : "";
-  return apiFetch<AddressSummary[]>(`/addresses${params}`);
+export function listAddresses(params?: {
+  depositoId?: string;
+  funcao?: string;
+  acessivelAMao?: boolean;
+}) {
+  const qs = new URLSearchParams();
+  if (params?.depositoId) qs.set("depositoId", params.depositoId);
+  if (params?.funcao) qs.set("funcao", params.funcao);
+  if (typeof params?.acessivelAMao === "boolean")
+    qs.set("acessivelAMao", String(params.acessivelAMao));
+  const suffix = Array.from(qs.keys()).length ? `?${qs.toString()}` : "";
+  return apiFetch<AddressSummary[]>(`/addresses${suffix}`);
 }
 
 export function getAddress(id: string) {

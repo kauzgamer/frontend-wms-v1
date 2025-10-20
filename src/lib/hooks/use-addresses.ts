@@ -1,25 +1,34 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CoordinateRange } from '../types/addresses';
-import { 
-  listAddresses, 
-  getAddress, 
-  createAddresses, 
-  previewAddresses, 
-  updateAddress, 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { CoordinateRange } from "../types/addresses";
+import {
+  listAddresses,
+  getAddress,
+  createAddresses,
+  previewAddresses,
+  updateAddress,
   deleteAddress,
   getStreetsByDeposit,
-  getAddressesByStreet
-} from '../api/addresses';
-import type { 
-  AddressSummary, 
-  AddressDetail, 
-  CreateAddressInput 
-} from '../types/addresses';
+  getAddressesByStreet,
+} from "../api/addresses";
+import type {
+  AddressSummary,
+  AddressDetail,
+  CreateAddressInput,
+} from "../types/addresses";
 
-export function useAddresses(depositoId?: string) {
+export function useAddresses(params?: {
+  depositoId?: string;
+  funcao?: string;
+  acessivelAMao?: boolean;
+}) {
   return useQuery<AddressSummary[]>({
-    queryKey: ['addresses', depositoId],
-    queryFn: () => listAddresses(depositoId),
+    queryKey: [
+      "addresses",
+      params?.depositoId,
+      params?.funcao,
+      params?.acessivelAMao,
+    ],
+    queryFn: () => listAddresses(params),
     retry: false, // Não tentar novamente se falhar
     staleTime: 30000, // Cache por 30 segundos
   });
@@ -27,7 +36,7 @@ export function useAddresses(depositoId?: string) {
 
 export function useAddress(id: string) {
   return useQuery<AddressDetail>({
-    queryKey: ['addresses', id],
+    queryKey: ["addresses", id],
     queryFn: () => getAddress(id),
     enabled: !!id,
   });
@@ -38,16 +47,19 @@ export function useCreateAddresses() {
   return useMutation({
     mutationFn: (input: CreateAddressInput) => createAddresses(input),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['addresses'] });
+      qc.invalidateQueries({ queryKey: ["addresses"] });
     },
   });
 }
 
 export function usePreviewAddresses() {
   return useMutation({
-    mutationFn: (params: { depositoId: string; estruturaFisicaId: string; coordenadas: CoordinateRange[] }) =>
-      previewAddresses(params),
-  })
+    mutationFn: (params: {
+      depositoId: string;
+      estruturaFisicaId: string;
+      coordenadas: CoordinateRange[];
+    }) => previewAddresses(params),
+  });
 }
 
 export function useUpdateAddress(id: string) {
@@ -55,8 +67,8 @@ export function useUpdateAddress(id: string) {
   return useMutation({
     mutationFn: (data: Partial<AddressDetail>) => updateAddress(id, data),
     onSuccess: (data) => {
-      qc.setQueryData(['addresses', id], data);
-      qc.invalidateQueries({ queryKey: ['addresses'] });
+      qc.setQueryData(["addresses", id], data);
+      qc.invalidateQueries({ queryKey: ["addresses"] });
     },
   });
 }
@@ -66,23 +78,26 @@ export function useDeleteAddress() {
   return useMutation({
     mutationFn: (id: string) => deleteAddress(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['addresses'] });
+      qc.invalidateQueries({ queryKey: ["addresses"] });
     },
   });
 }
 
 export function useStreetsByDeposit(depositoId: string | undefined) {
   return useQuery<string[]>({
-    queryKey: ['addresses', 'streets', depositoId],
+    queryKey: ["addresses", "streets", depositoId],
     queryFn: () => getStreetsByDeposit(depositoId!),
     enabled: !!depositoId,
     staleTime: 30000,
   });
 }
 
-export function useAddressesByStreet(depositoId: string | undefined, street: string | undefined) {
+export function useAddressesByStreet(
+  depositoId: string | undefined,
+  street: string | undefined
+) {
   return useQuery({
-    queryKey: ['addresses', 'by-street', depositoId, street],
+    queryKey: ["addresses", "by-street", depositoId, street],
     queryFn: () => getAddressesByStreet(depositoId!, street!),
     enabled: !!depositoId && !!street,
     staleTime: 30000,

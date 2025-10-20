@@ -9,7 +9,15 @@ import {
   type CreatePickingInput,
 } from "@/lib/validation/picking";
 import { Search as SearchIcon, Trash } from "lucide-react";
-import { getAddressesByStreet } from "@/lib/api/addresses";
+import { listAddresses } from "@/lib/api/addresses";
+
+type AddressItem = {
+  id: string;
+  enderecoCompleto: string;
+  enderecoAbreviado: string;
+  depositId?: string;
+  depositoId?: string; // compat
+};
 
 export default function DefinirEnderecosPage() {
   const navigate = useNavigate();
@@ -21,12 +29,16 @@ export default function DefinirEnderecosPage() {
   const productName = sp.get("name") ?? "Produto";
   const productSku = sp.get("sku") ?? "";
 
-  // filtros da lista de endereços (carrega apenas endereços acessíveis à mão)
-  const initialDeposit = sp.get("depositId") ?? "";
-  const [depositId, setDepositId] = useState(initialDeposit);
-  const [street, setStreet] = useState("");
+  // Agora a lista não exige depósito/rua: mostra todos os endereços de função Picking (acessível à mão)
+  const [depositId, setDepositId] = useState(""); // opcional, apenas para filtrar se desejar
+  const [street, setStreet] = useState(""); // opcional, filtra client-side pelo abreviado/completo
   const [addresses, setAddresses] = useState<
-    Array<{ id: string; enderecoCompleto: string; enderecoAbreviado: string }>
+    Array<{
+      id: string;
+      enderecoCompleto: string;
+      enderecoAbreviado: string;
+      depositId?: string;
+    }>
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -34,27 +46,26 @@ export default function DefinirEnderecosPage() {
   useEffect(() => {
     let ignore = false;
     async function run() {
-      if (!depositId || !street.trim()) {
-        setAddresses([]);
-        return;
-      }
       try {
         setIsLoading(true);
         setLoadError(null);
-        const data = await getAddressesByStreet(depositId, street, {
+        const data = await listAddresses({
           funcao: "Picking",
           acessivelAMao: true,
+          depositoId: depositId || undefined,
         });
-        // Garantia adicional de filtros aplicados
-        const onlyPicking = (data || []).filter(
-          (a) =>
-            a.acessivelAMao === true &&
-            String(a.funcao).toLowerCase() === "picking"
+        // Filtro opcional por rua (client-side) se o usuário digitar algo em street
+        const filtered = (data || []).filter((a: AddressItem) =>
+          !street.trim()
+            ? true
+            : a.enderecoCompleto.toLowerCase().includes(street.toLowerCase()) ||
+              a.enderecoAbreviado.toLowerCase().includes(street.toLowerCase())
         );
-        const mapped = onlyPicking.map((a) => ({
+        const mapped = filtered.map((a: AddressItem) => ({
           id: a.id,
           enderecoCompleto: a.enderecoCompleto,
           enderecoAbreviado: a.enderecoAbreviado,
+          depositId: a.depositId ?? a.depositoId,
         }));
         if (!ignore) setAddresses(mapped);
       } catch (err) {
@@ -77,6 +88,7 @@ export default function DefinirEnderecosPage() {
     id: string;
     enderecoCompleto: string;
     enderecoAbreviado: string;
+    depositId?: string;
   } | null>(null);
 
   // formulário do painel direito
@@ -87,14 +99,24 @@ export default function DefinirEnderecosPage() {
   const { mutateAsync: createAsync, isPending } = useCreatePicking();
 
   async function handleSalvar() {
-    if (!id || !selectedAddress || !depositId) {
-      show({ kind: "error", message: "Selecione depósito e endereço" });
+    if (!id || !selectedAddress) {
+      show({ kind: "error", message: "Selecione um endereço" });
+      return;
+    }
+    // Resolver depósito automaticamente a partir do endereço selecionado, se o campo de filtro não estiver preenchido
+    const depositResolved = depositId || selectedAddress.depositId || "";
+    if (!depositResolved) {
+      show({
+        kind: "error",
+        message:
+          "Não foi possível determinar o depósito do endereço selecionado",
+      });
       return;
     }
     const payload: CreatePickingInput = {
       productId: id,
       addressId: selectedAddress.id,
-      depositId,
+      depositId: depositResolved,
       maxQuantity: Number(maxQuantity || 0),
       reorderPoint: Number(reorderPoint || 0),
     };
@@ -149,7 +171,6 @@ export default function DefinirEnderecosPage() {
                 value={street}
                 onChange={(e) => setStreet(e.target.value)}
                 className="w-64"
-                disabled={!depositId}
               />
               <Button size="icon" variant="outline" className="h-9 w-9">
                 <SearchIcon className="size-4" />
@@ -168,29 +189,14 @@ export default function DefinirEnderecosPage() {
                 </tr>
               </thead>
               <tbody>
-                {!depositId && (
-                  <tr>
-                    <td className="p-4 text-muted-foreground" colSpan={4}>
-                      Informe o depósito (UUID) para listar endereços de
-                      picking.
-                    </td>
-                  </tr>
-                )}
-                {depositId && !street.trim() && (
-                  <tr>
-                    <td className="p-4 text-muted-foreground" colSpan={4}>
-                      Informe a rua (campo R) para listar endereços.
-                    </td>
-                  </tr>
-                )}
-                {depositId && isLoading && (
+                {isLoading && (
                   <tr>
                     <td className="p-4" colSpan={4}>
                       Carregando...
                     </td>
                   </tr>
                 )}
-                {depositId && loadError && (
+                {loadError && (
                   <tr>
                     <td className="p-4 text-amber-700" colSpan={4}>
                       {loadError}
@@ -222,6 +228,7 @@ export default function DefinirEnderecosPage() {
                             id: a.id,
                             enderecoCompleto: a.enderecoCompleto,
                             enderecoAbreviado: a.enderecoAbreviado,
+                            depositId: a.depositId,
                           })
                         }
                       >
@@ -230,16 +237,13 @@ export default function DefinirEnderecosPage() {
                     </td>
                   </tr>
                 ))}
-                {depositId &&
-                  !isLoading &&
-                  !loadError &&
-                  (addresses?.length ?? 0) === 0 && (
-                    <tr>
-                      <td className="p-4" colSpan={4}>
-                        Nenhum endereço encontrado
-                      </td>
-                    </tr>
-                  )}
+                {!isLoading && !loadError && (addresses?.length ?? 0) === 0 && (
+                  <tr>
+                    <td className="p-4" colSpan={4}>
+                      Nenhum endereço encontrado
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
