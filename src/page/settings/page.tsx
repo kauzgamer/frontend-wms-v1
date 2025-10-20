@@ -86,7 +86,7 @@ export function SettingsPage() {
               <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Kit de produtos</button>
             </div>
             <div className="space-y-0 text-[15px] leading-snug">
-              <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Grupo de Endereço</button>
+              <Link to="/settings/grupo-endereco" className="block text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Grupo de Endereço</Link>
               <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Mapeamento de endereço</button>
               <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Tipo de estoque</button>
             </div>
