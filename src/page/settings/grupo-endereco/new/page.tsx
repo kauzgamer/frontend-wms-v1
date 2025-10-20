@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCreateAddressGroup } from "@/lib/hooks/use-address-groups";
 import { createAddressGroupSchema } from "@/lib/validation/address-groups";
@@ -13,7 +13,8 @@ import {
 import { HomeIcon } from "lucide-react";
 import { useToast } from "@/components/ui/toast-context";
 import { useDeposits } from "@/lib/hooks/use-organization";
-import { usePhysicalStructures } from "@/lib/hooks/use-physical-structures";
+import { usePhysicalStructures, usePhysicalStructure } from "@/lib/hooks/use-physical-structures";
+import type { CoordConfig } from "@/lib/types/physical-structures";
 
 export default function NewAddressGroupPage() {
   const navigate = useNavigate();
@@ -38,6 +39,66 @@ export default function NewAddressGroupPage() {
     funcao: "Armazenagem",
     acessivelAMao: false,
   });
+
+  // Detalhe da estrutura física selecionada (coords dinâmicas)
+  const { data: estruturaSelecionada } = usePhysicalStructure(form.physicalStructureSlug);
+
+  // Labels e visibilidade dinâmicos conforme estrutura
+  const coords = estruturaSelecionada?.coords;
+  const coordR = coords?.["R"];
+  const coordC = coords?.["C"];
+  const coordN = coords?.["N"];
+  const coordP = coords?.["P"];
+
+  const labelR = useMemo(
+    () => coordR ? (coordR.nomeCustom || coordR.nomePadrao) : "Rua",
+    [coordR]
+  );
+  const labelC = useMemo(
+    () => coordC ? (coordC.nomeCustom || coordC.nomePadrao) : "Coluna",
+    [coordC]
+  );
+  const labelN = useMemo(
+    () => coordN ? (coordN.nomeCustom || coordN.nomePadrao) : "Nível",
+    [coordN]
+  );
+  const labelP = useMemo(
+    () => coordP ? (coordP.nomeCustom || coordP.nomePadrao) : "Palete",
+    [coordP]
+  );
+
+  // Quando a estrutura muda, ajustar defaults de campos não ativos para valores neutros
+  useEffect(() => {
+    setForm((prev) => {
+      const next = { ...prev };
+      // Ajustar prefixo para o nome da rua (se houver R)
+      if (coordR?.ativo) {
+        next.streetPrefix = labelR || prev.streetPrefix || "Rua";
+        // manter valores existentes do usuário
+      } else {
+        // Se não houver eixo Rua ativo, colapsar intervalo para único valor
+        next.streetPrefix = labelR || "Rua";
+        next.streetFrom = "1";
+        next.streetTo = "1";
+      }
+      // Coluna
+      if (!coordC?.ativo) {
+        next.columnFrom = 1;
+        next.columnTo = 1;
+      }
+      // Nível
+      if (!coordN?.ativo) {
+        next.levelFrom = 0;
+        next.levelTo = 0;
+      }
+      // Palete
+      if (!coordP?.ativo) {
+        next.palletFrom = 1;
+        next.palletTo = 1;
+      }
+      return next;
+    });
+  }, [form.physicalStructureSlug, coordR?.ativo, coordC?.ativo, coordN?.ativo, coordP?.ativo, labelR]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -158,6 +219,18 @@ export default function NewAddressGroupPage() {
                     </option>
                   ))}
               </select>
+              {estruturaSelecionada && (
+                (() => {
+                  const all = (Object.values(estruturaSelecionada.coords || {}) as CoordConfig[]);
+                  const ativos = all.filter((c) => c?.ativo);
+                  const labels = ativos.map((c) => c.nomeCustom || c.nomePadrao);
+                  return (
+                    <span className="text-[11px] text-muted-foreground mt-1">
+                      Eixos ativos: {labels.length > 0 ? labels.join(', ') : '—'}
+                    </span>
+                  );
+                })()
+              )}
             </div>
           </div>
         </section>
@@ -165,94 +238,116 @@ export default function NewAddressGroupPage() {
         <section>
           <h2 className="text-xs font-semibold tracking-wide text-[#008bb1] mb-4">CONFIGURAÇÃO DE RUAS E FAIXAS</h2>
           <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#334b52]">Prefixo da rua</label>
-              <input
-                value={form.streetPrefix}
-                onChange={(e) => setForm({ ...form, streetPrefix: e.target.value })}
-                placeholder="Ex: Rua, Corredor"
-                className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#334b52]">Rua (De)</label>
-              <input
-                value={form.streetFrom}
-                onChange={(e) => setForm({ ...form, streetFrom: e.target.value })}
-                placeholder="Ex: A"
-                className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#334b52]">Rua (Até)</label>
-              <input
-                value={form.streetTo}
-                onChange={(e) => setForm({ ...form, streetTo: e.target.value })}
-                placeholder="Ex: Z"
-                className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#334b52]">Coluna (De)</label>
-              <input
-                type="number"
-                value={form.columnFrom}
-                onChange={(e) => setForm({ ...form, columnFrom: Number(e.target.value) })}
-                placeholder="Ex: 1"
-                className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#334b52]">Coluna (Até)</label>
-              <input
-                type="number"
-                value={form.columnTo}
-                onChange={(e) => setForm({ ...form, columnTo: Number(e.target.value) })}
-                placeholder="Ex: 10"
-                className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#334b52]">Nível (De)</label>
-              <input
-                type="number"
-                value={form.levelFrom}
-                onChange={(e) => setForm({ ...form, levelFrom: Number(e.target.value) })}
-                placeholder="Ex: 0"
-                className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#334b52]">Nível (Até)</label>
-              <input
-                type="number"
-                value={form.levelTo}
-                onChange={(e) => setForm({ ...form, levelTo: Number(e.target.value) })}
-                placeholder="Ex: 3"
-                className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#334b52]">Palete (De)</label>
-              <input
-                type="number"
-                value={form.palletFrom}
-                onChange={(e) => setForm({ ...form, palletFrom: Number(e.target.value) })}
-                placeholder="Ex: 1"
-                className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-[#334b52]">Palete (Até)</label>
-              <input
-                type="number"
-                value={form.palletTo}
-                onChange={(e) => setForm({ ...form, palletTo: Number(e.target.value) })}
-                placeholder="Ex: 2"
-                className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
-              />
-            </div>
+            {coordR?.ativo && (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-[#334b52]">Prefixo de {labelR}</label>
+                  <input
+                    value={form.streetPrefix}
+                    onChange={(e) => setForm({ ...form, streetPrefix: e.target.value })}
+                    placeholder={`Ex: ${labelR}`}
+                    className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-[#334b52]">{labelR} (De)</label>
+                  <input
+                    value={form.streetFrom}
+                    onChange={(e) => setForm({ ...form, streetFrom: e.target.value })}
+                    placeholder="Ex: A"
+                    className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-[#334b52]">{labelR} (Até)</label>
+                  <input
+                    value={form.streetTo}
+                    onChange={(e) => setForm({ ...form, streetTo: e.target.value })}
+                    placeholder="Ex: Z"
+                    className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                  />
+                </div>
+              </>
+            )}
+
+            {coordC?.ativo && (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-[#334b52]">{labelC} (De)</label>
+                  <input
+                    type="number"
+                    value={form.columnFrom}
+                    onChange={(e) => setForm({ ...form, columnFrom: Number(e.target.value) })}
+                    placeholder="Ex: 1"
+                    className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-[#334b52]">{labelC} (Até)</label>
+                  <input
+                    type="number"
+                    value={form.columnTo}
+                    onChange={(e) => setForm({ ...form, columnTo: Number(e.target.value) })}
+                    placeholder="Ex: 10"
+                    className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                  />
+                </div>
+              </>
+            )}
+
+            {coordN?.ativo && (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-[#334b52]">{labelN} (De)</label>
+                  <input
+                    type="number"
+                    value={form.levelFrom}
+                    onChange={(e) => setForm({ ...form, levelFrom: Number(e.target.value) })}
+                    placeholder="Ex: 0"
+                    className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-[#334b52]">{labelN} (Até)</label>
+                  <input
+                    type="number"
+                    value={form.levelTo}
+                    onChange={(e) => setForm({ ...form, levelTo: Number(e.target.value) })}
+                    placeholder="Ex: 3"
+                    className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                  />
+                </div>
+              </>
+            )}
+
+            {coordP?.ativo && (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-[#334b52]">{labelP} (De)</label>
+                  <input
+                    type="number"
+                    value={form.palletFrom}
+                    onChange={(e) => setForm({ ...form, palletFrom: Number(e.target.value) })}
+                    placeholder="Ex: 1"
+                    className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-[#334b52]">{labelP} (Até)</label>
+                  <input
+                    type="number"
+                    value={form.palletTo}
+                    onChange={(e) => setForm({ ...form, palletTo: Number(e.target.value) })}
+                    placeholder="Ex: 2"
+                    className="h-10 rounded border px-3 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                  />
+                </div>
+              </>
+            )}
           </div>
+          {!coordR?.ativo && !coordC?.ativo && !coordN?.ativo && !coordP?.ativo && (
+            <p className="text-sm text-muted-foreground">Selecione uma estrutura física para configurar os eixos.</p>
+          )}
         </section>
 
         {/* feedback de erro básico via toast já está implementado */}
