@@ -28,7 +28,7 @@ export function SettingsPage() {
   <h1 className="text-3xl font-semibold leading-tight" style={{ color: '#4a5c60' }}>Configurador WMS</h1>
 
       {/* Feature cards */}
-      <div className="grid gap-5 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+  <div className="grid gap-5 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
   <Link to="/settings/fluxos" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0c9abe] rounded-md">
     <Card className="aspect-[6/5] flex flex-col items-center justify-center gap-2 text-center cursor-pointer hover:shadow-sm transition p-4">
       <Workflow className="size-9" style={{ color: '#0c9abe' }} />
@@ -51,6 +51,12 @@ export function SettingsPage() {
     <Card className="aspect-[6/5] flex flex-col items-center justify-center gap-2 text-center cursor-pointer hover:shadow-sm transition p-4">
       <StructureIcon className="size-9" style={{ color: '#0c9abe' }} />
       <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Estrutura física</span>
+    </Card>
+  </Link>
+  <Link to="/settings/mapeamento-endereco" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0c9abe] rounded-md">
+    <Card className="aspect-[6/5] flex flex-col items-center justify-center gap-2 text-center cursor-pointer hover:shadow-sm transition p-4">
+      <MapPinned className="size-9" style={{ color: '#0c9abe' }} />
+      <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Mapeamento de endereços</span>
     </Card>
   </Link>
   <Card className="aspect-[6/5] flex flex-col items-center justify-center gap-2 text-center cursor-pointer hover:shadow-sm transition p-4">
@@ -87,7 +93,7 @@ export function SettingsPage() {
             </div>
             <div className="space-y-0 text-[15px] leading-snug">
               <Link to="/settings/grupo-endereco" className="block text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Grupo de Endereço</Link>
-              <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Mapeamento de endereço</button>
+              <Link to="/settings/mapeamento-endereco" className="block text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Mapeamento de endereços</Link>
               <button className="text-left w-full hover:underline border-b border-border/60 py-3" style={{ color: '#0c9abe' }}>Tipo de estoque</button>
             </div>
           </div>
