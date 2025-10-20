@@ -68,6 +68,15 @@ const NovoPickingPage = lazy(() => import("@/page/picking/novo/page"));
 const DefinirEnderecosPage = lazy(
   () => import("@/page/picking/definir-enderecos/[id]/page")
 );
+const GrupoEnderecoPage = lazy(
+  () => import("@/page/settings/grupo-endereco/page")
+);
+const NewGrupoEnderecoPage = lazy(
+  () => import("@/page/settings/grupo-endereco/new/page")
+);
+const GrupoEnderecoDetailPage = lazy(
+  () => import("@/page/settings/grupo-endereco/[id]/page")
+);
 
 // Global route change overlay spinner
 function GlobalRouteLoader({ minDuration = 300 }: { minDuration?: number }) {
@@ -213,6 +222,15 @@ function App() {
           <Route path="/settings/fluxos" element={<FluxosPage />} />
           <Route path="/settings/deposito" element={<DepositoPage />} />
           <Route path="/settings/usuarios" element={<UsuariosPage />} />
+          <Route path="/settings/grupo-endereco" element={<GrupoEnderecoPage />} />
+          <Route
+            path="/settings/grupo-endereco/new"
+            element={<NewGrupoEnderecoPage />}
+          />
+          <Route
+            path="/settings/grupo-endereco/:id"
+            element={<GrupoEnderecoDetailPage />}
+          />
           <Route path="/integration" element={<IntegrationPage />} />
           <Route
             path="/integration/settings"
