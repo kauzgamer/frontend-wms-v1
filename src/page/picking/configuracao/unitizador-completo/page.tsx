@@ -2,12 +2,30 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useToast } from '@/components/ui/toast-context';
+import { useOrganization, useDeposits } from '@/lib/hooks/use-organization';
+import { usePickingSettings, useUpsertPickingSettings } from '@/lib/hooks/use-picking-settings';
 
 export default function UnitizadorCompletoConfigPage() {
   const navigate = useNavigate();
-  const [modo, setModo] = useState<'FALTANTE'|'UNITIZADOR'|''>('');
+  const toast = useToast();
+  const { data: org } = useOrganization();
+  const { data: deposits } = useDeposits();
+  const principalDepositId = deposits?.find((d) => d.principal)?.id;
+  const { data, isLoading } = usePickingSettings({ organizationId: org?.id, depositId: principalDepositId });
+  const { mutateAsync, isPending } = useUpsertPickingSettings({ organizationId: org?.id, depositId: principalDepositId });
+  const disabled = isLoading || isPending || !org?.id;
+
+  async function handleChange(value: 'FALTANTE' | 'UNITIZADOR') {
+    try {
+      await mutateAsync({ replenishMode: value });
+      toast.show({ message: 'Configuração salva com sucesso', kind: 'success' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar configuração';
+      toast.show({ message: msg, kind: 'error' });
+    }
+  }
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 pt-4">
       <Breadcrumb>
@@ -57,10 +75,24 @@ export default function UnitizadorCompletoConfigPage() {
           </div>
           <div className="flex flex-col gap-3 mt-2" role="radiogroup" aria-label="Forma de reabastecer">
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="radio" name="modo-reabastecer" checked={modo==='FALTANTE'} onChange={()=>setModo('FALTANTE')} /> Repor quantidade faltante
+              <input
+                type="radio"
+                name="modo-reabastecer"
+                checked={data?.replenishMode === 'FALTANTE'}
+                onChange={() => handleChange('FALTANTE')}
+                disabled={disabled}
+              />
+              Repor quantidade faltante
             </label>
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="radio" name="modo-reabastecer" checked={modo==='UNITIZADOR'} onChange={()=>setModo('UNITIZADOR')} /> Repor com unitizador completo
+              <input
+                type="radio"
+                name="modo-reabastecer"
+                checked={data?.replenishMode === 'UNITIZADOR'}
+                onChange={() => handleChange('UNITIZADOR')}
+                disabled={disabled}
+              />
+              Repor com unitizador completo
             </label>
           </div>
         </div>

@@ -2,11 +2,29 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useToast } from '@/components/ui/toast-context';
+import { useOrganization, useDeposits } from '@/lib/hooks/use-organization';
+import { usePickingSettings, useUpsertPickingSettings } from '@/lib/hooks/use-picking-settings';
 
 export default function TrocaEstoqueConfigPage() {
   const navigate = useNavigate();
-  const [option, setOption] = useState<'NAO'|'IGUAIS'|'QUALQUER'|''>('');
+  const toast = useToast();
+  const { data: org } = useOrganization();
+  const { data: deposits } = useDeposits();
+  const principalDepositId = deposits?.find((d) => d.principal)?.id;
+  const { data, isLoading } = usePickingSettings({ organizationId: org?.id, depositId: principalDepositId });
+  const { mutateAsync, isPending } = useUpsertPickingSettings({ organizationId: org?.id, depositId: principalDepositId });
+  const disabled = isLoading || isPending || !org?.id;
+
+  async function handleChange(value: 'NAO' | 'IGUAIS' | 'QUALQUER') {
+    try {
+      await mutateAsync({ stockSwapMode: value });
+      toast.show({ message: 'Configuração salva com sucesso', kind: 'success' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar configuração';
+      toast.show({ message: msg, kind: 'error' });
+    }
+  }
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 pt-4">
       <Breadcrumb>
@@ -55,13 +73,34 @@ export default function TrocaEstoqueConfigPage() {
           </div>
           <div className="flex flex-col gap-3 mt-2" role="radiogroup" aria-label="Troca de estoque">
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="radio" name="troca-estoque" checked={option==='NAO'} onChange={()=>setOption('NAO')} /> Não permite troca
+              <input
+                type="radio"
+                name="troca-estoque"
+                checked={data?.stockSwapMode === 'NAO'}
+                onChange={() => handleChange('NAO')}
+                disabled={disabled}
+              />
+              Não permite troca
             </label>
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="radio" name="troca-estoque" checked={option==='IGUAIS'} onChange={()=>setOption('IGUAIS')} /> Permitir troca apenas para características iguais
+              <input
+                type="radio"
+                name="troca-estoque"
+                checked={data?.stockSwapMode === 'IGUAIS'}
+                onChange={() => handleChange('IGUAIS')}
+                disabled={disabled}
+              />
+              Permitir troca apenas para características iguais
             </label>
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="radio" name="troca-estoque" checked={option==='QUALQUER'} onChange={()=>setOption('QUALQUER')} /> Permitir troca por qualquer característica
+              <input
+                type="radio"
+                name="troca-estoque"
+                checked={data?.stockSwapMode === 'QUALQUER'}
+                onChange={() => handleChange('QUALQUER')}
+                disabled={disabled}
+              />
+              Permitir troca por qualquer característica
             </label>
           </div>
         </div>

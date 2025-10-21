@@ -2,12 +2,40 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useToast } from '@/components/ui/toast-context';
+import { useOrganization, useDeposits } from '@/lib/hooks/use-organization';
+import { usePickingSettings, useUpsertPickingSettings } from '@/lib/hooks/use-picking-settings';
 
 export default function ReservaEstoqueConfigPage() {
   const navigate = useNavigate();
-  const [momento, setMomento] = useState<'IMEDIATO'|'POSTERIOR'|''>('');
-  const [coletaParcial, setColetaParcial] = useState<'SIM'|'NAO'|''>('');
+  const toast = useToast();
+  const { data: org } = useOrganization();
+  const { data: deposits } = useDeposits();
+  const principalDepositId = deposits?.find((d) => d.principal)?.id;
+  const { data, isLoading } = usePickingSettings({ organizationId: org?.id, depositId: principalDepositId });
+  const { mutateAsync, isPending } = useUpsertPickingSettings({ organizationId: org?.id, depositId: principalDepositId });
+  const disabled = isLoading || isPending || !org?.id;
+
+  async function setReserveMoment(value: 'IMEDIATO' | 'POSTERIOR') {
+    try {
+      await mutateAsync({ reserveMoment: value });
+      toast.show({ message: 'Configuração salva com sucesso', kind: 'success' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar configuração';
+      toast.show({ message: msg, kind: 'error' });
+    }
+  }
+
+  async function setPartialPicking(value: boolean) {
+    try {
+      await mutateAsync({ allowPartialPicking: value });
+      toast.show({ message: 'Configuração salva com sucesso', kind: 'success' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar configuração';
+      toast.show({ message: msg, kind: 'error' });
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 pt-4">
       <Breadcrumb>
@@ -57,10 +85,24 @@ export default function ReservaEstoqueConfigPage() {
           </div>
           <div className="flex flex-col gap-3 mt-2" role="radiogroup" aria-label="Momento da reserva">
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="radio" name="momento" checked={momento==='IMEDIATO'} onChange={()=>setMomento('IMEDIATO')} /> Imediato, no processamento da seleção
+              <input
+                type="radio"
+                name="momento"
+                checked={data?.reserveMoment === 'IMEDIATO'}
+                onChange={() => setReserveMoment('IMEDIATO')}
+                disabled={disabled}
+              />
+              Imediato, no processamento da seleção
             </label>
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="radio" name="momento" checked={momento==='POSTERIOR'} onChange={()=>setMomento('POSTERIOR')} /> Posterior, na etapa de separação mobile
+              <input
+                type="radio"
+                name="momento"
+                checked={data?.reserveMoment === 'POSTERIOR'}
+                onChange={() => setReserveMoment('POSTERIOR')}
+                disabled={disabled}
+              />
+              Posterior, na etapa de separação mobile
             </label>
           </div>
         </section>
@@ -71,10 +113,24 @@ export default function ReservaEstoqueConfigPage() {
           </div>
           <div className="flex flex-col gap-3 mt-2" role="radiogroup" aria-label="Coleta parcial">
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="radio" name="coleta" checked={coletaParcial==='SIM'} onChange={()=>setColetaParcial('SIM')} /> Sim, até atingir o total solicitado
+              <input
+                type="radio"
+                name="coleta"
+                checked={!!data?.allowPartialPicking}
+                onChange={() => setPartialPicking(true)}
+                disabled={disabled}
+              />
+              Sim, até atingir o total solicitado
             </label>
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="radio" name="coleta" checked={coletaParcial==='NAO'} onChange={()=>setColetaParcial('NAO')} /> Não, apenas coleta total
+              <input
+                type="radio"
+                name="coleta"
+                checked={data ? data.allowPartialPicking === false : false}
+                onChange={() => setPartialPicking(false)}
+                disabled={disabled}
+              />
+              Não, apenas coleta total
             </label>
           </div>
         </section>

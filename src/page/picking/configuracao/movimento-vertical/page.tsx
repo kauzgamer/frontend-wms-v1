@@ -2,11 +2,33 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useToast } from '@/components/ui/toast-context';
+import { useOrganization, useDeposits } from '@/lib/hooks/use-organization';
+import { usePickingSettings, useUpsertPickingSettings } from '@/lib/hooks/use-picking-settings';
 
 export default function MovimentoVerticalConfigPage() {
-  const [useVertical, setUseVertical] = useState<'SIM' | 'NAO' | ''>('');
   const navigate = useNavigate();
+  const toast = useToast();
+
+  const { data: org } = useOrganization();
+  const { data: deposits } = useDeposits();
+  const principalDepositId = deposits?.find((d) => d.principal)?.id;
+
+  const { data, isLoading } = usePickingSettings({ organizationId: org?.id, depositId: principalDepositId });
+  const { mutateAsync, isPending } = useUpsertPickingSettings({ organizationId: org?.id, depositId: principalDepositId });
+
+  const disabled = isLoading || isPending || !org?.id;
+
+  async function handleChange(value: 'SIM' | 'NAO') {
+    try {
+      await mutateAsync({ useVerticalMovement: value === 'SIM' });
+      toast.show({ message: 'Configuração salva com sucesso', kind: 'success' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar configuração';
+      toast.show({ message: msg, kind: 'error' });
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 pt-4">
       <Breadcrumb>
@@ -56,10 +78,24 @@ export default function MovimentoVerticalConfigPage() {
           </div>
           <div className="flex flex-col gap-3 mt-2" role="radiogroup" aria-label="Utilizar movimento vertical">
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="radio" name="mov-vertical" checked={useVertical==='SIM'} onChange={() => setUseVertical('SIM')} /> Utilizar
+              <input
+                type="radio"
+                name="mov-vertical"
+                checked={!!data?.useVerticalMovement}
+                onChange={() => handleChange('SIM')}
+                disabled={disabled}
+              />
+              Utilizar
             </label>
             <label className="inline-flex items-center gap-2 text-sm">
-              <input type="radio" name="mov-vertical" checked={useVertical==='NAO'} onChange={() => setUseVertical('NAO')} /> Não utilizar
+              <input
+                type="radio"
+                name="mov-vertical"
+                checked={data ? data.useVerticalMovement === false : false}
+                onChange={() => handleChange('NAO')}
+                disabled={disabled}
+              />
+              Não utilizar
             </label>
           </div>
         </div>
