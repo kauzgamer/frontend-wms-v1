@@ -15,11 +15,11 @@ export async function getPickingSettings(params: { organizationId: string; depos
   const qs = new URLSearchParams();
   qs.set('organizationId', params.organizationId);
   if (params.depositId) qs.set('depositId', params.depositId);
-  return apiFetch<PickingSettingsDTO>(`/picking/settings?${qs.toString()}`);
+  return apiFetch<PickingSettingsDTO>(`/picking-settings?${qs.toString()}`);
 }
 
 export async function upsertPickingSettings(data: Partial<PickingSettingsDTO> & { organizationId: string; depositId?: string }) {
-  return apiFetch<PickingSettingsDTO>(`/picking/settings`, {
+  return apiFetch<PickingSettingsDTO>(`/picking-settings`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
