@@ -1,8 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
-import type { CreateAddressMappingInput, MappingStockType } from '@/lib/types/address-mapping';
+import type { CreateAddressMappingInput } from '@/lib/types/address-mapping';
+import { useStockTypes } from '@/lib/hooks/use-stock-types';
 
 export default function NovoMapeamentoEnderecoPage() {
   const navigate = useNavigate();
@@ -10,10 +11,14 @@ export default function NovoMapeamentoEnderecoPage() {
     descricao: '',
     categoriaProdutoId: undefined,
     produtoId: undefined,
-    tipoEstoque: 'Armazenagem' as MappingStockType,
+    stockTypeId: undefined,
+    tipoEstoque: 'Armazenagem',
     nivelEspecificacao: 'Genérico',
     situacao: 'ATIVO',
   });
+
+  const { data: stockTypes } = useStockTypes({ situacao: 'ATIVO' });
+  const stockTypeOptions = useMemo(() => (stockTypes ?? []).map(st => ({ id: st.id, label: st.descricao })), [stockTypes]);
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 pt-4">
@@ -87,12 +92,14 @@ export default function NovoMapeamentoEnderecoPage() {
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium text-[#334b52]">Tipo de estoque <span className="text-muted-foreground text-xs">(Opcional)</span></label>
             <select
-              value={form.tipoEstoque}
-              onChange={(e) => setForm((f) => ({ ...f, tipoEstoque: e.target.value as MappingStockType }))}
+              value={form.stockTypeId ?? ''}
+              onChange={(e) => setForm((f) => ({ ...f, stockTypeId: e.target.value || undefined }))}
               className="h-10 rounded border px-3 text-sm bg-white shadow-sm"
             >
-              <option value="Armazenagem">Armazenagem</option>
-              <option value="Picking">Picking</option>
+              <option value="">Selecione o tipo de estoque</option>
+              {stockTypeOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>{opt.label}</option>
+              ))}
             </select>
           </div>
         </div>

@@ -7,6 +7,8 @@ export interface AddressMappingSummary {
   descricao: string;
   categoriaProduto?: string;
   produto?: string;
+  stockTypeId?: string | null;
+  stockTypeDescricao?: string | null;
   tipoEstoque: MappingStockType;
   nivelEspecificacao: 'Genérico' | 'Específico';
   situacao: MappingSituation;
@@ -18,6 +20,7 @@ export interface CreateAddressMappingInput {
   descricao: string;
   categoriaProdutoId?: string;
   produtoId?: string;
+  stockTypeId?: string;
   tipoEstoque: MappingStockType;
   nivelEspecificacao: 'Genérico' | 'Específico';
   situacao?: MappingSituation;

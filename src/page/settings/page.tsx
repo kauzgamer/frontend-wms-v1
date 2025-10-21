@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
-import { HomeIcon, Workflow, Warehouse, MapPinned, Component as StructureIcon, ListChecks, Users } from 'lucide-react'
+import { HomeIcon, Workflow, Warehouse, MapPinned, Component as StructureIcon, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export function SettingsPage() {
@@ -53,16 +53,7 @@ export function SettingsPage() {
       <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Estrutura física</span>
     </Card>
   </Link>
-  <Link to="/settings/mapeamento-endereco" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0c9abe] rounded-md">
-    <Card className="aspect-[6/5] flex flex-col items-center justify-center gap-2 text-center cursor-pointer hover:shadow-sm transition p-4">
-      <MapPinned className="size-9" style={{ color: '#0c9abe' }} />
-      <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Mapeamento de endereços</span>
-    </Card>
-  </Link>
-  <Card className="aspect-[6/5] flex flex-col items-center justify-center gap-2 text-center cursor-pointer hover:shadow-sm transition p-4">
-    <ListChecks className="size-9" style={{ color: '#0c9abe' }} />
-          <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Grupo de atividade</span>
-        </Card>
+  {/** Removidos cards de Mapeamento de endereços e Grupo de atividade conforme solicitado */}
   <Link to="/settings/usuarios" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0c9abe] rounded-md">
     <Card className="aspect-[6/5] flex flex-col items-center justify-center gap-2 text-center cursor-pointer hover:shadow-sm transition p-4">
       <Users className="size-9" style={{ color: '#0c9abe' }} />

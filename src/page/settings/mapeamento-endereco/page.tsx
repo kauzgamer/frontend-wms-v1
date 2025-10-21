@@ -302,7 +302,7 @@ export default function MapeamentoEnderecoPage() {
                       <td className="p-3 text-sm whitespace-nowrap">{row.produto ?? '-'}</td>
                     )}
                     {visibleCols.tipoEstoque && (
-                      <td className="p-3 text-sm whitespace-nowrap">{row.tipoEstoque}</td>
+                      <td className="p-3 text-sm whitespace-nowrap">{row.stockTypeDescricao ?? row.tipoEstoque}</td>
                     )}
                     {visibleCols.nivel && (
                       <td className="p-3 text-sm whitespace-nowrap">{row.nivelEspecificacao}</td>
