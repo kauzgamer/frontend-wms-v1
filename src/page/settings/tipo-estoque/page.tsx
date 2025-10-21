@@ -11,6 +11,8 @@ export default function TipoEstoquePage() {
   const [situacao, setSituacao] = useState<'ATIVO' | 'INATIVO' | 'TODOS'>('ATIVO');
   const [creating, setCreating] = useState(false);
   const [newDesc, setNewDesc] = useState('');
+  const [newExpedicao, setNewExpedicao] = useState(false);
+  const [newManufatura, setNewManufatura] = useState(false);
   const { data, isLoading, error } = useStockTypes({ q, situacao: situacao === 'TODOS' ? undefined : situacao });
   const { mutateAsync: createAsync, isPending: creatingPending } = useCreateStockType();
   const { mutateAsync: updateAsync } = useUpdateStockType();
@@ -19,8 +21,15 @@ export default function TipoEstoquePage() {
 
   async function handleCreate() {
     if (!newDesc.trim()) return;
-    await createAsync({ descricao: newDesc.trim(), situacao: 'ATIVO' });
+    await createAsync({
+      descricao: newDesc.trim(),
+      situacao: 'ATIVO',
+      usarNaExpedicao: newExpedicao,
+      usarNaManufatura: newManufatura,
+    });
     setNewDesc('');
+    setNewExpedicao(false);
+    setNewManufatura(false);
     setCreating(false);
   }
 
@@ -110,7 +119,18 @@ export default function TipoEstoquePage() {
                     >
                       ✓
                     </button>
-                    <button className="text-rose-600 font-bold px-1" title="Cancelar" onClick={() => setCreating(false)}>×</button>
+                    <button
+                      className="text-rose-600 font-bold px-1"
+                      title="Cancelar"
+                      onClick={() => {
+                        setCreating(false);
+                        setNewDesc('');
+                        setNewExpedicao(false);
+                        setNewManufatura(false);
+                      }}
+                    >
+                      ×
+                    </button>
                   </td>
                   <td className="p-2">
                     <input
@@ -120,8 +140,24 @@ export default function TipoEstoquePage() {
                       className="h-8 rounded border px-3 text-sm bg-white shadow-sm w-full"
                     />
                   </td>
-                  <td className="p-2 text-center">—</td>
-                  <td className="p-2 text-center">—</td>
+                  <td className="p-2 text-center">
+                    <button
+                      className={`inline-flex items-center justify-center w-6 h-6 rounded ${newExpedicao ? 'bg-emerald-600' : 'bg-gray-300'}`}
+                      onClick={() => setNewExpedicao((v) => !v)}
+                      title="Alternar Utilizar na expedição"
+                    >
+                      {newExpedicao && <Check className="size-4 text-white" />}
+                    </button>
+                  </td>
+                  <td className="p-2 text-center">
+                    <button
+                      className={`inline-flex items-center justify-center w-6 h-6 rounded ${newManufatura ? 'bg-emerald-600' : 'bg-gray-300'}`}
+                      onClick={() => setNewManufatura((v) => !v)}
+                      title="Alternar Utilizar na manufatura"
+                    >
+                      {newManufatura && <Check className="size-4 text-white" />}
+                    </button>
+                  </td>
                   <td className="p-2 text-center">—</td>
                 </tr>
               )}
