@@ -68,6 +68,24 @@ const NovoPickingPage = lazy(() => import("@/page/picking/novo/page"));
 const DefinirEnderecosPage = lazy(
   () => import("@/page/picking/definir-enderecos/[id]/page")
 );
+const PickingConfiguracaoPage = lazy(
+  () => import("@/page/picking/configuracao/page")
+);
+const PickingCfgMovimentoVerticalPage = lazy(
+  () => import("@/page/picking/configuracao/movimento-vertical/page")
+);
+const PickingCfgTrocaEstoquePage = lazy(
+  () => import("@/page/picking/configuracao/troca-estoque/page")
+);
+const PickingCfgUnitizadorCompletoPage = lazy(
+  () => import("@/page/picking/configuracao/unitizador-completo/page")
+);
+const PickingCfgReservaEstoquePage = lazy(
+  () => import("@/page/picking/configuracao/reserva-estoque/page")
+);
+const PickingCfgCaracteristicasEstoquePage = lazy(
+  () => import("@/page/picking/configuracao/caracteristicas-estoque/page")
+);
 const GrupoEnderecoPage = lazy(
   () => import("@/page/settings/grupo-endereco/page")
 );
@@ -265,6 +283,12 @@ function App() {
             element={<UnifiedProductPage />}
           />
           <Route path="/picking" element={<PickingPage />} />
+          <Route path="/picking/configuracao" element={<PickingConfiguracaoPage />} />
+          <Route path="/picking/configuracao/movimento-vertical" element={<PickingCfgMovimentoVerticalPage />} />
+          <Route path="/picking/configuracao/troca-estoque" element={<PickingCfgTrocaEstoquePage />} />
+          <Route path="/picking/configuracao/unitizador-completo" element={<PickingCfgUnitizadorCompletoPage />} />
+          <Route path="/picking/configuracao/reserva-estoque" element={<PickingCfgReservaEstoquePage />} />
+          <Route path="/picking/configuracao/caracteristicas-estoque" element={<PickingCfgCaracteristicasEstoquePage />} />
           <Route path="/picking/novo" element={<NovoPickingPage />} />
           <Route
             path="/picking/definir-enderecos/:id"

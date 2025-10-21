@@ -334,11 +334,9 @@ export default function PickingPage() {
             size="lg"
             variant="outline"
             className="border-2 border-cyan-600 text-cyan-700 hover:bg-cyan-50 whitespace-nowrap"
-            onClick={() => {
-              /* abrir config */
-            }}
+            asChild
           >
-            Configuração
+            <Link to="/picking/configuracao">Configuração</Link>
           </Button>
           <Button
             size="lg"
