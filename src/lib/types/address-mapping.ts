@@ -1,6 +1,7 @@
 export type MappingSituation = 'ATIVO' | 'INATIVO';
 
-export type MappingStockType = 'Genérico' | 'Específico' | 'Picking' | 'Armazenagem';
+// Tipo apresentado na listagem (friendly). Para criação/edição use os enums do backend abaixo.
+export type MappingStockType = 'Picking' | 'Armazenagem';
 
 export interface AddressMappingSummary {
   id: string;
@@ -21,9 +22,11 @@ export interface CreateAddressMappingInput {
   categoriaProdutoId?: string;
   produtoId?: string;
   stockTypeId?: string;
-  tipoEstoque: MappingStockType;
-  nivelEspecificacao: 'Genérico' | 'Específico';
+  // Enums do backend (opcionais, com defaults no servidor)
+  tipoEstoque?: 'ARMAZENAGEM' | 'PICKING';
+  nivelEspecificacao?: 'GENERICO' | 'ESPECIFICO';
   situacao?: MappingSituation;
+  prioridades?: Array<{ prioridade: number; groupId: string; filtro?: Record<string, unknown> }>;
 }
 
 export type UpdateAddressMappingInput = Partial<CreateAddressMappingInput>;
