@@ -60,3 +60,54 @@ export async function triggerOdbcSync(payload: OdbcSyncRequest) {
     body: JSON.stringify(payload),
   });
 }
+
+// ===============================
+// Nova arquitetura (Desktop Agent)
+// Endpoints existentes no backend:
+//  - POST /odbc-integration/staged/process { batchId, stage }
+//  - GET  /odbc-integration/staged/batch/:batchId/status
+//  - GET  /odbc-integration/logs
+// ===============================
+
+export type OdbcStage = 'categories' | 'products' | 'skus';
+
+export interface OdbcProcessResponse {
+  stage: OdbcStage | string;
+  processed: number;
+  errors: number;
+  details: string[];
+}
+
+export interface OdbcBatchStatus {
+  batchId: string;
+  total: number;
+  breakdown: { status: string; count: number }[];
+}
+
+export async function processStage(payload: { batchId: string; stage: OdbcStage }) {
+  return apiFetch<OdbcProcessResponse>('/odbc-integration/staged/process', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getBatchStatus(batchId: string) {
+  return apiFetch<OdbcBatchStatus>(`/odbc-integration/staged/batch/${batchId}/status`);
+}
+
+export interface OdbcLogItem {
+  id: string;
+  date: string;
+  document: string;
+  key: string;
+  process: string;
+  status: 'success' | 'failed' | 'quarantine';
+  details?: string;
+  errorMessage?: string;
+  productsCount?: number;
+}
+
+export async function getOdbcLogs(params?: { organizationId?: string }) {
+  const qs = params?.organizationId ? `?organizationId=${encodeURIComponent(params.organizationId)}` : '';
+  return apiFetch<OdbcLogItem[]>(`/odbc-integration/logs${qs}`);
+}

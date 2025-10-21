@@ -7,6 +7,9 @@ import {
   testOdbcConnection,
   triggerOdbcImport,
   triggerOdbcSync,
+  processStage,
+  getBatchStatus,
+  getOdbcLogs,
 } from '../api/odbc-integration';
 import type {
   OdbcIntegrationConfig,
@@ -76,5 +79,32 @@ export function useTriggerOdbcImport() {
 export function useTriggerOdbcSync() {
   return useMutation({
     mutationFn: (payload: OdbcSyncRequest) => triggerOdbcSync(payload),
+  });
+}
+
+// ===============================
+// Nova arquitetura (Desktop Agent)
+// ===============================
+
+export function useProcessStage() {
+  return useMutation({
+    mutationFn: (payload: { batchId: string; stage: 'categories' | 'products' | 'skus' }) => processStage(payload),
+  });
+}
+
+export function useBatchStatus(batchId?: string) {
+  return useQuery({
+    queryKey: ['odbc-integration', 'batch-status', batchId],
+    queryFn: () => (batchId ? getBatchStatus(batchId) : Promise.resolve(null)),
+    enabled: !!batchId,
+    staleTime: 15_000,
+  });
+}
+
+export function useOdbcLogs(params?: { organizationId?: string }) {
+  return useQuery({
+    queryKey: ['odbc-integration', 'logs', params?.organizationId ?? 'all'],
+    queryFn: () => getOdbcLogs(params),
+    staleTime: 30_000,
   });
 }
