@@ -9,6 +9,12 @@ export interface PickingSettingsDTO {
   reserveMoment: 'IMEDIATO' | 'POSTERIOR';
   allowPartialPicking: boolean;
   requestAttributesOnSelect: boolean;
+  // Novas opções
+  addressSelection: 'PICKING_FIRST' | 'STORAGE_FIRST' | 'ONLY_PICKING' | 'ONLY_STORAGE';
+  stockSorting: 'FEFO' | 'FIFO' | 'NONE';
+  splitMode: 'BY_ITEM' | 'BY_ADDRESS' | 'BY_PRODUCT';
+  maxQtyPerTask: number | null | undefined;
+  maxLinesPerTask: number | null | undefined;
 }
 
 export async function getPickingSettings(params: { organizationId: string; depositId?: string }) {

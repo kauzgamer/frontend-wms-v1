@@ -60,6 +60,12 @@ export function SettingsPage() {
       <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Usuários</span>
     </Card>
   </Link>
+  <Link to="/picking/configuracao" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0c9abe] rounded-md">
+    <Card className="aspect-[6/5] flex flex-col items-center justify-center gap-2 text-center cursor-pointer hover:shadow-sm transition p-4">
+      <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border" style={{ borderColor: '#0c9abe', color: '#0c9abe' }}>P</span>
+      <span className="text-base font-medium" style={{ color: '#4a5c60' }}>Picking (Config.)</span>
+    </Card>
+  </Link>
       </div>
 
       {/* Cadastros list */}

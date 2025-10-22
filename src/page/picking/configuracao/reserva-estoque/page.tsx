@@ -43,6 +43,46 @@ export default function ReservaEstoqueConfigPage() {
     }
   }
 
+  async function setAddressSelection(value: 'PICKING_FIRST' | 'STORAGE_FIRST' | 'ONLY_PICKING' | 'ONLY_STORAGE') {
+    try {
+      await mutateAsync({ addressSelection: value });
+      toast.show({ message: 'Configuração salva com sucesso', kind: 'success' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar configuração';
+      toast.show({ message: msg, kind: 'error' });
+    }
+  }
+
+  async function setStockSorting(value: 'FEFO' | 'FIFO' | 'NONE') {
+    try {
+      await mutateAsync({ stockSorting: value });
+      toast.show({ message: 'Configuração salva com sucesso', kind: 'success' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar configuração';
+      toast.show({ message: msg, kind: 'error' });
+    }
+  }
+
+  async function setSplit(value: 'BY_ITEM' | 'BY_ADDRESS' | 'BY_PRODUCT') {
+    try {
+      await mutateAsync({ splitMode: value });
+      toast.show({ message: 'Configuração salva com sucesso', kind: 'success' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar configuração';
+      toast.show({ message: msg, kind: 'error' });
+    }
+  }
+
+  async function setLimits(values: { maxQtyPerTask?: number | null; maxLinesPerTask?: number | null }) {
+    try {
+      await mutateAsync(values);
+      toast.show({ message: 'Configuração salva com sucesso', kind: 'success' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar configuração';
+      toast.show({ message: msg, kind: 'error' });
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-6 p-6 pt-4">
       <Breadcrumb>
@@ -103,6 +143,94 @@ export default function ReservaEstoqueConfigPage() {
 
         <section className="space-y-2">
           <div className="text-sm font-medium" style={{ color: '#4a5c60' }}>
+            Prioridade de endereço (picking vs alto)
+          </div>
+          <div className="flex flex-col gap-3 mt-2" role="radiogroup" aria-label="Prioridade de endereço">
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="addr"
+                checked={data?.addressSelection === 'PICKING_FIRST'}
+                onChange={() => setAddressSelection('PICKING_FIRST')}
+                disabled={disabled}
+              />
+              Priorizar Picking; se não atender, buscar no Alto
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="addr"
+                checked={data?.addressSelection === 'STORAGE_FIRST'}
+                onChange={() => setAddressSelection('STORAGE_FIRST')}
+                disabled={disabled}
+              />
+              Priorizar Alto; se não atender, buscar no Picking
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="addr"
+                  checked={data?.addressSelection === 'ONLY_PICKING'}
+                  onChange={() => setAddressSelection('ONLY_PICKING')}
+                  disabled={disabled}
+                />
+                Somente Picking
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="addr"
+                  checked={data?.addressSelection === 'ONLY_STORAGE'}
+                  onChange={() => setAddressSelection('ONLY_STORAGE')}
+                  disabled={disabled}
+                />
+                Somente Alto/Armazenagem
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-2">
+          <div className="text-sm font-medium" style={{ color: '#4a5c60' }}>
+            Ordenação do estoque
+          </div>
+          <div className="flex flex-col gap-3 mt-2" role="radiogroup" aria-label="Ordenação do estoque">
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="sort"
+                checked={data?.stockSorting === 'FEFO'}
+                onChange={() => setStockSorting('FEFO')}
+                disabled={disabled}
+              />
+              FEFO (validade mais próxima primeiro)
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="sort"
+                checked={data?.stockSorting === 'FIFO'}
+                onChange={() => setStockSorting('FIFO')}
+                disabled={disabled}
+              />
+              FIFO (mais antigo primeiro)
+            </label>
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="sort"
+                checked={data?.stockSorting === 'NONE'}
+                onChange={() => setStockSorting('NONE')}
+                disabled={disabled}
+              />
+              Maior saldo primeiro
+            </label>
+          </div>
+        </section>
+
+        <section className="space-y-2">
+          <div className="text-sm font-medium" style={{ color: '#4a5c60' }}>
             Reserva de estoque picking na seleção de estoque automática
           </div>
           <div className="flex flex-col gap-3 mt-2" role="radiogroup" aria-label="Momento da reserva">
@@ -154,6 +282,53 @@ export default function ReservaEstoqueConfigPage() {
               />
               Não, apenas coleta total
             </label>
+          </div>
+        </section>
+
+        <section className="space-y-2">
+          <div className="text-sm font-medium" style={{ color: '#4a5c60' }}>
+            Divisão e limites da geração de tarefas
+          </div>
+          <div className="flex flex-col gap-3 mt-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+              <label className="text-sm">Modo de split</label>
+              <select
+                className="h-9 rounded border px-2 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                value={data?.splitMode ?? 'BY_ADDRESS'}
+                onChange={(e) =>
+                  setSplit(
+                    e.target.value as 'BY_ITEM' | 'BY_ADDRESS' | 'BY_PRODUCT'
+                  )
+                }
+                disabled={disabled}
+              >
+                <option value="BY_ITEM">Por item</option>
+                <option value="BY_ADDRESS">Por endereço</option>
+                <option value="BY_PRODUCT">Por produto</option>
+              </select>
+
+              <div className="md:col-span-2" />
+
+              <label className="text-sm">Qtd. máxima por tarefa</label>
+              <input
+                type="number"
+                min={1}
+                className="h-9 rounded border px-2 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                value={data?.maxQtyPerTask ?? ''}
+                onChange={(e) => setLimits({ maxQtyPerTask: e.target.value ? Number(e.target.value) : null })}
+                disabled={disabled}
+              />
+
+              <label className="text-sm">Máx. linhas por tarefa</label>
+              <input
+                type="number"
+                min={1}
+                className="h-9 rounded border px-2 text-sm bg-white shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#0c9abe]"
+                value={data?.maxLinesPerTask ?? ''}
+                onChange={(e) => setLimits({ maxLinesPerTask: e.target.value ? Number(e.target.value) : null })}
+                disabled={disabled}
+              />
+            </div>
           </div>
         </section>
       </Card>
