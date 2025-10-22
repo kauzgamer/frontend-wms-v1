@@ -153,11 +153,11 @@ export function ErpIntegration() {
               {status && (
                 <div className="rounded-md border p-3 text-sm">
                   <p className="font-medium">Status do lote {status.batchId}</p>
-                  <p>Total de registros: {status.total}</p>
-                  <ul className="mt-2 grid gap-1 md:grid-cols-3">
-                    {status.breakdown.map((b) => (
-                      <li key={b.status} className="text-xs text-muted-foreground">
-                        <span className="font-medium text-foreground">{b.status}</span>: {b.count}
+                  <p>Total de registros: {status.total} • Concluídos: {status.completed} • Pendentes: {status.pending}</p>
+                  <ul className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {Object.entries(status.stages).map(([stage, s]) => (
+                      <li key={stage} className="text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground capitalize">{stage.replace(/([A-Z])/g, ' $1')}</span>: {s.processed}/{s.total}
                       </li>
                     ))}
                   </ul>
