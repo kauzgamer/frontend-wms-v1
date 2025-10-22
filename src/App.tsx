@@ -111,6 +111,8 @@ const NovoProcessoRecebimentoPage = lazy(() => import("@/page/recebimento/novo-p
 const NovoDocRecebimentoPage = lazy(() => import("@/page/docs/recebimento/new/page"));
 const UploadXmlRecebimentoPage = lazy(() => import("@/page/docs/recebimento/new/xml/page"));
 const NovoDocRecebimentoManualPage = lazy(() => import("@/page/docs/recebimento/new/manual/page"));
+const CargasPage = lazy(() => import("@/page/cargas/page"));
+const CargaDetailPage = lazy(() => import("@/page/cargas/[id]/page"));
 
 // Global route change overlay spinner
 function GlobalRouteLoader({ minDuration = 300 }: { minDuration?: number }) {
@@ -314,6 +316,9 @@ function App() {
             path="/picking/definir-enderecos/:id"
             element={<DefinirEnderecosPage />}
           />
+          {/* Cargas */}
+          <Route path="/cargas" element={<CargasPage />} />
+          <Route path="/cargas/:id" element={<CargaDetailPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
