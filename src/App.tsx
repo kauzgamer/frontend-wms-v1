@@ -106,6 +106,8 @@ const DocsPage = lazy(() => import("@/page/docs/page"));
 const NovoDocExpedicaoPage = lazy(() => import("@/page/docs/expedicao/new/page"));
 const UploadXmlExpedicaoPage = lazy(() => import("@/page/docs/expedicao/new/xml/page"));
 const NovoDocExpedicaoManualPage = lazy(() => import("@/page/docs/expedicao/new/manual/page"));
+const NovoProcessoExpedicaoPage = lazy(() => import("@/page/expedicao/novo-processo/page"));
+const NovoProcessoRecebimentoPage = lazy(() => import("@/page/recebimento/novo-processo/page"));
 const NovoDocRecebimentoPage = lazy(() => import("@/page/docs/recebimento/new/page"));
 const UploadXmlRecebimentoPage = lazy(() => import("@/page/docs/recebimento/new/xml/page"));
 const NovoDocRecebimentoManualPage = lazy(() => import("@/page/docs/recebimento/new/manual/page"));
@@ -294,6 +296,9 @@ function App() {
           <Route path="/docs/expedicao/new" element={<NovoDocExpedicaoPage />} />
           <Route path="/docs/expedicao/new/xml" element={<UploadXmlExpedicaoPage />} />
           <Route path="/docs/expedicao/new/manual" element={<NovoDocExpedicaoManualPage />} />
+          {/* Novos processos */}
+          <Route path="/expedicao/novo-processo" element={<NovoProcessoExpedicaoPage />} />
+          <Route path="/recebimento/novo-processo" element={<NovoProcessoRecebimentoPage />} />
           <Route path="/docs/recebimento/new" element={<NovoDocRecebimentoPage />} />
           <Route path="/docs/recebimento/new/xml" element={<UploadXmlRecebimentoPage />} />
           <Route path="/docs/recebimento/new/manual" element={<NovoDocRecebimentoManualPage />} />

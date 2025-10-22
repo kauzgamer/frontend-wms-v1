@@ -61,8 +61,22 @@ const data = {
       ],
     },
     { title: "Estoque", url: "/estoque", icon: Boxes },
-    { title: "Recebimento", url: "#", icon: PackagePlus },
-    { title: "Expedição", url: "#", icon: Truck },
+    {
+      title: "Recebimento",
+      url: "#",
+      icon: PackagePlus,
+      items: [
+        { title: "Novo processo", url: "/recebimento/novo-processo" },
+      ],
+    },
+    {
+      title: "Expedição",
+      url: "#",
+      icon: Truck,
+      items: [
+        { title: "Novo processo", url: "/expedicao/novo-processo" },
+      ],
+    },
     { title: "Inventário", url: "/inventario", icon: ClipboardList },
     {
       title: "Picking",
