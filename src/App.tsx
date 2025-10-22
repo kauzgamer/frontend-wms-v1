@@ -102,6 +102,13 @@ const NovoMapeamentoEnderecoPage = lazy(
   () => import("@/page/settings/mapeamento-endereco/new/page")
 );
 const TipoEstoquePage = lazy(() => import("@/page/settings/tipo-estoque/page"));
+const DocsPage = lazy(() => import("@/page/docs/page"));
+const NovoDocExpedicaoPage = lazy(() => import("@/page/docs/expedicao/new/page"));
+const UploadXmlExpedicaoPage = lazy(() => import("@/page/docs/expedicao/new/xml/page"));
+const NovoDocExpedicaoManualPage = lazy(() => import("@/page/docs/expedicao/new/manual/page"));
+const NovoDocRecebimentoPage = lazy(() => import("@/page/docs/recebimento/new/page"));
+const UploadXmlRecebimentoPage = lazy(() => import("@/page/docs/recebimento/new/xml/page"));
+const NovoDocRecebimentoManualPage = lazy(() => import("@/page/docs/recebimento/new/manual/page"));
 
 // Global route change overlay spinner
 function GlobalRouteLoader({ minDuration = 300 }: { minDuration?: number }) {
@@ -282,6 +289,14 @@ function App() {
             path="/integration/settings/unified-product"
             element={<UnifiedProductPage />}
           />
+          {/* Documentos */}
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/docs/expedicao/new" element={<NovoDocExpedicaoPage />} />
+          <Route path="/docs/expedicao/new/xml" element={<UploadXmlExpedicaoPage />} />
+          <Route path="/docs/expedicao/new/manual" element={<NovoDocExpedicaoManualPage />} />
+          <Route path="/docs/recebimento/new" element={<NovoDocRecebimentoPage />} />
+          <Route path="/docs/recebimento/new/xml" element={<UploadXmlRecebimentoPage />} />
+          <Route path="/docs/recebimento/new/manual" element={<NovoDocRecebimentoManualPage />} />
           <Route path="/picking" element={<PickingPage />} />
           <Route path="/picking/configuracao" element={<PickingConfiguracaoPage />} />
           <Route path="/picking/configuracao/movimento-vertical" element={<PickingCfgMovimentoVerticalPage />} />
