@@ -69,7 +69,7 @@ export async function triggerOdbcSync(payload: OdbcSyncRequest) {
 //  - GET  /odbc-integration/logs
 // ===============================
 
-export type OdbcStage = 'categories' | 'products' | 'skus';
+export type OdbcStage = 'categories' | 'products' | 'skus' | 'shipments' | 'stock-movements';
 
 export interface OdbcProcessResponse {
   stage: OdbcStage | string;
@@ -81,7 +81,15 @@ export interface OdbcProcessResponse {
 export interface OdbcBatchStatus {
   batchId: string;
   total: number;
-  breakdown: { status: string; count: number }[];
+  completed: number;
+  pending: number;
+  stages: {
+    categories: { processed: number; total: number };
+    products: { processed: number; total: number };
+    skus: { processed: number; total: number };
+    shipments?: { processed: number; total: number };
+    stockMovements?: { processed: number; total: number };
+  };
 }
 
 export async function processStage(payload: { batchId: string; stage: OdbcStage }) {
