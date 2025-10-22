@@ -63,7 +63,7 @@ const data = {
     { title: "Estoque", url: "/estoque", icon: Boxes },
     {
       title: "Recebimento",
-      url: "#",
+      url: "/recebimento/novo-processo", // clicar no pai já abre o default
       icon: PackagePlus,
       items: [
         { title: "Novo processo", url: "/recebimento/novo-processo" },
@@ -71,7 +71,7 @@ const data = {
     },
     {
       title: "Expedição",
-      url: "#",
+      url: "/expedicao/novo-processo", // idem
       icon: Truck,
       items: [
         { title: "Novo processo", url: "/expedicao/novo-processo" },
@@ -85,7 +85,7 @@ const data = {
       items: [{ title: "Novo mapeamento", url: "/picking/novo" }],
     },
     { title: "Kit", url: "#", icon: Layers3 },
-    { title: "Docs", url: "#", icon: FileText },
+  { title: "Docs", url: "/docs", icon: FileText },
     { title: "Integração", url: "/integration", icon: Cable },
     { title: "Atividades", url: "#", icon: Activity },
     { title: "Manufatura", url: "#", icon: Factory },
